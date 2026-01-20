@@ -1,0 +1,81 @@
+// MBOA Market - Database Diagram (Simplifié)
+// Plateforme de Marketplace Agricole
+// Visualiser sur: https://dbdiagram.io
+
+// ========== UTILISATEURS ==========
+Table users {
+  id uuid [pk]
+  email varchar [unique, not null]
+  password_hash varchar [not null]
+  display_name varchar [not null]
+  phone_number varchar
+  activity_type varchar [note: 'producteur, acheteur, fournisseur']
+  domain varchar [note: 'agriculture, elevage']
+  region varchar
+  created_at timestamp
+}
+
+// ========== PUBLICATIONS ==========
+Table listings {
+  id uuid [pk]
+  seller_id uuid [ref: > users.id]
+  category_id varchar [note: 'agriculture, elevage']
+  title varchar [not null]
+  quantity decimal [not null]
+  unit varchar [note: 'kg, tonne, litre']
+  price_per_unit decimal [not null]
+  currency varchar [default: 'XAF']
+  region varchar
+  status varchar [default: 'PUBLISHED']
+  images text[] [note: 'URLs des images']
+  created_at timestamp
+}
+
+// ========== MESSAGERIE ==========
+Table conversations {
+  id uuid [pk]
+  listing_id uuid [ref: > listings.id, note: 'Produit concerné']
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table conversation_participants {
+  conversation_id uuid [ref: > conversations.id]
+  user_id uuid [ref: > users.id]
+  last_read_at timestamp
+  
+  indexes {
+    (conversation_id, user_id) [pk]
+  }
+}
+
+Table messages {
+  id uuid [pk]
+  conversation_id uuid [ref: > conversations.id]
+  sender_id uuid [ref: > users.id]
+  content text [not null]
+  is_read boolean [default: false]
+  created_at timestamp
+}
+
+// ========== COMMUNAUTÉ ==========
+Table community_posts {
+  id uuid [pk]
+  author_id uuid [ref: > users.id]
+  domain varchar [note: 'agriculture, elevage']
+  title varchar [not null]
+  content text [not null]
+  images text[] [note: 'URLs des images']
+  likes_count int [default: 0]
+  comments_count int [default: 0]
+  created_at timestamp
+}
+
+// ========== RELATIONS ==========
+// Users → Listings (1:N) - Un utilisateur peut créer plusieurs publications
+// Users → Conversations (N:M) - Via conversation_participants
+// Conversations → Listing (N:1) - Une conversation peut concerner un produit
+// Conversations → Messages (1:N) - Une conversation contient plusieurs messages
+// Users → Community Posts (1:N) - Un utilisateur peut créer plusieurs posts
+
+// Base de données: PostgreSQL | IDs: UUID | Timezone: UTC
