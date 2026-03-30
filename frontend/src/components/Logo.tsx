@@ -4,13 +4,13 @@ interface LogoProps {
 }
 
 export default function Logo({ className = '', size = 'md' }: LogoProps) {
-  // Responsive heights for different screen sizes
+  // Responsive heights for different screen sizes - Optimisé pour mobile
   const heights = {
-    xs: 'h-10 sm:h-12',
-    sm: 'h-12 sm:h-14 md:h-16',
-    md: 'h-16 sm:h-20 md:h-24',
-    lg: 'h-24 sm:h-32 md:h-40 lg:h-48',
-    xl: 'h-32 sm:h-40 md:h-48 lg:h-56'
+    xs: 'h-8',
+    sm: 'h-10 sm:h-12',
+    md: 'h-14 sm:h-16 md:h-20',
+    lg: 'h-20 sm:h-24 md:h-32 lg:h-40',
+    xl: 'h-28 sm:h-32 md:h-40 lg:h-48'
   };
 
   return (

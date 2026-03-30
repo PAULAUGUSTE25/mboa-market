@@ -59,14 +59,11 @@ class ApiService {
       (error) => Promise.reject(error)
     );
 
+    // Intercepteur de réponse désactivé car on utilise l'auth locale
     this.client.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (error.response?.status === 401) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('refresh_token');
-          window.location.href = '/login';
-        }
+        // Ne pas rediriger vers login automatiquement avec l'auth locale
         return Promise.reject(error);
       }
     );

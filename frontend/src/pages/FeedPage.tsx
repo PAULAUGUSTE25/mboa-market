@@ -826,10 +826,11 @@ export default function FeedPage() {
       <header className={`sticky top-0 z-10 ${theme === 'dark' ? 'bg-[#060D0A]/80 backdrop-blur-xl shadow-sm border-b border-white/10' : 'bg-white shadow-sm border-b border-gray-200'}`} style={{ userSelect: 'none', boxShadow: theme === 'light' ? '0 1px 2px rgba(0, 0, 0, 0.1)' : undefined }}>
         <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-3 sm:py-4">
           <div className="flex items-center justify-between gap-2 sm:gap-4">
-            {/* Logo Responsive */}
+            {/* Logo Responsive - Optimisé pour mobile */}
             <div className="flex-shrink-0">
-              <Logo size="sm" className="sm:hidden" />
-              <Logo size="md" className="hidden sm:block" />
+              <Logo size="xs" className="sm:hidden" />
+              <Logo size="sm" className="hidden sm:block md:hidden" />
+              <Logo size="md" className="hidden md:block" />
             </div>
 
             {/* Advanced Search Bar with Dropdown */}
@@ -971,9 +972,9 @@ export default function FeedPage() {
               </div>
             </button>
             
-            {/* Voice Assistant Button */}
+            {/* Voice Assistant Button - Optimisé et centré */}
             <button 
-              className="relative p-2 rounded-full transition-all duration-300 shadow-sm hover:scale-105 group"
+              className="relative w-10 h-10 sm:w-11 sm:h-11 rounded-full transition-all duration-300 shadow-sm hover:scale-105 group flex items-center justify-center"
               onClick={toggleVoiceAssistant}
               style={{ 
                 backgroundColor: isVoiceActive 
@@ -992,7 +993,7 @@ export default function FeedPage() {
               )}
               {/* Voice status indicator */}
               {isVoiceActive && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-pulse" 
+                <div className="absolute -top-0.5 -right-0.5 w-3 h-3 rounded-full animate-pulse" 
                   style={{ 
                     backgroundColor: voiceStatus === 'listening' ? '#10B981' : 
                                      voiceStatus === 'processing' ? '#F59E0B' : '#6B7280'
@@ -2063,11 +2064,11 @@ export default function FeedPage() {
         </>
       )}
 
-      {/* Mobile Bottom Navigation */}
+      {/* Mobile Bottom Navigation - Optimisé avec icônes plus petites et mieux espacées */}
       <div className={`fixed bottom-0 left-0 right-0 z-30 lg:hidden border-t ${
-        theme === 'dark' ? 'bg-gray-900/95 border-white/10' : 'bg-white/95 border-gray-200'
-      } backdrop-blur-xl`}>
-        <div className="flex items-center justify-around px-2 py-2">
+        theme === 'dark' ? 'bg-gray-900/98 border-white/10' : 'bg-white/98 border-gray-200'
+      } backdrop-blur-xl safe-area-inset-bottom`}>
+        <div className="flex items-center justify-around px-1 py-2.5">
           {[
             { icon: Home, label: 'Accueil', path: '/feed' },
             { icon: BarChart3, label: 'Dashboard', path: '/dashboard' },
@@ -2078,7 +2079,7 @@ export default function FeedPage() {
             <button
               key={idx}
               onClick={() => navigate(item.path)}
-              className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all relative"
+              className="flex flex-col items-center gap-0.5 px-2 py-1.5 rounded-lg transition-all relative min-w-0 flex-1"
               style={{
                 color: window.location.pathname === item.path 
                   ? getDomainColors(selectedSector).primary 
@@ -2086,14 +2087,14 @@ export default function FeedPage() {
               }}
             >
               <div className="relative">
-                <item.icon className="w-6 h-6" />
+                <item.icon className="w-5 h-5" strokeWidth={window.location.pathname === item.path ? 2.5 : 2} />
                 {item.badge && item.badge > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] w-3.5 h-3.5 rounded-full flex items-center justify-center font-bold">
                     {item.badge}
                   </span>
                 )}
               </div>
-              <span className="text-xs font-medium">{item.label}</span>
+              <span className="text-[10px] font-medium truncate max-w-full">{item.label}</span>
             </button>
           ))}
         </div>
