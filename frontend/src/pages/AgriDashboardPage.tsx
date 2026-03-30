@@ -106,31 +106,26 @@ export default function AgriDashboardPage() {
         <div className="max-w-[1920px] mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className={`text-3xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent`}>
-                🌱 Smart Agri Dashboard
+              <h1 className={`text-3xl font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                � Tableau de Bord
               </h1>
               <p className={`text-sm mt-1 ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                Contrôle Intelligent de votre Ferme • {new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                Gestion de votre ferme • {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
               </p>
             </div>
 
-            {/* Quick Stats */}
-            <div className="flex gap-4">
-              <div className={`px-4 py-2 rounded-xl ${isDark ? 'bg-green-500/10 border border-green-500/20' : 'bg-green-100 border border-green-200'}`}>
-                <div className="flex items-center gap-2">
-                  <Wifi className="w-4 h-4 text-green-500" />
-                  <span className={`text-sm font-medium ${isDark ? 'text-green-400' : 'text-green-700'}`}>
-                    IoT Connecté
-                  </span>
-                </div>
+            {/* User Info */}
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className={`text-sm font-medium ${isDark ? 'text-white' : 'text-gray-900'}`}>
+                  {(user.profile as any)?.display_name || 'Agriculteur'}
+                </p>
+                <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
+                  {(user.profile as any)?.region || 'Cameroun'}
+                </p>
               </div>
-              <div className={`px-4 py-2 rounded-xl ${isDark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-100 border border-blue-200'}`}>
-                <div className="flex items-center gap-2">
-                  <Brain className="w-4 h-4 text-blue-500" />
-                  <span className={`text-sm font-medium ${isDark ? 'text-blue-400' : 'text-blue-700'}`}>
-                    IA Active
-                  </span>
-                </div>
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold text-lg">
+                {(user.profile as any)?.display_name?.[0]?.toUpperCase() || '👤'}
               </div>
             </div>
           </div>
@@ -138,9 +133,9 @@ export default function AgriDashboardPage() {
           {/* Tabs */}
           <div className="flex gap-2 mt-4">
             {[
-              { id: 'greenhouse', label: '🏡 Serre Intelligente', icon: Sprout },
-              { id: 'farm', label: '🚜 Gestion Ferme', icon: Tractor },
-              { id: 'analytics', label: '📊 Analytics IA', icon: BarChart3 }
+              { id: 'greenhouse', label: '🏡 Ma Serre', icon: Sprout },
+              { id: 'farm', label: '🚜 Ma Ferme', icon: Tractor },
+              { id: 'analytics', label: '📊 Statistiques', icon: BarChart3 }
             ].map((tab) => (
               <button
                 key={tab.id}
