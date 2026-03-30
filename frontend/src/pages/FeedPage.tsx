@@ -1190,9 +1190,9 @@ export default function FeedPage() {
               { icon: BarChart3, label: 'Tableau de Bord', path: '/dashboard' },
               { icon: User, label: 'Mon Compte', path: '/profile' },
               { icon: Home, label: 'Fil d\'actualité', path: '/feed', active: true },
-              { icon: MessageCircle, label: 'Messages', path: '/messages', badge: unreadMessages },
-              { icon: Activity, label: 'Mon Activité', path: '/activity' },
-              { icon: ShoppingBag, label: 'Marketplace', path: '/marketplace' },
+              { icon: MessageCircle, label: 'Messages', path: '/chat', badge: unreadMessages },
+              { icon: Activity, label: 'Mon Activité', path: '/my-activity' },
+              { icon: ShoppingBag, label: 'Marketplace', path: '/listings' },
             ].map((item, idx) => (
               <button
                 key={idx}
