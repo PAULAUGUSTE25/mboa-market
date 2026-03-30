@@ -20,10 +20,10 @@ interface AIResponse {
 class MultiAIService {
   private providers: AIProvider[] = [
     {
-      name: 'Gemini',
-      endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-      apiKey: import.meta.env.VITE_GEMINI_API_KEY || '',
-      model: 'gemini-2.0-flash',
+      name: 'OpenRouter',
+      endpoint: 'https://openrouter.ai/api/v1/chat/completions',
+      apiKey: import.meta.env.VITE_OPENROUTER_API_KEY || '',
+      model: 'mistralai/mistral-7b-instruct:free',
       enabled: true
     }
   ];
@@ -88,32 +88,28 @@ class MultiAIService {
   private async callGemini(provider: AIProvider, prompt: string, context?: string): Promise<string> {
     const systemContext = context || "Tu es Bigiss, un assistant agricole expert basé au Cameroun. Tu réponds en français de manière naturelle, conversationnelle et utile. Tu donnes des conseils pratiques sur l'agriculture, l'élevage, et le commerce agricole.";
     
-    console.log('🚀 Calling Gemini API...');
+    console.log('🚀 Calling OpenRouter API...');
     console.log('📍 Endpoint:', provider.endpoint);
     console.log('🔑 API Key preview:', provider.apiKey ? provider.apiKey.substring(0, 10) + '...' : 'EMPTY');
     console.log('💬 Prompt:', prompt.substring(0, 100) + '...');
     
     try {
-      const response = await fetch(`${provider.endpoint}?key=${provider.apiKey}`, {
+      const response = await fetch(provider.endpoint, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Authorization': `Bearer ${provider.apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://mboa-market.vercel.app',
+          'X-Title': 'Bigiss AI - Mboa Market'
         },
         body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: `${systemContext}\n\nUtilisateur: ${prompt}\n\nBigiss:`
-                }
-              ]
-            }
+          model: provider.model,
+          messages: [
+            { role: 'system', content: systemContext },
+            { role: 'user', content: prompt }
           ],
-          generationConfig: {
-            temperature: 0.7,
-            maxOutputTokens: 1024,
-            topP: 0.9
-          }
+          temperature: 0.7,
+          max_tokens: 1024
         })
       });
 
@@ -121,23 +117,23 @@ class MultiAIService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Gemini API error:', response.status, errorText);
-        throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
+        console.error('❌ OpenRouter API error:', response.status, errorText);
+        throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('✅ Gemini API response received successfully');
+      console.log('✅ OpenRouter API response received successfully');
       
-      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      const content = data.choices?.[0]?.message?.content;
       if (!content) {
-        console.error('❌ No content in Gemini response:', data);
-        throw new Error('Gemini API returned empty response');
+        console.error('❌ No content in OpenRouter response:', data);
+        throw new Error('OpenRouter API returned empty response');
       }
       
       console.log('✨ Generated response length:', content.length);
       return content;
     } catch (error) {
-      console.error('❌ Gemini API call failed:', error);
+      console.error('❌ OpenRouter API call failed:', error);
       throw error;
     }
   }
