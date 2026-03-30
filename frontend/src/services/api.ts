@@ -73,71 +73,22 @@ class ApiService {
   }
 
   async register(data: RegisterRequest): Promise<any> {
-    // Utiliser l'authentification locale si pas de backend configuré
-    if (USE_LOCAL_AUTH) {
-      console.log('📱 Utilisation de l\'authentification locale (pas de backend)');
-      const user = await localAuth.register(data);
-      return user;
-    }
-
-    // Sinon, utiliser le backend
-    try {
-      const response = await this.client.post('/auth/register', data);
-      const { access_token, refresh_token, user } = response.data;
-      
-      if (access_token && refresh_token) {
-        localStorage.setItem('access_token', access_token);
-        localStorage.setItem('refresh_token', refresh_token);
-      }
-      
-      return user;
-    } catch (error: any) {
-      // Fallback vers l'auth locale si le backend échoue
-      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
-        console.warn('⚠️ Backend non disponible, utilisation de l\'auth locale');
-        const user = await localAuth.register(data);
-        return user;
-      }
-      throw error;
-    }
+    // Utiliser l'authentification locale
+    console.log('📱 Utilisation de l\'authentification locale');
+    const user = await localAuth.register(data);
+    return user;
   }
 
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    // Utiliser l'authentification locale si pas de backend configuré
-    if (USE_LOCAL_AUTH) {
-      console.log('📱 Utilisation de l\'authentification locale (pas de backend)');
-      const user = await localAuth.login(credentials);
-      return {
-        access_token: 'local_token',
-        refresh_token: 'local_refresh',
-        token_type: 'bearer',
-        user
-      };
-    }
-
-    // Sinon, utiliser le backend
-    try {
-      const response = await this.client.post('/auth/login', credentials);
-      const { access_token, refresh_token } = response.data;
-      
-      localStorage.setItem('access_token', access_token);
-      localStorage.setItem('refresh_token', refresh_token);
-      
-      return response.data;
-    } catch (error: any) {
-      // Fallback vers l'auth locale si le backend échoue
-      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
-        console.warn('⚠️ Backend non disponible, utilisation de l\'auth locale');
-        const user = await localAuth.login(credentials);
-        return {
-          access_token: 'local_token',
-          refresh_token: 'local_refresh',
-          token_type: 'bearer',
-          user
-        };
-      }
-      throw error;
-    }
+    // Utiliser l'authentification locale
+    console.log('📱 Utilisation de l\'authentification locale');
+    const user = await localAuth.login(credentials);
+    return {
+      access_token: 'local_token',
+      refresh_token: 'local_refresh',
+      token_type: 'bearer',
+      user
+    };
   }
 
   async logout(): Promise<void> {
