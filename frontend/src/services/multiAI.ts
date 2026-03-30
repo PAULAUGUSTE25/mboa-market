@@ -22,7 +22,7 @@ class MultiAIService {
     {
       name: 'Groq',
       endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-      apiKey: 'gsk_8xQZJ3WqYKLmN4pRvT5sWGdyb3FYcH9jKlMnOpQrStUvWxYz',
+      apiKey: import.meta.env.VITE_GROQ_API_KEY || '',
       model: 'mixtral-8x7b-32768',
       enabled: true
     }
