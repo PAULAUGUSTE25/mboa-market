@@ -3,7 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
 # from app.core.rate_limiter import limiter, rate_limit_exceeded_handler
-from app.api import auth, users, listings, orders, b2b, logistics, livestock, messaging, security
+# Temporarily disabled auth and security imports (missing dependencies)
+# from app.api import auth, users, listings, orders, b2b, logistics, livestock, messaging, security
+from app.api import listings, orders, b2b, logistics, livestock, messaging
 # from slowapi.errors import RateLimitExceeded
 import traceback
 import logging
@@ -52,15 +54,16 @@ async def global_exception_handler(request: Request, exc: Exception):
     )
 
 # Include routers
-app.include_router(auth.router, prefix="/api")
-app.include_router(users.router, prefix="/api")
+# Temporarily disabled auth, users, and security routes (missing dependencies)
+# app.include_router(auth.router, prefix="/api")
+# app.include_router(users.router, prefix="/api")
 app.include_router(listings.router, prefix="/api")
 app.include_router(orders.router, prefix="/api")
 app.include_router(b2b.router, prefix="/api")
 app.include_router(logistics.router, prefix="/api")
 app.include_router(livestock.router, prefix="/api")
 app.include_router(messaging.router, prefix="/api")
-app.include_router(security.router, prefix="/api")
+# app.include_router(security.router, prefix="/api")
 
 
 @app.get("/")
