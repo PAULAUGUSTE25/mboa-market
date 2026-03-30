@@ -20,10 +20,10 @@ interface AIResponse {
 class MultiAIService {
   private providers: AIProvider[] = [
     {
-      name: 'Groq',
-      endpoint: 'https://api.groq.com/openai/v1/chat/completions',
-      apiKey: import.meta.env.VITE_GROQ_API_KEY || '',
-      model: 'mixtral-8x7b-32768',
+      name: 'Gemini',
+      endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+      apiKey: import.meta.env.VITE_GEMINI_API_KEY || '',
+      model: 'gemini-1.5-flash',
       enabled: true
     }
   ];
@@ -78,44 +78,42 @@ class MultiAIService {
    * Appelle un provider spécifique
    */
   private async callProvider(provider: AIProvider, prompt: string, context?: string): Promise<string> {
-    // Groq AI uniquement
-    return await this.callGroq(provider, prompt, context);
+    // Gemini AI uniquement
+    return await this.callGemini(provider, prompt, context);
   }
 
   /**
-   * Appel à Groq API (format OpenAI compatible)
+   * Appel à Google Gemini API
    */
-  private async callGroq(provider: AIProvider, prompt: string, context?: string): Promise<string> {
+  private async callGemini(provider: AIProvider, prompt: string, context?: string): Promise<string> {
     const systemContext = context || "Tu es Bigiss, un assistant agricole expert basé au Cameroun. Tu réponds en français de manière naturelle, conversationnelle et utile. Tu donnes des conseils pratiques sur l'agriculture, l'élevage, et le commerce agricole.";
     
-    console.log('🚀 Calling Groq API...');
+    console.log('🚀 Calling Gemini API...');
     console.log('📍 Endpoint:', provider.endpoint);
-    console.log('🤖 Model:', provider.model);
+    console.log('🔑 API Key preview:', provider.apiKey ? provider.apiKey.substring(0, 10) + '...' : 'EMPTY');
     console.log('💬 Prompt:', prompt.substring(0, 100) + '...');
     
     try {
-      const response = await fetch(provider.endpoint, {
+      const response = await fetch(`${provider.endpoint}?key=${provider.apiKey}`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${provider.apiKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: provider.model,
-          messages: [
+          contents: [
             {
-              role: 'system',
-              content: systemContext
-            },
-            {
-              role: 'user',
-              content: prompt
+              parts: [
+                {
+                  text: `${systemContext}\n\nUtilisateur: ${prompt}\n\nBigiss:`
+                }
+              ]
             }
           ],
-          temperature: 0.7,
-          max_tokens: 1024,
-          top_p: 0.9,
-          stream: false
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 1024,
+            topP: 0.9
+          }
         })
       });
 
@@ -123,24 +121,23 @@ class MultiAIService {
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('❌ Groq API error:', response.status, errorText);
-        throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+        console.error('❌ Gemini API error:', response.status, errorText);
+        throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('✅ Groq API response received successfully');
-      console.log('📦 Response data structure:', Object.keys(data));
+      console.log('✅ Gemini API response received successfully');
       
-      const content = data.choices?.[0]?.message?.content;
+      const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
       if (!content) {
-        console.error('❌ No content in response:', data);
-        throw new Error('Groq API returned empty response');
+        console.error('❌ No content in Gemini response:', data);
+        throw new Error('Gemini API returned empty response');
       }
       
       console.log('✨ Generated response length:', content.length);
       return content;
     } catch (error) {
-      console.error('❌ Groq API call failed:', error);
+      console.error('❌ Gemini API call failed:', error);
       throw error;
     }
   }
