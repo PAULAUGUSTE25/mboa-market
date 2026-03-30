@@ -25,19 +25,6 @@ class MultiAIService {
       apiKey: 'gsk_8xQZJ3WqYKLmN4pRvT5sWGdyb3FYcH9jKlMnOpQrStUvWxYz',
       model: 'mixtral-8x7b-32768',
       enabled: true
-    },
-    {
-      name: 'HuggingFace Mistral',
-      endpoint: 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',
-      apiKey: 'hf_kRdvEamhaxrARWdeiSXFfZJGEzXxtKGV',
-      model: 'mistralai/Mistral-7B-Instruct-v0.2',
-      enabled: true
-    },
-    {
-      name: 'Local AI Fallback',
-      endpoint: 'local',
-      model: 'advanced',
-      enabled: false // Désactivé - utiliser seulement les vraies API
     }
   ];
 
@@ -49,13 +36,8 @@ class MultiAIService {
    */
   async generateResponse(prompt: string, context?: string): Promise<AIResponse> {
     console.log('🤖 Bigiss generating response for:', prompt.substring(0, 50) + '...');
+    console.log('📋 Available providers:', this.providers.map(p => `${p.name} (${p.enabled ? 'enabled' : 'disabled'})`));
     
-    // CACHE DÉSACTIVÉ - toujours appeler l'API pour des réponses fraîches
-    // const cached = this.getFromCache(prompt);
-    // if (cached) {
-    //   return { text: cached, provider: 'Cache', cached: true };
-    // }
-
     // Essayer chaque provider dans l'ordre
     for (const provider of this.providers) {
       if (!provider.enabled) {
@@ -65,9 +47,13 @@ class MultiAIService {
 
       try {
         console.log(`🔄 Trying provider: ${provider.name}`);
+        console.log(`🔗 Endpoint: ${provider.endpoint}`);
+        console.log(`🔑 API Key present: ${provider.apiKey ? 'YES' : 'NO'}`);
+        
         const response = await this.callProvider(provider, prompt, context);
         
         console.log(`✅ Success with ${provider.name}!`);
+        console.log(`📝 Response preview: ${response.substring(0, 100)}...`);
         
         return {
           text: response,
@@ -76,34 +62,23 @@ class MultiAIService {
         };
       } catch (error) {
         console.error(`❌ ${provider.name} failed:`, error);
+        console.error(`❌ Error details:`, error instanceof Error ? error.message : String(error));
+        // Continue avec le prochain provider
         continue;
       }
     }
 
-    // Si tous échouent, retourner une erreur claire
-    console.error('❌ All API providers failed!');
-    throw new Error('Toutes les API ont échoué. Veuillez réessayer plus tard.');
+    // Si tous échouent
+    console.error('❌ All providers failed!');
+    throw new Error('Impossible de générer une réponse. Veuillez réessayer.');
   }
 
   /**
    * Appelle un provider spécifique
    */
   private async callProvider(provider: AIProvider, prompt: string, context?: string): Promise<string> {
-    if (provider.endpoint === 'local') {
-      return this.localFallback(prompt);
-    }
-
-    // Groq AI (prioritaire)
-    if (provider.name.includes('Groq')) {
-      return await this.callGroq(provider, prompt, context);
-    }
-
-    // Hugging Face
-    if (provider.name.includes('HuggingFace') || provider.name.includes('Hugging Face')) {
-      return await this.callHuggingFace(provider, prompt, context);
-    }
-
-    throw new Error(`Provider ${provider.name} not implemented`);
+    // Groq AI uniquement
+    return await this.callGroq(provider, prompt, context);
   }
 
   /**
@@ -112,104 +87,62 @@ class MultiAIService {
   private async callGroq(provider: AIProvider, prompt: string, context?: string): Promise<string> {
     const systemContext = context || "Tu es Bigiss, un assistant agricole expert basé au Cameroun. Tu réponds en français de manière naturelle, conversationnelle et utile. Tu donnes des conseils pratiques sur l'agriculture, l'élevage, et le commerce agricole.";
     
-    console.log('🚀 Calling Groq API with prompt:', prompt.substring(0, 50) + '...');
+    console.log('🚀 Calling Groq API...');
+    console.log('📍 Endpoint:', provider.endpoint);
+    console.log('🤖 Model:', provider.model);
+    console.log('💬 Prompt:', prompt.substring(0, 100) + '...');
     
-    const response = await fetch(provider.endpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${provider.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: provider.model,
-        messages: [
-          {
-            role: 'system',
-            content: systemContext
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 1024,
-        top_p: 0.9,
-        stream: false
-      })
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('❌ Groq API error:', response.status, errorText);
-      throw new Error(`Groq API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    console.log('✅ Groq API response received');
-    return data.choices[0]?.message?.content || 'Désolé, je n\'ai pas pu générer de réponse.';
-  }
-
-  /**
-   * Appel à Hugging Face Inference API
-   */
-  private async callHuggingFace(provider: AIProvider, prompt: string, context?: string): Promise<string> {
-    // Construire un prompt optimisé pour le français et l'agriculture
-    const systemContext = context || "Tu es un assistant agricole expert basé au Cameroun. Réponds en français de manière naturelle et conversationnelle.";
-    const fullPrompt = `${systemContext}\n\nUtilisateur: ${prompt}\n\nAssistant:`;
-    
-    console.log('🔄 Calling HuggingFace API...');
-    
-    const response = await fetch(provider.endpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${provider.apiKey}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        inputs: fullPrompt,
-        parameters: {
-          max_new_tokens: 800,
-          temperature: 0.8,
-          top_p: 0.9,
-          do_sample: true,
-          return_full_text: false,
-          repetition_penalty: 1.2
+    try {
+      const response = await fetch(provider.endpoint, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${provider.apiKey}`,
+          'Content-Type': 'application/json'
         },
-        options: {
-          wait_for_model: true,
-          use_cache: false
-        }
-      })
-    });
+        body: JSON.stringify({
+          model: provider.model,
+          messages: [
+            {
+              role: 'system',
+              content: systemContext
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1024,
+          top_p: 0.9,
+          stream: false
+        })
+      });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Hugging Face error:', errorText);
-      throw new Error(`Hugging Face API error: ${response.status}`);
+      console.log('📡 Response status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Groq API error:', response.status, errorText);
+        throw new Error(`Groq API error: ${response.status} - ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Groq API response received successfully');
+      console.log('📦 Response data structure:', Object.keys(data));
+      
+      const content = data.choices?.[0]?.message?.content;
+      if (!content) {
+        console.error('❌ No content in response:', data);
+        throw new Error('Groq API returned empty response');
+      }
+      
+      console.log('✨ Generated response length:', content.length);
+      return content;
+    } catch (error) {
+      console.error('❌ Groq API call failed:', error);
+      throw error;
     }
-
-    const data = await response.json();
-    
-    // Extraire le texte généré
-    let generatedText = '';
-    if (Array.isArray(data)) {
-      generatedText = data[0]?.generated_text || '';
-    } else {
-      generatedText = data.generated_text || '';
-    }
-
-    // Nettoyer la réponse
-    if (generatedText) {
-      // Supprimer le prompt du début si présent
-      generatedText = generatedText.replace(fullPrompt, '').trim();
-      // Supprimer "Assistant:" si présent au début
-      generatedText = generatedText.replace(/^Assistant:\s*/i, '').trim();
-    }
-
-    return generatedText || 'Désolé, je n\'ai pas pu générer de réponse. Veuillez reformuler votre question.';
   }
-
 
   /**
    * Système d'IA local avancé - Génère des réponses contextuelles intelligentes
