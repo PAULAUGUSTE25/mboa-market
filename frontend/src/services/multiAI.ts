@@ -48,25 +48,26 @@ class MultiAIService {
    * Génère une réponse IA avec fallback automatique
    */
   async generateResponse(prompt: string, context?: string): Promise<AIResponse> {
-    // Vérifier le cache d'abord
-    const cached = this.getFromCache(prompt);
-    if (cached) {
-      return {
-        text: cached,
-        provider: 'Cache',
-        cached: true
-      };
-    }
+    console.log('🤖 Bigiss generating response for:', prompt.substring(0, 50) + '...');
+    
+    // CACHE DÉSACTIVÉ - toujours appeler l'API pour des réponses fraîches
+    // const cached = this.getFromCache(prompt);
+    // if (cached) {
+    //   return { text: cached, provider: 'Cache', cached: true };
+    // }
 
     // Essayer chaque provider dans l'ordre
     for (const provider of this.providers) {
-      if (!provider.enabled) continue;
+      if (!provider.enabled) {
+        console.log(`⏭️ Skipping disabled provider: ${provider.name}`);
+        continue;
+      }
 
       try {
+        console.log(`🔄 Trying provider: ${provider.name}`);
         const response = await this.callProvider(provider, prompt, context);
         
-        // Mettre en cache la réponse
-        this.saveToCache(prompt, response);
+        console.log(`✅ Success with ${provider.name}!`);
         
         return {
           text: response,
@@ -74,17 +75,14 @@ class MultiAIService {
           cached: false
         };
       } catch (error) {
-        console.warn(`${provider.name} failed, trying next provider...`, error);
+        console.error(`❌ ${provider.name} failed:`, error);
         continue;
       }
     }
 
-    // Si tous échouent, utiliser le fallback local
-    return {
-      text: this.localFallback(prompt),
-      provider: 'Local Fallback',
-      cached: false
-    };
+    // Si tous échouent, retourner une erreur claire
+    console.error('❌ All API providers failed!');
+    throw new Error('Toutes les API ont échoué. Veuillez réessayer plus tard.');
   }
 
   /**
@@ -112,7 +110,9 @@ class MultiAIService {
    * Appel à Groq API (format OpenAI compatible)
    */
   private async callGroq(provider: AIProvider, prompt: string, context?: string): Promise<string> {
-    const systemContext = context || "Tu es un assistant agricole expert basé au Cameroun nommé Léa. Tu réponds en français de manière naturelle, conversationnelle et utile. Tu donnes des conseils pratiques sur l'agriculture, l'élevage, et le commerce agricole.";
+    const systemContext = context || "Tu es Bigiss, un assistant agricole expert basé au Cameroun. Tu réponds en français de manière naturelle, conversationnelle et utile. Tu donnes des conseils pratiques sur l'agriculture, l'élevage, et le commerce agricole.";
+    
+    console.log('🚀 Calling Groq API with prompt:', prompt.substring(0, 50) + '...');
     
     const response = await fetch(provider.endpoint, {
       method: 'POST',
@@ -141,11 +141,12 @@ class MultiAIService {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Groq API error:', errorText);
+      console.error('❌ Groq API error:', response.status, errorText);
       throw new Error(`Groq API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('✅ Groq API response received');
     return data.choices[0]?.message?.content || 'Désolé, je n\'ai pas pu générer de réponse.';
   }
 
@@ -157,7 +158,9 @@ class MultiAIService {
     const systemContext = context || "Tu es un assistant agricole expert basé au Cameroun. Réponds en français de manière naturelle et conversationnelle.";
     const fullPrompt = `${systemContext}\n\nUtilisateur: ${prompt}\n\nAssistant:`;
     
-    const response = await fetch(`${provider.endpoint}/${provider.model}`, {
+    console.log('🔄 Calling HuggingFace API...');
+    
+    const response = await fetch(provider.endpoint, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${provider.apiKey}`,
