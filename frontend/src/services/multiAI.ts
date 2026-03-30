@@ -23,7 +23,7 @@ class MultiAIService {
       name: 'OpenRouter',
       endpoint: 'https://openrouter.ai/api/v1/chat/completions',
       apiKey: import.meta.env.VITE_OPENROUTER_API_KEY || '',
-      model: 'mistralai/mistral-7b-instruct:free',
+      model: 'nvidia/nemotron-3-super-120b-a12b:free',
       enabled: true
     }
   ];
@@ -69,9 +69,14 @@ class MultiAIService {
       }
     }
 
-    // Si tous échouent
-    console.error('❌ All providers failed!');
-    throw new Error('Impossible de générer une réponse. Veuillez réessayer.');
+    // Si tous échouent, utiliser le fallback local
+    console.warn('⚠️ All providers failed! Using local fallback...');
+    const localResponse = this.localFallback(prompt);
+    return {
+      text: localResponse,
+      provider: 'Local',
+      cached: false
+    };
   }
 
   /**

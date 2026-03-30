@@ -24,6 +24,6 @@
   "env": {
     "VITE_API_URL": "https://mboa-market.onrender.com/api",
     "VITE_GEMINI_API_KEY": "AIzaSyDMveMdsMx0sCjOF6sdPNYuxzNe5r7ExYc",
-    "VITE_OPENROUTER_API_KEY": "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"
+    "VITE_OPENROUTER_API_KEY": "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"
   }
 }
