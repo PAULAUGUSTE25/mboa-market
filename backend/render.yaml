@@ -4,14 +4,18 @@ services:
     env: python
     region: frankfurt
     plan: free
+    rootDir: backend
     buildCommand: "pip install -r requirements.txt"
     startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
     envVars:
       - key: DATABASE_URL
         value: sqlite:///./mboa_market.db
       - key: SECRET_KEY
-        generateValue: true
+        value: mboa-market-secret-key-2024-production
       - key: PYTHON_VERSION
-        value: 3.11.0
+        value: "3.11"
       - key: FRONTEND_URL
-        value: https://mboa-market.vercel.app
+        value: https://mboa-market.netlify.app
+      - key: ALLOWED_ORIGINS
+        value: https://mboa-market.netlify.app,http://localhost:5173
