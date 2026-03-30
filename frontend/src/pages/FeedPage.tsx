@@ -59,6 +59,7 @@ export default function FeedPage() {
   const [toastMessage, setToastMessage] = useState<{text: string; type: 'success' | 'info'} | null>(null);
   const [activeStory, setActiveStory] = useState<{id: number; name: string; image: string; time: string} | null>(null);
   const [storyProgress, setStoryProgress] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (user?.profile?.domain) {
@@ -959,8 +960,8 @@ export default function FeedPage() {
             
             {/* Mobile Menu Button */}
             <button 
-              className="sm:hidden p-2 rounded-full transition-colors"
-              onClick={() => {/* TODO: Add mobile menu */}}
+              className="lg:hidden p-2 rounded-full transition-colors"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               style={{ color: getTextStyles(theme).muted }}
             >
               <div className="w-5 h-5 flex flex-col justify-center gap-1">
@@ -1919,6 +1920,184 @@ export default function FeedPage() {
           </div>
         </div>
       )}
+
+      {/* Mobile Menu Sidebar */}
+      {mobileMenuOpen && (
+        <>
+          {/* Overlay */}
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          
+          {/* Sidebar */}
+          <div 
+            className={`fixed top-0 left-0 bottom-0 w-80 z-50 lg:hidden transform transition-transform duration-300 ${
+              theme === 'dark' ? 'bg-gray-900' : 'bg-white'
+            } shadow-2xl overflow-y-auto`}
+          >
+            {/* Header */}
+            <div className="p-6 border-b" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB' }}>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold" style={{ color: getTextStyles(theme).title }}>
+                  Menu
+                </h2>
+                <button
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  <X className="w-5 h-5" style={{ color: getTextStyles(theme).muted }} />
+                </button>
+              </div>
+              
+              {user && (
+                <div className="flex items-center gap-3">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-emerald-600 flex items-center justify-center text-white font-bold">
+                    {(user.profile as any)?.display_name?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                  <div>
+                    <p className="font-semibold" style={{ color: getTextStyles(theme).title }}>
+                      {(user.profile as any)?.display_name || 'Utilisateur'}
+                    </p>
+                    <p className="text-sm" style={{ color: getTextStyles(theme).muted }}>
+                      {user.phone}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Navigation Links */}
+            <div className="p-4 space-y-2">
+              {[
+                { icon: Home, label: 'Fil d\'actualité', path: '/feed' },
+                { icon: BarChart3, label: 'Tableau de Bord', path: '/dashboard' },
+                { icon: MessageCircle, label: 'Messages', path: '/chat', badge: unreadMessages },
+                { icon: User, label: 'Mon Compte', path: '/profile' },
+                { icon: Activity, label: 'Mon Activité', path: '/my-activity' },
+                { icon: ShoppingBag, label: 'Marketplace', path: '/listings' },
+              ].map((item, idx) => (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    navigate(item.path);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-colors ${
+                    theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" style={{ color: getDomainColors(selectedSector).primary }} />
+                  <span className="font-medium flex-1 text-left" style={{ color: getTextStyles(theme).title }}>
+                    {item.label}
+                  </span>
+                  {item.badge && item.badge > 0 && (
+                    <span className="bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                      {item.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Sectors */}
+            <div className="p-4 border-t" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB' }}>
+              <h3 className="text-xs font-bold uppercase tracking-wider mb-3 px-2" style={{ color: getTextStyles(theme).muted }}>
+                Secteurs
+              </h3>
+              <div className="space-y-1">
+                <button 
+                  onClick={() => {
+                    setSelectedSector('agriculture');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${
+                    theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                    <Leaf className="w-4 h-4 text-green-600" />
+                  </div>
+                  <span className="text-sm font-medium" style={{ color: getTextStyles(theme).title }}>
+                    Agriculture
+                  </span>
+                </button>
+                <button 
+                  onClick={() => {
+                    setSelectedSector('elevage');
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${
+                    theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-gray-50'
+                  }`}
+                >
+                  <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                    <Truck className="w-4 h-4 text-amber-600" />
+                  </div>
+                  <span className="text-sm font-medium" style={{ color: getTextStyles(theme).title }}>
+                    Élevage
+                  </span>
+                </button>
+              </div>
+            </div>
+
+            {/* Logout */}
+            {user && (
+              <div className="p-4 border-t" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB' }}>
+                <button
+                  onClick={() => {
+                    useAuthStore.getState().logout();
+                    navigate('/login');
+                  }}
+                  className="w-full px-4 py-3 rounded-xl font-medium transition-colors"
+                  style={{
+                    backgroundColor: theme === 'dark' ? 'rgba(239, 68, 68, 0.1)' : '#FEE2E2',
+                    color: '#EF4444'
+                  }}
+                >
+                  Déconnexion
+                </button>
+              </div>
+            )}
+          </div>
+        </>
+      )}
+
+      {/* Mobile Bottom Navigation */}
+      <div className={`fixed bottom-0 left-0 right-0 z-30 lg:hidden border-t ${
+        theme === 'dark' ? 'bg-gray-900/95 border-white/10' : 'bg-white/95 border-gray-200'
+      } backdrop-blur-xl`}>
+        <div className="flex items-center justify-around px-2 py-2">
+          {[
+            { icon: Home, label: 'Accueil', path: '/feed' },
+            { icon: BarChart3, label: 'Dashboard', path: '/dashboard' },
+            { icon: MessageCircle, label: 'Messages', path: '/chat', badge: unreadMessages },
+            { icon: ShoppingBag, label: 'Market', path: '/listings' },
+            { icon: User, label: 'Profil', path: '/profile' },
+          ].map((item, idx) => (
+            <button
+              key={idx}
+              onClick={() => navigate(item.path)}
+              className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl transition-all relative"
+              style={{
+                color: window.location.pathname === item.path 
+                  ? getDomainColors(selectedSector).primary 
+                  : getTextStyles(theme).muted
+              }}
+            >
+              <div className="relative">
+                <item.icon className="w-6 h-6" />
+                {item.badge && item.badge > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-4 h-4 rounded-full flex items-center justify-center">
+                    {item.badge}
+                  </span>
+                )}
+              </div>
+              <span className="text-xs font-medium">{item.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
