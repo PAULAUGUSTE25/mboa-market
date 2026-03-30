@@ -21,9 +21,9 @@ class MultiAIService {
   private providers: AIProvider[] = [
     {
       name: 'Gemini',
-      endpoint: 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent',
+      endpoint: 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent',
       apiKey: import.meta.env.VITE_GEMINI_API_KEY || '',
-      model: 'gemini-1.5-flash',
+      model: 'gemini-pro',
       enabled: true
     }
   ];
