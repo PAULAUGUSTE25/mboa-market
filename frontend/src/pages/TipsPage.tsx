@@ -74,7 +74,7 @@ export default function TipsPage() {
       <div 
         className="fixed inset-0 bg-cover bg-center bg-fixed"
         style={{
-          backgroundImage: `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000')`,
+          backgroundImage: `url('https://images.unsplash.com/photo-1597916829826-02e5bb4a54e0?q=80&w=2000')`,
         }}
       >
         <div className="absolute inset-0 bg-gradient-to-br from-green-950/85 via-teal-950/80 to-amber-950/85"></div>
@@ -204,7 +204,7 @@ export default function TipsPage() {
             onClick={() => setSelectedSector('all')}
             className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-full font-bold transition-all duration-300 text-sm sm:text-base"
             style={{
-              backgroundColor: selectedSector === 'all' ? 'rgba(16, 185, 129, 0.3)' : (theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : getCardStyles(theme, 'emerald').backgroundColor),
+              background: selectedSector === 'all' ? 'rgba(16, 185, 129, 0.3)' : (theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : getCardStyles(theme, 'emerald').background),
               color: selectedSector === 'all' ? (theme === 'dark' ? '#FFFFFF' : '#FFFFFF') : (theme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : getTextStyles(theme).body),
               border: selectedSector === 'all' ? '2px solid rgba(16, 185, 129, 0.5)' : (theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)')
             }}
@@ -215,7 +215,7 @@ export default function TipsPage() {
             onClick={() => setSelectedSector('agriculture')}
             className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
             style={{
-              backgroundColor: selectedSector === 'agriculture' ? 'rgba(16, 185, 129, 0.3)' : (theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : getCardStyles(theme, 'emerald').backgroundColor),
+              background: selectedSector === 'agriculture' ? 'rgba(16, 185, 129, 0.3)' : (theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : getCardStyles(theme, 'emerald').background),
               color: selectedSector === 'agriculture' ? (theme === 'dark' ? '#FFFFFF' : '#FFFFFF') : (theme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : getTextStyles(theme).body),
               border: selectedSector === 'agriculture' ? '2px solid rgba(16, 185, 129, 0.5)' : (theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)')
             }}
@@ -227,7 +227,7 @@ export default function TipsPage() {
             onClick={() => setSelectedSector('elevage')}
             className="px-4 sm:px-5 py-1.5 sm:py-2 rounded-full font-bold transition-all duration-300 flex items-center gap-1.5 sm:gap-2 text-sm sm:text-base"
             style={{
-              backgroundColor: selectedSector === 'elevage' ? 'rgba(245, 158, 11, 0.3)' : (theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : getCardStyles(theme, 'emerald').backgroundColor),
+              background: selectedSector === 'elevage' ? 'rgba(183, 28, 28, 0.3)' : (theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : getCardStyles(theme, 'emerald').background),
               color: selectedSector === 'elevage' ? (theme === 'dark' ? '#FFFFFF' : '#FFFFFF') : (theme === 'dark' ? 'rgba(255, 255, 255, 0.8)' : getTextStyles(theme).body),
               border: selectedSector === 'elevage' ? '2px solid rgba(245, 158, 11, 0.5)' : (theme === 'dark' ? '1px solid rgba(255, 255, 255, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)')
             }}
@@ -252,7 +252,7 @@ export default function TipsPage() {
               <div className="h-40 sm:h-48 bg-gradient-to-br from-emerald-500/20 via-teal-500/20 to-green-500/20 relative overflow-hidden backdrop-blur-sm">
                 <div className="absolute inset-0 flex items-center justify-center">
                   {tip.category === 'agriculture' && <Sprout className="h-16 w-16 sm:h-20 sm:w-20 text-emerald-400" strokeWidth={1} />}
-                  {tip.category === 'elevage' && <Leaf className="h-16 w-16 sm:h-20 sm:w-20 text-amber-400" strokeWidth={1} />}
+                  {tip.category === 'elevage' && <Leaf className="h-16 w-16 sm:h-20 sm:w-20 text-red-500" strokeWidth={1} />}
                   {tip.category === 'commerce' && <TrendingUp className="h-16 w-16 sm:h-20 sm:w-20 text-purple-400" strokeWidth={1} />}
                 </div>
               </div>

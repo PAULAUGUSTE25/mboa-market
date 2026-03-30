@@ -70,6 +70,9 @@ export const getThemeStyles = (theme: 'light' | 'dark') => ({
     amber: theme === 'light'
       ? 'bg-amber-50 text-amber-700 border border-amber-200'
       : 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
+    red: theme === 'light'
+      ? 'bg-red-50 text-red-700 border border-red-200'
+      : 'bg-red-500/20 text-red-400 border border-red-500/30',
   },
   
   // Message bubbles (chat)

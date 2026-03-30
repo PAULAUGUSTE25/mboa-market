@@ -1,15 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
-import { useTheme } from '@/contexts/ThemeContext';
-import { getCardStyles, getTextStyles, getInputStyles, getButtonStyles } from '@/utils/cardStyles';
-import Logo from '@/components/Logo';
-import { Phone, Lock, Wheat, Beef, Sprout } from 'lucide-react';
+import { Phone, Lock, ArrowLeft, CheckCircle } from 'lucide-react';
+import gsap from 'gsap';
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { theme } = useTheme();
   const { login, loading, error, clearError } = useAuthStore();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
@@ -17,6 +14,22 @@ export default function LoginPage() {
     phone: '',
     password: '',
   });
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Animation d'entrée pour la carte
+      gsap.fromTo(
+        cardRef.current,
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', delay: 0.2 }
+      );
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,271 +67,169 @@ export default function LoginPage() {
   };
 
   return (
-    <>
+    <div ref={containerRef} className="min-h-screen w-full overflow-hidden relative flex items-center justify-center lg:justify-end">
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 z-0"
+        style={{
+          backgroundImage: `url('/background pic.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className="absolute inset-0 bg-black/20" />
+      </div>
+
+      {/* Success Modal */}
       {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div 
-            className="backdrop-blur-md rounded-3xl shadow-2xl p-8 mx-4 max-w-md border-2"
-            style={{
-              ...getCardStyles(theme, 'emerald'),
-              borderColor: theme === 'light' ? '#10B981' : 'rgba(16, 185, 129, 0.4)'
-            }}
-          >
-            <div className="text-center">
-              <div className="mb-4 inline-flex items-center justify-center w-16 h-16 bg-teal-500 rounded-full">
-                <span className="text-3xl text-white">✓</span>
-              </div>
-              <h2 className="text-2xl font-bold mb-3" style={{ color: getTextStyles(theme).title }}>Connexion Réussie!</h2>
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <p style={{ color: getTextStyles(theme).body }}>Bienvenue sur MBOA Market</p>
-                <Wheat className="h-5 w-5 text-green-600" strokeWidth={2} />
-                <Beef className="h-5 w-5 text-amber-600" strokeWidth={2} />
-              </div>
-              <div className="flex items-center justify-center space-x-2 text-teal-600 mt-4">
-                <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
-                <span className="text-sm">Redirection...</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      <div className="min-h-screen relative flex items-center justify-center overflow-hidden py-4 sm:py-8 font-['Inter','Plus_Jakarta_Sans',sans-serif]">
-      {/* Background Image avec Overlay - Dark Mode uniquement */}
-      {theme === 'dark' && (
-        <>
-          <div 
-            className="absolute inset-0 bg-cover bg-center bg-fixed"
-            style={{
-              backgroundImage: `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000')`,
-            }}
-          >
-            <div className="absolute inset-0 bg-gradient-to-br from-green-950/85 via-teal-950/80 to-amber-950/85"></div>
-          </div>
-
-          {/* Animated Background Pattern */}
-          <div className="absolute inset-0 opacity-20">
-            <div className="absolute top-10 left-10 w-32 h-32 bg-green-400 rounded-full blur-3xl animate-pulse"></div>
-            <div className="absolute top-40 right-20 w-40 h-40 bg-amber-400 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-            <div className="absolute bottom-20 left-1/4 w-36 h-36 bg-teal-400 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
-            <div className="absolute bottom-40 right-1/3 w-44 h-44 bg-green-300 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1.5s' }}></div>
-          </div>
-        </>
-      )}
-
-      {/* Visible Animated Icon Background */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, rotate: -10 }}
-        animate={{ 
-          opacity: [0, 0.1, 0.08, 0.1],
-          scale: [0.98, 1, 1.01, 1],
-          rotate: 0
-        }}
-        transition={{ 
-          opacity: { duration: 1.2, times: [0, 0.4, 0.7, 1], ease: "easeInOut" },
-          scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 0.8, ease: "easeOut" }
-        }}
-        className="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
-      >
-        <div className="text-teal-500/[0.12]">
-          <Lock 
-            className="w-[600px] h-[600px]"
-            strokeWidth={0.6}
-          />
-        </div>
-      </motion.div>
-
-      {/* Animated Glow */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ 
-          opacity: 1,
-          scale: [1, 1.05, 1]
-        }}
-        transition={{ 
-          opacity: { duration: 0.8 },
-          scale: { duration: 3, repeat: Infinity, ease: "easeInOut" }
-        }}
-        className="fixed inset-0 pointer-events-none"
-      >
-        <motion.div 
-          animate={{
-            opacity: [0.06, 0.09, 0.06]
-          }}
-          transition={{
-            duration: 2.5,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] bg-teal-500/[0.06]"
-        />
-      </motion.div>
-
-      {/* Login Card - Glassmorphism Premium Responsive */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-md mx-4 sm:mx-6 lg:mx-auto"
-      >
-        <div 
-          className="backdrop-blur-[25px] rounded-[24px] sm:rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-6 sm:p-8 border relative overflow-hidden"
-          style={getCardStyles(theme, 'emerald')}
-        >
-          {/* Bordure Lumineuse */}
-          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
-          
-          {/* Subtle Glow */}
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: [0.08, 0.12, 0.08],
-              scale: [1, 1.005, 1]
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute -inset-[2px] rounded-[24px] sm:rounded-[32px] blur-2xl -z-10 bg-gradient-to-r from-teal-500/20 to-green-600/20"
-          />
-          
-          {/* Bouton Retour */}
-          <button
-            onClick={() => navigate('/')}
-            className="mb-4 sm:mb-6 transition-all transform hover:scale-110 text-2xl font-bold"
-            style={{ color: theme === 'light' ? '#374151' : '#9CA3AF' }}
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl p-8 mx-4 max-w-sm border border-gray-200 shadow-2xl text-center"
           >
-            ←
-          </button>
-
-          {/* Logo Responsive */}
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-center mb-6 sm:mb-8"
-          >
-            <Logo size="md" className="mb-4 sm:mb-6" />
-            {/* Icônes SVG Responsive */}
-            <div className="flex justify-center gap-3 sm:gap-4 mb-3 sm:mb-4">
-              <motion.div 
-                whileHover={{ scale: 1.1, rotate: 5 }}
-                className="w-12 h-12 sm:w-14 sm:h-14 bg-emerald-500/20 border border-emerald-500/30 rounded-full flex items-center justify-center backdrop-blur-sm"
-              >
-                <Sprout className="h-6 w-6 sm:h-7 sm:w-7 text-emerald-400" strokeWidth={1.5} />
-              </motion.div>
-              <motion.div 
-                whileHover={{ scale: 1.1, rotate: -5 }}
-                className="w-12 h-12 sm:w-14 sm:h-14 bg-amber-500/20 border border-amber-500/30 rounded-full flex items-center justify-center backdrop-blur-sm"
-              >
-                <Beef className="h-6 w-6 sm:h-7 sm:w-7 text-amber-400" strokeWidth={1.5} />
-              </motion.div>
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-amber-500 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-2" style={{ color: getTextStyles(theme).title }}>CONNEXION</h2>
-            <p className="text-sm sm:text-base" style={{ color: getTextStyles(theme).subtitle }}>Accédez à votre compte MBOA Market</p>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Connexion Réussie!</h2>
+            <p className="text-gray-500 mb-4">Bienvenue sur MBOA Market</p>
+            <div className="flex items-center justify-center gap-2 text-green-600">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-sm">Redirection...</span>
+            </div>
           </motion.div>
-
-          {(error || fieldErrors.general) && (
-            <div className="mb-6 p-4 bg-red-500/20 backdrop-blur-md border border-red-400/50 text-white rounded-xl text-sm flex items-center justify-between">
-              <span>{error || fieldErrors.general}</span>
-              <button
-                onClick={() => {
-                  setFieldErrors({});
-                  clearError();
-                }}
-                className="text-white hover:text-red-200 font-bold ml-2 text-xl"
-              >
-                ×
-              </button>
-            </div>
-          )}
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Input Glass avec Icône SVG */}
-            <div>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2" style={{ opacity: 0.5 }}>
-                  <Phone className="h-5 w-5" strokeWidth={1.5} style={{ color: getInputStyles(theme).color }} />
-                </div>
-                <input
-                  type="tel"
-                  placeholder="Numéro de téléphone (+237...)"
-                  value={formData.phone}
-                  onChange={(e) => {
-                    setFormData({ ...formData, phone: e.target.value });
-                    if (fieldErrors.phone) {
-                      const newErrors = {...fieldErrors};
-                      delete newErrors.phone;
-                      setFieldErrors(newErrors);
-                    }
-                  }}
-                  className="w-full pl-12 pr-4 py-4 backdrop-blur-md border-2 rounded-xl focus:outline-none transition-all duration-300 focus:ring-2"
-                  style={{
-                    ...getInputStyles(theme, !!fieldErrors.phone),
-                    borderRadius: '12px'
-                  }}
-                  required
-                />
-              </div>
-              {fieldErrors.phone && (
-                <p className="text-red-300 text-xs mt-2 ml-1">{fieldErrors.phone}</p>
-              )}
-            </div>
-
-            {/* Input Mot de Passe Glass */}
-            <div>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2" style={{ opacity: 0.5 }}>
-                  <Lock className="h-5 w-5" strokeWidth={1.5} style={{ color: getInputStyles(theme).color }} />
-                </div>
-                <input
-                  type="password"
-                  placeholder="Mot de passe"
-                  value={formData.password}
-                  onChange={(e) => {
-                    setFormData({ ...formData, password: e.target.value });
-                    if (fieldErrors.password) {
-                      const newErrors = {...fieldErrors};
-                      delete newErrors.password;
-                      setFieldErrors(newErrors);
-                    }
-                  }}
-                  className="w-full pl-12 pr-4 py-4 backdrop-blur-md border-2 rounded-xl focus:outline-none transition-all duration-300 focus:ring-2"
-                  style={{
-                    ...getInputStyles(theme, !!fieldErrors.password),
-                    borderRadius: '12px'
-                  }}
-                  required
-                />
-              </div>
-              {fieldErrors.password && (
-                <p className="text-red-300 text-xs mt-2 ml-1">{fieldErrors.password}</p>
-              )}
-            </div>
-
-            {/* Bouton Dégradé Teal vers Green */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 rounded-full font-bold text-lg uppercase tracking-wide transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 mt-8 border-2"
-              style={getButtonStyles(theme, 'primary', 'emerald')}
-            >
-              {loading ? 'Connexion...' : 'Se Connecter'}
-            </button>
-          </form>
-
-          {/* Lien Inscription */}
-          <p className="text-center text-sm mt-6" style={{ color: getTextStyles(theme).body }}>
-            Pas de compte?{' '}
-            <Link to="/register" className="font-bold transition-colors underline" style={{ color: theme === 'light' ? '#10B981' : '#5EEAD4' }}>
-              S'inscrire
-            </Link>
-          </p>
         </div>
-      </motion.div>
+      )}
+
+      {/* Back Button */}
+      <div className="absolute top-8 left-6 z-20">
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-white hover:text-white/80 transition-colors drop-shadow-md"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span className="text-sm font-medium">Retour</span>
+        </motion.button>
+      </div>
+
+      {/* Login Card */}
+      <div 
+        ref={cardRef}
+        className="relative z-10 w-full max-w-md mr-0 lg:mr-20 px-6 py-12 m-4"
+      >
+        <div className="backdrop-blur-xl bg-white/30 border border-white/40 rounded-[2rem] shadow-2xl p-8 sm:p-10 overflow-hidden relative">
+          {/* Shine effect */}
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/40 to-transparent pointer-events-none" />
+
+          {/* Header with Logo */}
+          <div className="relative z-10 flex flex-col items-center text-center mb-8">
+            <motion.img
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              src="/new logo.png"
+              alt="MBOA Market"
+              className="h-20 sm:h-24 w-auto object-contain mb-4 drop-shadow-lg"
+            />
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 drop-shadow-md">Connexion</h1>
+            <p className="text-white/90 text-sm font-medium">Accédez à votre compte</p>
+          </div>
+
+          <div className="relative z-10">
+            {/* Error Message */}
+            {(error || fieldErrors.general) && (
+              <div className="mb-6 p-4 bg-red-500/80 border border-red-500/50 rounded-xl text-sm text-white flex items-center justify-between shadow-sm backdrop-blur-sm">
+                <span>{error || fieldErrors.general}</span>
+                <button
+                  onClick={() => {
+                    setFieldErrors({});
+                    clearError();
+                  }}
+                  className="text-white hover:text-red-100 font-bold text-lg"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Phone Input */}
+              <div>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="tel"
+                    placeholder="Numéro de téléphone (+237...)"
+                    value={formData.phone}
+                    onChange={(e) => {
+                      setFormData({ ...formData, phone: e.target.value });
+                      if (fieldErrors.phone) {
+                        const newErrors = {...fieldErrors};
+                        delete newErrors.phone;
+                        setFieldErrors(newErrors);
+                      }
+                    }}
+                    className={`w-full pl-12 pr-4 py-4 bg-white/90 border ${
+                      fieldErrors.phone ? 'border-red-500' : 'border-white/50'
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all shadow-inner`}
+                    required
+                  />
+                </div>
+                {fieldErrors.phone && (
+                  <p className="text-red-200 text-xs mt-2 ml-1 font-medium drop-shadow-md">{fieldErrors.phone}</p>
+                )}
+              </div>
+
+              {/* Password Input */}
+              <div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="password"
+                    placeholder="Mot de passe"
+                    value={formData.password}
+                    onChange={(e) => {
+                      setFormData({ ...formData, password: e.target.value });
+                      if (fieldErrors.password) {
+                        const newErrors = {...fieldErrors};
+                        delete newErrors.password;
+                        setFieldErrors(newErrors);
+                      }
+                    }}
+                    className={`w-full pl-12 pr-4 py-4 bg-white/90 border ${
+                      fieldErrors.password ? 'border-red-500' : 'border-white/50'
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all shadow-inner`}
+                    required
+                  />
+                </div>
+                {fieldErrors.password && (
+                  <p className="text-red-200 text-xs mt-2 ml-1 font-medium drop-shadow-md">{fieldErrors.password}</p>
+                )}
+              </div>
+
+              {/* Submit Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 bg-gradient-to-r from-green-600 via-green-500 to-amber-500 text-white font-bold rounded-xl shadow-lg shadow-green-500/30 disabled:opacity-50 transition-all"
+              >
+                {loading ? 'Connexion...' : 'Se Connecter'}
+              </motion.button>
+            </form>
+
+            {/* Register Link */}
+            <p className="text-center text-sm text-white/90 mt-6 font-medium drop-shadow-md">
+              Pas de compte?{' '}
+              <Link to="/register" className="text-white font-bold hover:text-green-200 transition-colors underline decoration-2 decoration-green-400 underline-offset-4">
+                S'inscrire
+              </Link>
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
-    </>
   );
 }

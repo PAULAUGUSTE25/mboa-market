@@ -29,7 +29,7 @@ export default function ExpertCard({
     >
       {/* Card Glassmorphism - Beige/crème transparent comme dans l'image */}
       <div
-        className="rounded-3xl p-10 backdrop-blur-[12px]"
+        className="rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 lg:p-10 backdrop-blur-[12px]"
         style={{
           background: 'rgba(245, 237, 220, 0.75)', // Beige/crème transparent
           border: '1px solid rgba(255, 255, 255, 0.3)',
@@ -37,21 +37,21 @@ export default function ExpertCard({
         }}
       >
         {/* Icon - Cercle doré comme dans l'image */}
-        <div className="flex justify-center mb-8">
+        <div className="flex justify-center mb-4 sm:mb-6 md:mb-8">
           <div
-            className="w-20 h-20 rounded-full flex items-center justify-center"
+            className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full flex items-center justify-center"
             style={{
               background: 'linear-gradient(135deg, #D4AF37 0%, #C9A227 100%)',
               boxShadow: '0 4px 12px 0 rgba(212, 175, 55, 0.4)',
             }}
           >
-            <Users className="w-10 h-10 text-white" strokeWidth={2.5} />
+            <Users className="w-7 h-7 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white" strokeWidth={2.5} />
           </div>
         </div>
 
         {/* Title - Noir profond */}
         <h3
-          className="text-3xl font-bold text-center mb-4"
+          className="text-xl sm:text-2xl md:text-3xl font-bold text-center mb-2 sm:mb-3 md:mb-4"
           style={{ 
             color: '#1A1A1A',
             letterSpacing: '-0.02em'
@@ -62,18 +62,18 @@ export default function ExpertCard({
 
         {/* Description - Gris anthracite */}
         <p
-          className="text-center mb-8 leading-relaxed text-base"
+          className="text-center mb-4 sm:mb-6 md:mb-8 leading-relaxed text-sm sm:text-base"
           style={{ color: '#4A4A4A' }}
         >
           {description}
         </p>
 
         {/* Tags - Pill avec bordures colorées et icônes */}
-        <div className="flex flex-wrap justify-center gap-3 mb-8">
+        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-4 sm:mb-6 md:mb-8">
           {tags.map((tag, index) => (
             <div
               key={index}
-              className="px-6 py-3 rounded-full text-sm font-bold transition-all hover:scale-105 hover:shadow-md cursor-pointer"
+              className="px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-full text-xs sm:text-sm font-bold transition-all hover:scale-105 hover:shadow-md cursor-pointer"
               style={{
                 background: '#FFFFFF',
                 border: index === 0 ? '2px solid #27AE60' : '2px solid #E67E22',
@@ -89,7 +89,7 @@ export default function ExpertCard({
         {/* CTA Button - Orange/terracotta comme dans l'image */}
         <button
           onClick={onConsult}
-          className="w-full py-5 rounded-2xl font-bold text-base uppercase transition-all hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl"
+          className="w-full py-3 sm:py-4 md:py-5 rounded-xl sm:rounded-2xl font-bold text-sm sm:text-base uppercase transition-all hover:scale-[1.02] active:scale-[0.98] hover:shadow-xl"
           style={{
             background: 'linear-gradient(135deg, #D2691E 0%, #C85A17 100%)', // Orange terracotta
             color: '#FFFFFF',

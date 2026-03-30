@@ -1,10 +1,10 @@
 from sqlalchemy import Column, String, Integer, DateTime, Date, ForeignKey, Enum as SQLEnum, UniqueConstraint, Index
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 import enum
 from app.core.database import Base
+from app.core.types import GUID
 
 
 class LivestockSpecies(str, enum.Enum):
@@ -31,8 +31,8 @@ class LivestockEventType(str, enum.Enum):
 class LivestockBatch(Base):
     __tablename__ = "livestock_batches"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    owner_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    owner_user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     species = Column(SQLEnum(LivestockSpecies), nullable=False)
     name = Column(String, nullable=True)
     start_date = Column(Date, nullable=False)
@@ -46,8 +46,8 @@ class LivestockBatch(Base):
 class SyncClient(Base):
     __tablename__ = "sync_clients"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     device_id = Column(String, nullable=False)
     platform = Column(String, nullable=True)
     last_sync_at = Column(DateTime, nullable=True)
@@ -59,12 +59,12 @@ class SyncClient(Base):
 class LivestockEvent(Base):
     __tablename__ = "livestock_events"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    batch_id = Column(UUID(as_uuid=True), ForeignKey("livestock_batches.id", ondelete="CASCADE"), nullable=False)
-    owner_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    batch_id = Column(GUID(), ForeignKey("livestock_batches.id", ondelete="CASCADE"), nullable=False)
+    owner_user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
     event_type = Column(SQLEnum(LivestockEventType), nullable=False)
     client_event_id = Column(String, nullable=False)
-    client_id = Column(UUID(as_uuid=True), ForeignKey("sync_clients.id", ondelete="CASCADE"), nullable=False)
+    client_id = Column(GUID(), ForeignKey("sync_clients.id", ondelete="CASCADE"), nullable=False)
     event_at = Column(DateTime, nullable=False)
     server_received_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     

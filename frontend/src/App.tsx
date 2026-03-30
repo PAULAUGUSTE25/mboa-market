@@ -1,7 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
-import { useTheme } from './contexts/ThemeContext'
-import ThemeToggleButton from './components/ThemeToggleButton'
 import SelectSectorPage from './pages/SelectSectorPage'
 import LoginPage from './pages/LoginPage'
 import LoginAgriculturePage from './pages/LoginAgriculturePage'
@@ -21,36 +19,34 @@ import CommunityAgriculturePage from './pages/CommunityAgriculturePage'
 import CommunityElevagePage from './pages/CommunityElevagePage'
 import ProfilePage from './pages/ProfilePage'
 import MyActivityPage from './pages/MyActivityPage'
+import AgriDashboardPage from './pages/AgriDashboardPage'
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
+import AIAssistant from './components/AIAssistant'
+import { DomainProvider } from './contexts/DomainContext'
 
 function App() {
   const { user } = useAuthStore()
-  const { theme } = useTheme()
 
   return (
+    <DomainProvider>
     <div className="min-h-screen relative">
-      {/* Background pour Light Mode uniquement */}
-      {theme === 'light' && (
-        <>
-          <div 
-            className="fixed inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage: `url('/light%20mode%20.png')`,
-              zIndex: -2,
-            }}
-          />
-          {/* Overlay léger pour lisibilité */}
-          <div 
-            className="fixed inset-0"
-            style={{
-              background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.25) 0%, rgba(250, 245, 235, 0.35) 50%, rgba(245, 240, 230, 0.4) 100%)',
-              zIndex: -1,
-            }}
-          />
-        </>
-      )}
-      
-      {/* Bouton Toggle élégant et discret */}
-      <ThemeToggleButton />
+      <AIAssistant />
+      {/* Background Light Mode */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center"
+        style={{
+          backgroundImage: `url('/light%20mode%20.png')`,
+          zIndex: -2,
+        }}
+      />
+      {/* Overlay léger pour lisibilité */}
+      <div 
+        className="fixed inset-0"
+        style={{
+          background: 'linear-gradient(to bottom, rgba(255, 255, 255, 0.25) 0%, rgba(250, 245, 235, 0.35) 50%, rgba(245, 240, 230, 0.4) 100%)',
+          zIndex: -1,
+        }}
+      />
       
       <Routes>
       <Route path="/" element={<HomePage />} />
@@ -71,6 +67,9 @@ function App() {
       <Route path="/community/agriculture" element={<CommunityAgriculturePage />} />
       <Route path="/community/elevage" element={<CommunityElevagePage />} />
       
+      {/* Legal Pages */}
+      <Route path="/privacy" element={<PrivacyPolicyPage />} />
+      
       {/* Profile Page - replaces dashboard */}
       <Route 
         path="/profile" 
@@ -83,8 +82,11 @@ function App() {
         element={user ? <MyActivityPage /> : <Navigate to="/login" />} 
       />
       
-      {/* Redirect old dashboard to profile */}
-      <Route path="/dashboard" element={<Navigate to="/profile" />} />
+      {/* Dashboard Page - Smart Agri Dashboard */}
+      <Route 
+        path="/dashboard" 
+        element={user ? <AgriDashboardPage /> : <Navigate to="/login" />} 
+      />
       
       <Route 
         path="/seed-provider" 
@@ -100,6 +102,7 @@ function App() {
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
     </div>
+    </DomainProvider>
   )
 }
 

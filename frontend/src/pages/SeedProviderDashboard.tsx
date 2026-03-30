@@ -21,7 +21,7 @@ interface Listing {
 }
 
 export default function SeedProviderDashboard() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const { user } = useAuthStore();
   const { theme } = useTheme();
   const styles = getThemeStyles(theme);
@@ -53,7 +53,7 @@ export default function SeedProviderDashboard() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background Image */}
-      <div className="fixed inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000')` }}>
+      <div className="fixed inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1597916829826-02e5bb4a54e0?q=80&w=2000')` }}>
         <div className={`absolute inset-0 bg-gradient-to-br ${styles.background}`}></div>
       </div>
 
@@ -79,7 +79,7 @@ export default function SeedProviderDashboard() {
         }}
         className="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
       >
-        <div className={currentSector === 'agriculture' ? 'text-emerald-500/[0.12]' : 'text-amber-500/[0.12]'}>
+        <div className={currentSector === 'agriculture' ? 'text-emerald-500/[0.12]' : 'text-red-500/[0.12]'}>
           {currentSector === 'agriculture' ? (
             <Wheat className="w-[600px] h-[600px]" strokeWidth={0.6} />
           ) : (
@@ -111,7 +111,7 @@ export default function SeedProviderDashboard() {
             ease: "easeInOut"
           }}
           className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] ${
-            currentSector === 'agriculture' ? 'bg-emerald-500/[0.06]' : 'bg-amber-500/[0.06]'
+            currentSector === 'agriculture' ? 'bg-emerald-500/[0.06]' : 'bg-red-500/[0.06]'
           }`}
         />
       </motion.div>
@@ -122,7 +122,7 @@ export default function SeedProviderDashboard() {
       <div className={`shadow-lg transition-colors backdrop-blur-md ${
         currentSector === 'agriculture' 
           ? 'bg-gradient-to-r from-emerald-600/90 to-green-700/90' 
-          : 'bg-gradient-to-r from-amber-600/90 to-orange-600/90'
+          : 'bg-gradient-to-r from-red-600/90 to-red-700/90'
       }`}>
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
@@ -175,7 +175,7 @@ export default function SeedProviderDashboard() {
             className={`inline-flex items-center px-4 sm:px-6 py-2 sm:py-3 border-2 rounded-xl shadow-lg text-sm sm:text-base font-bold text-white transition-all hover:scale-105 ${
               currentSector === 'agriculture'
                 ? 'bg-emerald-500/20 border-emerald-500/30 hover:bg-emerald-500/30'
-                : 'bg-amber-500/20 border-amber-500/30 hover:bg-amber-500/30'
+                : 'bg-red-500/20 border-red-500/30 hover:bg-red-500/30'
             }`}
           >
             <Plus className="h-5 w-5 mr-2" />
@@ -196,10 +196,10 @@ export default function SeedProviderDashboard() {
                   <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center shadow-lg ${
                     currentSector === 'agriculture' 
                       ? 'bg-gradient-to-br from-emerald-500/30 to-emerald-600/20 border border-emerald-400/30' 
-                      : 'bg-gradient-to-br from-amber-500/30 to-amber-600/20 border border-amber-400/30'
+                      : 'bg-gradient-to-br from-red-500/30 to-red-600/20 border border-red-400/30'
                   }`}>
                     <Package className={`h-7 w-7 sm:h-8 sm:w-8 ${
-                      currentSector === 'agriculture' ? 'text-emerald-300' : 'text-amber-300'
+                      currentSector === 'agriculture' ? 'text-emerald-300' : 'text-red-300'
                     }`} strokeWidth={2.5} />
                   </div>
                 </div>
@@ -227,10 +227,10 @@ export default function SeedProviderDashboard() {
                   <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center shadow-lg ${
                     currentSector === 'agriculture' 
                       ? 'bg-gradient-to-br from-emerald-500/30 to-emerald-600/20 border border-emerald-400/30' 
-                      : 'bg-gradient-to-br from-amber-500/30 to-amber-600/20 border border-amber-400/30'
+                      : 'bg-gradient-to-br from-red-500/30 to-red-600/20 border border-red-400/30'
                   }`}>
                     <MessageSquare className={`h-7 w-7 sm:h-8 sm:w-8 ${
-                      currentSector === 'agriculture' ? 'text-emerald-300' : 'text-amber-300'
+                      currentSector === 'agriculture' ? 'text-emerald-300' : 'text-red-300'
                     }`} strokeWidth={2.5} />
                   </div>
                 </div>
@@ -256,10 +256,10 @@ export default function SeedProviderDashboard() {
                   <div className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl flex items-center justify-center shadow-lg ${
                     currentSector === 'agriculture' 
                       ? 'bg-gradient-to-br from-emerald-500/30 to-emerald-600/20 border border-emerald-400/30' 
-                      : 'bg-gradient-to-br from-amber-500/30 to-amber-600/20 border border-amber-400/30'
+                      : 'bg-gradient-to-br from-red-500/30 to-red-600/20 border border-red-400/30'
                   }`}>
                     <TrendingUp className={`h-7 w-7 sm:h-8 sm:w-8 ${
-                      currentSector === 'agriculture' ? 'text-emerald-300' : 'text-amber-300'
+                      currentSector === 'agriculture' ? 'text-emerald-300' : 'text-red-300'
                     }`} strokeWidth={2.5} />
                   </div>
                 </div>
@@ -294,7 +294,7 @@ export default function SeedProviderDashboard() {
           ) : listings.length === 0 ? (
             <div className="backdrop-blur-md bg-white/10 border border-white/20 shadow-lg rounded-xl p-8 sm:p-12 text-center">
               <Package className={`mx-auto h-12 w-12 sm:h-16 sm:w-16 ${
-                currentSector === 'agriculture' ? 'text-emerald-400' : 'text-amber-400'
+                currentSector === 'agriculture' ? 'text-emerald-400' : 'text-red-400'
               }`} />
               <h3 className="mt-4 text-base sm:text-lg font-bold text-white">
                 Aucune annonce
@@ -310,7 +310,7 @@ export default function SeedProviderDashboard() {
                   className={`inline-flex items-center px-6 py-3 border-2 shadow-lg text-sm sm:text-base font-bold rounded-xl text-white transition-all hover:scale-105 ${
                     currentSector === 'agriculture'
                       ? 'bg-emerald-500/20 border-emerald-500/30 hover:bg-emerald-500/30'
-                      : 'bg-amber-500/20 border-amber-500/30 hover:bg-amber-500/30'
+                      : 'bg-red-500/20 border-red-500/30 hover:bg-red-500/30'
                   }`}
                 >
                   <Plus className="h-5 w-5 mr-2" />
@@ -344,7 +344,7 @@ export default function SeedProviderDashboard() {
                           <span
                             className={`px-3 py-1 inline-flex text-xs font-bold rounded-full ${
                               listing.status === 'PUBLISHED'
-                                ? (currentSector === 'agriculture' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-300 border border-amber-500/30')
+                                ? (currentSector === 'agriculture' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-red-500/20 text-red-300 border border-red-500/30')
                                 : 'bg-white/10 text-white/70 border border-white/20'
                             }`}
                           >
@@ -377,7 +377,7 @@ export default function SeedProviderDashboard() {
               className={`mt-6 px-6 py-3 rounded-xl font-bold text-white transition-all hover:scale-105 ${
                 currentSector === 'agriculture'
                   ? 'bg-emerald-500/20 border-2 border-emerald-500/30 hover:bg-emerald-500/30'
-                  : 'bg-amber-500/20 border-2 border-amber-500/30 hover:bg-amber-500/30'
+                  : 'bg-red-500/20 border-2 border-red-500/30 hover:bg-red-500/30'
               }`}
             >
               Fermer

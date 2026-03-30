@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Package, TrendingUp, ShoppingCart, Sprout, Wheat, Beef } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -21,7 +21,7 @@ interface Listing {
 }
 
 export default function ProducerDashboard() {
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const { user } = useAuthStore();
   const { theme } = useTheme();
   const styles = getThemeStyles(theme);
@@ -60,7 +60,7 @@ export default function ProducerDashboard() {
   return (
     <div className="min-h-screen relative overflow-hidden">
       {/* Background Image */}
-      <div className="fixed inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000')` }}>
+      <div className="fixed inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1597916829826-02e5bb4a54e0?q=80&w=2000')` }}>
         <div className={`absolute inset-0 bg-gradient-to-br ${styles.background}`}></div>
       </div>
 
@@ -86,7 +86,7 @@ export default function ProducerDashboard() {
         }}
         className="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
       >
-        <div className={currentSector === 'agriculture' ? 'text-emerald-500/[0.12]' : 'text-amber-500/[0.12]'}>
+        <div className={currentSector === 'agriculture' ? 'text-emerald-500/[0.12]' : 'text-red-500/[0.12]'}>
           <Sprout className="w-[600px] h-[600px]" strokeWidth={0.6} />
         </div>
       </motion.div>
@@ -114,7 +114,7 @@ export default function ProducerDashboard() {
             ease: "easeInOut"
           }}
           className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] ${
-            currentSector === 'agriculture' ? 'bg-emerald-500/[0.06]' : 'bg-amber-500/[0.06]'
+            currentSector === 'agriculture' ? 'bg-emerald-500/[0.06]' : 'bg-red-500/[0.06]'
           }`}
         />
       </motion.div>
@@ -125,7 +125,7 @@ export default function ProducerDashboard() {
       <div className={`shadow-lg transition-colors backdrop-blur-md ${
         currentSector === 'agriculture' 
           ? 'bg-gradient-to-r from-emerald-600/90 to-green-700/90' 
-          : 'bg-gradient-to-r from-amber-600/90 to-orange-600/90'
+          : 'bg-gradient-to-r from-red-600/90 to-red-700/90'
       }`}>
         <div className="container mx-auto px-4 py-6">
           <div className="flex justify-between items-center">
@@ -169,10 +169,10 @@ export default function ProducerDashboard() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
-                    currentSector === 'agriculture' ? 'bg-emerald-500/20' : 'bg-amber-500/20'
+                    currentSector === 'agriculture' ? 'bg-emerald-500/20' : 'bg-red-500/20'
                   }`}>
                     <ShoppingCart className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      currentSector === 'agriculture' ? 'text-emerald-400' : 'text-amber-400'
+                      currentSector === 'agriculture' ? 'text-emerald-400' : 'text-red-400'
                     }`} />
                   </div>
                 </div>
@@ -198,10 +198,10 @@ export default function ProducerDashboard() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
-                    currentSector === 'agriculture' ? 'bg-emerald-500/20' : 'bg-amber-500/20'
+                    currentSector === 'agriculture' ? 'bg-emerald-500/20' : 'bg-red-500/20'
                   }`}>
                     <Sprout className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      currentSector === 'agriculture' ? 'text-emerald-400' : 'text-amber-400'
+                      currentSector === 'agriculture' ? 'text-emerald-400' : 'text-red-400'
                     }`} />
                   </div>
                 </div>
@@ -227,10 +227,10 @@ export default function ProducerDashboard() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
-                    currentSector === 'agriculture' ? 'bg-emerald-500/20' : 'bg-amber-500/20'
+                    currentSector === 'agriculture' ? 'bg-emerald-500/20' : 'bg-red-500/20'
                   }`}>
                     <Package className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      currentSector === 'agriculture' ? 'text-emerald-400' : 'text-amber-400'
+                      currentSector === 'agriculture' ? 'text-emerald-400' : 'text-red-400'
                     }`} />
                   </div>
                 </div>
@@ -258,10 +258,10 @@ export default function ProducerDashboard() {
               <div className="flex items-center">
                 <div className="flex-shrink-0">
                   <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center ${
-                    currentSector === 'agriculture' ? 'bg-emerald-500/20' : 'bg-amber-500/20'
+                    currentSector === 'agriculture' ? 'bg-emerald-500/20' : 'bg-red-500/20'
                   }`}>
                     <TrendingUp className={`h-5 w-5 sm:h-6 sm:w-6 ${
-                      currentSector === 'agriculture' ? 'text-emerald-400' : 'text-amber-400'
+                      currentSector === 'agriculture' ? 'text-emerald-400' : 'text-red-400'
                     }`} />
                   </div>
                 </div>
@@ -293,7 +293,7 @@ export default function ProducerDashboard() {
                   activeTab === 'buy'
                     ? currentSector === 'agriculture'
                       ? 'bg-emerald-500/30 text-white border-2 border-emerald-500/50 shadow-lg'
-                      : 'bg-amber-500/30 text-white border-2 border-amber-500/50 shadow-lg'
+                      : 'bg-red-500/30 text-white border-2 border-red-500/50 shadow-lg'
                     : 'bg-white/10 text-white/80 hover:bg-white/15 border border-white/20 backdrop-blur-sm'
                 }`}
               >
@@ -306,7 +306,7 @@ export default function ProducerDashboard() {
                   activeTab === 'sell'
                     ? currentSector === 'agriculture'
                       ? 'bg-emerald-500/30 text-white border-2 border-emerald-500/50 shadow-lg'
-                      : 'bg-amber-500/30 text-white border-2 border-amber-500/50 shadow-lg'
+                      : 'bg-red-500/30 text-white border-2 border-red-500/50 shadow-lg'
                     : 'bg-white/10 text-white/80 hover:bg-white/15 border border-white/20 backdrop-blur-sm'
                 }`}
               >
@@ -356,7 +356,7 @@ export default function ProducerDashboard() {
                               {listing.quantity} {listing.unit} disponible
                             </p>
                             <p className={`mt-1 text-xl font-bold ${
-                              currentSector === 'agriculture' ? 'text-emerald-400' : 'text-amber-400'
+                              currentSector === 'agriculture' ? 'text-emerald-400' : 'text-red-400'
                             }`}>
                               {listing.price_per_unit} {listing.currency}/{listing.unit}
                             </p>
@@ -366,7 +366,7 @@ export default function ProducerDashboard() {
                           <button className={`flex-1 px-4 py-2 rounded-xl text-sm font-bold transition-all ${
                             currentSector === 'agriculture'
                               ? 'bg-emerald-500/30 text-white border-2 border-emerald-500/50 hover:bg-emerald-500/40'
-                              : 'bg-amber-500/30 text-white border-2 border-amber-500/50 hover:bg-amber-500/40'
+                              : 'bg-red-500/30 text-white border-2 border-red-500/50 hover:bg-red-500/40'
                           }`}>
                             Acheter
                           </button>
@@ -393,7 +393,7 @@ export default function ProducerDashboard() {
                   className={`inline-flex items-center px-4 py-2 border-2 rounded-xl shadow-lg text-sm font-bold text-white transition-all hover:scale-105 ${
                     currentSector === 'agriculture'
                       ? 'bg-emerald-500/30 border-emerald-500/50 hover:bg-emerald-500/40'
-                      : 'bg-amber-500/30 border-amber-500/50 hover:bg-amber-500/40'
+                      : 'bg-red-500/30 border-red-500/50 hover:bg-red-500/40'
                   }`}
                 >
                   Créer une annonce
@@ -402,7 +402,7 @@ export default function ProducerDashboard() {
               {myListings.length === 0 ? (
                 <div className="backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-12 text-center">
                   <Package className={`mx-auto h-12 w-12 ${
-                    currentSector === 'agriculture' ? 'text-emerald-400' : 'text-amber-400'
+                    currentSector === 'agriculture' ? 'text-emerald-400' : 'text-red-400'
                   }`} />
                   <h3 className="mt-2 text-lg font-bold text-white">
                     {currentSector === 'agriculture' 
@@ -431,7 +431,7 @@ export default function ProducerDashboard() {
                           </div>
                           <div className="text-right">
                             <p className={`text-lg font-bold ${
-                              currentSector === 'agriculture' ? 'text-emerald-400' : 'text-amber-400'
+                              currentSector === 'agriculture' ? 'text-emerald-400' : 'text-red-400'
                             }`}>
                               {listing.price_per_unit} {listing.currency}
                             </p>

@@ -58,3 +58,6 @@ SECTOR_SWITCHING_GUIDE.md
 test_*.py
 check_*.py
 list_*.py
+
+# Local Netlify folder
+.netlify

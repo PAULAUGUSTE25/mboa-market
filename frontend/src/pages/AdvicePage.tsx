@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lightbulb, TrendingUp, Shield, Calendar, DollarSign, Users, CheckCircle, ShoppingCart } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getThemeStyles } from '@/utils/themeStyles';
 
 interface AdviceCategory {
   id: string;
@@ -193,34 +192,21 @@ const adviceData: AdviceCategory[] = [
 export default function AdvicePage() {
   const navigate = useNavigate();
   const { theme } = useTheme();
-  const styles = getThemeStyles(theme);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-
+  
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden font-['Inter','Plus_Jakarta_Sans',sans-serif]">
       {/* Background Image */}
       <div 
-        className="fixed inset-0 bg-cover bg-center bg-fixed"
+        className="fixed inset-0 z-0"
         style={{
-          backgroundImage: theme === 'light' 
-            ? `url('/light%20mode%20.png')`
-            : `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000')`,
+          backgroundImage: `url('/background pic.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
         }}
       >
-        <div className={`absolute inset-0 ${theme === 'dark' ? `bg-gradient-to-br ${styles.background}` : ''}`} style={{
-          backdropFilter: theme === 'light' ? 'blur(2px)' : undefined,
-          backgroundColor: theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : undefined
-        }}></div>
+        <div className={`absolute inset-0 ${theme === 'dark' ? 'bg-black/80' : 'bg-black/40'}`} />
       </div>
-
-      {/* Animated Background Pattern - Dark Mode Only */}
-      {theme === 'dark' && (
-        <div className={`fixed inset-0 ${styles.blobs}`}>
-          <div className={`absolute top-10 left-10 w-32 h-32 ${styles.blobColors[0]} rounded-full blur-3xl animate-pulse`}></div>
-          <div className={`absolute top-40 right-20 w-40 h-40 ${styles.blobColors[1]} rounded-full blur-3xl animate-pulse`} style={{ animationDelay: '1s' }}></div>
-          <div className={`absolute bottom-20 left-1/4 w-36 h-36 ${styles.blobColors[2]} rounded-full blur-3xl animate-pulse`} style={{ animationDelay: '2s' }}></div>
-        </div>
-      )}
 
       {/* Visible Animated Icon Background */}
       <motion.div
@@ -235,7 +221,7 @@ export default function AdvicePage() {
           scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
           rotate: { duration: 0.8, ease: "easeOut" }
         }}
-        className="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
+        className="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden z-0"
       >
         <div className="text-yellow-500/[0.12]">
           <Lightbulb className="w-[600px] h-[600px]" strokeWidth={0.6} />
@@ -253,7 +239,7 @@ export default function AdvicePage() {
           opacity: { duration: 0.8 },
           scale: { duration: 3, repeat: Infinity, ease: "easeInOut" }
         }}
-        className="fixed inset-0 pointer-events-none"
+        className="fixed inset-0 pointer-events-none z-0"
       >
         <motion.div 
           animate={{
@@ -274,10 +260,7 @@ export default function AdvicePage() {
         {/* Bouton Retour */}
         <button
           onClick={() => navigate('/')}
-          className="mb-4 sm:mb-6 transition-all transform hover:scale-110 text-2xl font-bold"
-          style={{
-            color: theme === 'light' ? '#1A1A1A' : '#9CA3AF'
-          }}
+          className="mb-4 sm:mb-6 transition-all transform hover:scale-110 text-2xl font-bold text-white hover:text-emerald-400"
         >
           ←
         </button>
@@ -289,12 +272,12 @@ export default function AdvicePage() {
           className="mb-8"
         >
           <div className="flex items-center space-x-3 mb-2">
-            <div className="w-12 h-12 rounded-full bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-full bg-yellow-500/20 border border-yellow-500/30 flex items-center justify-center backdrop-blur-sm">
               <Lightbulb className="h-6 w-6 text-yellow-400" />
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: theme === 'light' ? '#1A1A1A' : '#FFFFFF' }}>Conseils & Astuces</h1>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white">Conseils & Astuces</h1>
           </div>
-          <p style={{ color: theme === 'light' ? '#4B5563' : 'rgba(209, 213, 219, 0.9)' }}>
+          <p className="text-white/80 font-medium">
             Guide de production et conseils d'experts
           </p>
         </motion.div>
@@ -303,7 +286,7 @@ export default function AdvicePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="backdrop-blur-md bg-gradient-to-r from-emerald-500/30 to-teal-500/30 border border-emerald-500/30 rounded-xl p-8 mb-8 text-white"
+          className="backdrop-blur-md bg-gradient-to-r from-emerald-600/40 to-teal-600/40 border border-emerald-500/30 rounded-xl p-8 mb-8 text-white shadow-lg"
         >
           <h2 className="text-3xl font-bold mb-4">Devenez un Expert du Marché Agricole</h2>
           <p className="text-lg text-white/90">
@@ -321,9 +304,9 @@ export default function AdvicePage() {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className="backdrop-blur-md bg-gradient-to-br from-white/10 to-white/5 border-2 border-white/20 rounded-2xl p-6 sm:p-8 text-left shadow-xl hover:shadow-2xl hover:bg-white/15 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105"
+                  className="backdrop-blur-md bg-black/40 border border-white/10 rounded-2xl p-6 sm:p-8 text-left shadow-xl hover:shadow-2xl hover:bg-black/50 transition-all duration-300 transform hover:-translate-y-1 hover:scale-105 group"
                 >
-                  <div className="w-14 h-14 bg-gradient-to-br from-yellow-500/30 to-yellow-600/20 border border-yellow-400/30 rounded-xl flex items-center justify-center mb-4 shadow-lg">
+                  <div className="w-14 h-14 bg-gradient-to-br from-yellow-500/30 to-yellow-600/20 border border-yellow-400/30 rounded-xl flex items-center justify-center mb-4 shadow-lg group-hover:scale-110 transition-transform">
                     <Icon className="h-7 w-7 text-yellow-300" strokeWidth={2.5} />
                   </div>
                   <h3 className="text-xl font-bold mb-2 text-white tracking-tight">{category.title}</h3>
@@ -337,7 +320,7 @@ export default function AdvicePage() {
           <div>
             <button
               onClick={() => setSelectedCategory(null)}
-              className="mb-6 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-white hover:bg-white/15 transition-all font-bold"
+              className="mb-6 px-4 py-2 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-white hover:bg-white/20 transition-all font-bold"
             >
               ← Retour aux catégories
             </button>
@@ -357,15 +340,15 @@ export default function AdvicePage() {
                       {category.tips.map((tip, index) => (
                         <div
                           key={index}
-                          className="backdrop-blur-md bg-gradient-to-br from-white/10 to-white/5 border border-white/20 rounded-2xl p-6 sm:p-8 border-l-4 border-yellow-500 shadow-xl hover:shadow-2xl hover:bg-white/15 transition-all duration-300"
+                          className="backdrop-blur-md bg-black/40 border border-white/10 rounded-2xl p-6 sm:p-8 border-l-4 border-l-yellow-500 shadow-xl hover:shadow-2xl hover:bg-black/50 transition-all duration-300"
                         >
                           <h3 className="text-xl font-bold text-white mb-3 flex items-start gap-4">
-                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-gradient-to-br from-yellow-500/40 to-yellow-600/30 border border-yellow-500/50 text-yellow-200 font-bold text-base flex-shrink-0 shadow-md">
+                            <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 font-bold text-base flex-shrink-0 shadow-md">
                               {index + 1}
                             </span>
                             <span className="flex-1">{tip.title}</span>
                           </h3>
-                          <p className="text-white/70 leading-relaxed ml-14 text-base">{tip.description}</p>
+                          <p className="text-white/80 leading-relaxed ml-14 text-base">{tip.description}</p>
                         </div>
                       ))}
                     </div>
@@ -380,7 +363,7 @@ export default function AdvicePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="mt-12 backdrop-blur-md bg-white/10 border border-white/20 rounded-xl p-8"
+          className="mt-12 backdrop-blur-md bg-black/30 border border-white/10 rounded-xl p-8"
         >
           <div className="flex items-center space-x-2 mb-6">
             <Users className="h-6 w-6 text-yellow-400" />
@@ -392,28 +375,28 @@ export default function AdvicePage() {
               <p className="text-white/90 italic mb-2">
                 "Grâce aux conseils sur la photographie, mes ventes ont augmenté de 150% en un mois!"
               </p>
-              <p className="text-sm text-white/60">- Marie, Productrice de Maïs, Bafoussam</p>
+              <p className="text-sm text-white/50">- Marie, Productrice de Maïs, Bafoussam</p>
             </div>
 
             <div className="border-l-4 border-yellow-500 pl-4">
               <p className="text-white/90 italic mb-2">
                 "Le système d'escrow m'a permis d'acheter en toute confiance. Je recommande vivement!"
               </p>
-              <p className="text-sm text-white/60">- Jean, Acheteur, Douala</p>
+              <p className="text-sm text-white/50">- Jean, Acheteur, Douala</p>
             </div>
 
             <div className="border-l-4 border-yellow-500 pl-4">
               <p className="text-white/90 italic mb-2">
                 "En suivant les conseils de timing, j'ai pu vendre mes poulets 30% plus cher avant Noël."
               </p>
-              <p className="text-sm text-white/60">- Paul, Éleveur, Yaoundé</p>
+              <p className="text-sm text-white/50">- Paul, Éleveur, Yaoundé</p>
             </div>
 
             <div className="border-l-4 border-yellow-500 pl-4">
               <p className="text-white/90 italic mb-2">
                 "La négociation en gros m'a permis d'économiser 20% sur mes achats de semences."
               </p>
-              <p className="text-sm text-white/60">- Fatima, Productrice, Garoua</p>
+              <p className="text-sm text-white/50">- Fatima, Productrice, Garoua</p>
             </div>
           </div>
         </motion.div>
@@ -423,7 +406,7 @@ export default function AdvicePage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5 }}
-          className="mt-8 backdrop-blur-md bg-emerald-500/30 border border-emerald-500/30 rounded-xl p-8 text-center text-white"
+          className="mt-8 backdrop-blur-md bg-emerald-600/30 border border-emerald-500/30 rounded-xl p-8 text-center text-white shadow-lg"
         >
           <h2 className="text-2xl font-bold mb-4">Prêt à Appliquer Ces Conseils?</h2>
           <p className="text-lg text-white/90 mb-6">
@@ -431,7 +414,7 @@ export default function AdvicePage() {
           </p>
           <button
             onClick={() => navigate('/')}
-            className="bg-white/20 border-2 border-white/30 text-white px-8 py-3 rounded-xl font-bold hover:bg-white/30 transition-all"
+            className="bg-white/10 border-2 border-white/20 text-white px-8 py-3 rounded-xl font-bold hover:bg-white/20 transition-all"
           >
             Retour à l'Accueil
           </button>

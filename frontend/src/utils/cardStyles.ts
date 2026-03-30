@@ -1,11 +1,16 @@
 // Utility pour les styles de cartes visibles en light/dark mode
 // Inspiré des styles de HomePage
 
-export const getCardStyles = (theme: 'light' | 'dark', color: 'emerald' | 'amber' = 'emerald') => {
+export const getCardStyles = (theme: 'light' | 'dark', color: 'emerald' | 'amber' | 'red' = 'emerald') => {
   if (theme === 'light') {
+    const colorMap: Record<string, string> = {
+      emerald: '#2E7D32',
+      amber: '#F59E0B',
+      red: '#B71C1C'
+    };
     return {
       background: '#FFFFFF',
-      borderColor: color === 'emerald' ? '#10B981' : '#F59E0B',
+      borderColor: colorMap[color] || '#2E7D32',
       borderWidth: '3px',
     };
   }
@@ -42,7 +47,7 @@ export const getInputStyles = (theme: 'light' | 'dark', hasError: boolean = fals
       borderColor: hasError ? '#EF4444' : '#94A3B8',
       color: '#0F172A',
       placeholderColor: '#64748B',
-      focusBorderColor: hasError ? '#DC2626' : '#10B981',
+      focusBorderColor: hasError ? '#DC2626' : '#2E7D32',
     };
   }
   
@@ -51,22 +56,24 @@ export const getInputStyles = (theme: 'light' | 'dark', hasError: boolean = fals
     borderColor: hasError ? 'rgba(239, 68, 68, 0.5)' : 'rgba(255, 255, 255, 0.2)',
     color: '#FFFFFF',
     placeholderColor: 'rgba(255, 255, 255, 0.6)',
-    focusBorderColor: hasError ? '#EF4444' : '#10B981',
+    focusBorderColor: hasError ? '#EF4444' : '#2E7D32',
   };
 };
 
-export const getButtonStyles = (theme: 'light' | 'dark', variant: 'primary' | 'secondary' = 'primary', color: 'emerald' | 'amber' = 'emerald') => {
+export const getButtonStyles = (theme: 'light' | 'dark', variant: 'primary' | 'secondary' = 'primary', color: 'emerald' | 'amber' | 'red' = 'emerald') => {
   if (theme === 'light') {
     if (variant === 'primary') {
+      const colorMap: Record<string, { bg: string; shadow: string }> = {
+        emerald: { bg: '#2E7D32', shadow: 'rgba(46, 125, 50, 0.5)' },
+        amber: { bg: '#F59E0B', shadow: 'rgba(245, 158, 11, 0.5)' },
+        red: { bg: '#B71C1C', shadow: 'rgba(183, 28, 28, 0.5)' }
+      };
+      const colorStyle = colorMap[color] || colorMap.emerald;
       return {
-        background: color === 'emerald' 
-          ? 'linear-gradient(to right, #059669, #047857)'
-          : 'linear-gradient(to right, #D97706, #B45309)',
-        borderColor: color === 'emerald' ? '#047857' : '#B45309',
+        background: colorStyle.bg,
+        borderColor: colorStyle.bg,
         color: '#FFFFFF',
-        boxShadow: color === 'emerald'
-          ? '0 4px 20px rgba(5, 150, 105, 0.5)'
-          : '0 4px 20px rgba(217, 119, 6, 0.5)',
+        boxShadow: `0 4px 20px ${colorStyle.shadow}`,
       };
     }
     
@@ -79,14 +86,16 @@ export const getButtonStyles = (theme: 'light' | 'dark', variant: 'primary' | 's
   }
   
   if (variant === 'primary') {
+    const darkColorMap: Record<string, { bg: string; border: string; text: string }> = {
+      emerald: { bg: 'rgba(16, 185, 129, 0.2)', border: 'rgba(16, 185, 129, 0.3)', text: '#34D399' },
+      amber: { bg: 'rgba(251, 191, 36, 0.2)', border: 'rgba(251, 191, 36, 0.3)', text: '#FCD34D' },
+      red: { bg: 'rgba(183, 28, 28, 0.2)', border: 'rgba(183, 28, 28, 0.3)', text: '#EF5350' }
+    };
+    const colorStyle = darkColorMap[color] || darkColorMap.emerald;
     return {
-      background: color === 'emerald'
-        ? 'rgba(16, 185, 129, 0.2)'
-        : 'rgba(251, 191, 36, 0.2)',
-      borderColor: color === 'emerald'
-        ? 'rgba(16, 185, 129, 0.3)'
-        : 'rgba(251, 191, 36, 0.3)',
-      color: color === 'emerald' ? '#34D399' : '#FCD34D',
+      background: colorStyle.bg,
+      borderColor: colorStyle.border,
+      color: colorStyle.text,
       boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
     };
   }

@@ -15,7 +15,7 @@ import logging
 logger = logging.getLogger(__name__)
 from datetime import datetime
 
-router = APIRouter(prefix="/conversations", tags=["Messaging"])
+router = APIRouter(prefix="/messages/conversations", tags=["Messaging"])
 
 
 class PaginatedConversationsResponse(BaseModel):

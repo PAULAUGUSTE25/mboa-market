@@ -41,11 +41,18 @@ export default function ScrollToTop() {
           exit={{ opacity: 0, scale: 0.8, y: 20 }}
           transition={{ duration: 0.3 }}
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-[9999] group"
+          className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-[9999] group"
           aria-label="Retour en haut"
         >
-          <div className="backdrop-blur-md bg-gradient-to-br from-emerald-500 to-emerald-600 border-2 border-emerald-400/50 rounded-2xl p-4 shadow-2xl hover:shadow-emerald-500/50 transition-all duration-300 transform hover:scale-110 hover:-translate-y-1">
-            <ArrowUp className="h-6 w-6 text-white" strokeWidth={2.5} />
+          <div 
+            className="backdrop-blur-md border-2 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-translate-y-1"
+            style={{
+              background: 'linear-gradient(to bottom right, #2E7D32, #1B5E20)',
+              borderColor: 'rgba(46, 125, 50, 0.5)',
+              boxShadow: '0 10px 40px rgba(46, 125, 50, 0.3)'
+            }}
+          >
+            <ArrowUp className="h-5 w-5 sm:h-6 sm:w-6 text-white" strokeWidth={2.5} />
           </div>
           
           {/* Tooltip */}

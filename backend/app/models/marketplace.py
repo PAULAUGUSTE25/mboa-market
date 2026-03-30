@@ -1,10 +1,10 @@
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Integer, Numeric, Date, Text, Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 import enum
 from app.core.database import Base
+from app.core.types import GUID
 
 
 class ListingStatus(str, enum.Enum):
@@ -19,11 +19,11 @@ class ListingStatus(str, enum.Enum):
 class Category(Base):
     __tablename__ = "categories"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     name_fr = Column(String, nullable=False)
     name_en = Column(String, nullable=False)
     kind = Column(String, nullable=False)
-    parent_id = Column(UUID(as_uuid=True), ForeignKey("categories.id", ondelete="CASCADE"), nullable=True)
+    parent_id = Column(GUID(), ForeignKey("categories.id", ondelete="CASCADE"), nullable=True)
     is_active = Column(Boolean, nullable=False, default=True)
     
     parent = relationship("Category", remote_side=[id], backref="children")
@@ -33,7 +33,7 @@ class Category(Base):
 class ProductRef(Base):
     __tablename__ = "products_ref"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     name_fr = Column(String, nullable=False)
     name_en = Column(String, nullable=False)
     unit_default = Column(String, nullable=True)
@@ -45,10 +45,10 @@ class ProductRef(Base):
 class Listing(Base):
     __tablename__ = "listings"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    seller_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    category_id = Column(UUID(as_uuid=True), ForeignKey("categories.id", ondelete="RESTRICT"), nullable=False)
-    product_ref_id = Column(UUID(as_uuid=True), ForeignKey("products_ref.id", ondelete="SET NULL"), nullable=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    seller_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    category_id = Column(GUID(), ForeignKey("categories.id", ondelete="RESTRICT"), nullable=False)
+    product_ref_id = Column(GUID(), ForeignKey("products_ref.id", ondelete="SET NULL"), nullable=True)
     title = Column(String, nullable=True)
     variety = Column(String, nullable=True)
     domain = Column(String, nullable=True)
@@ -75,8 +75,8 @@ class Listing(Base):
 class ListingPhoto(Base):
     __tablename__ = "listing_photos"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    listing_id = Column(UUID(as_uuid=True), ForeignKey("listings.id", ondelete="CASCADE"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    listing_id = Column(GUID(), ForeignKey("listings.id", ondelete="CASCADE"), nullable=False)
     storage_key = Column(String, nullable=False)
     position = Column(Integer, nullable=False, default=1)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)

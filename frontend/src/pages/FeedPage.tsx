@@ -2,10 +2,14 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
-import { MessageCircle, Heart, MapPin, Package, Plus, X, ShoppingCart, Globe, Wheat, Beef, PackageSearch, Sprout, User, Send, Search, Clock, TrendingUp, Sparkles, Star } from 'lucide-react';
+import { MessageCircle, Heart, MapPin, Package, Plus, X, ShoppingCart, Globe, Wheat, Beef, PackageSearch, Sprout, User, Send, Search, Clock, TrendingUp, TrendingDown, Minus, Sparkles, Star, Home, Activity, ShoppingBag, Leaf, Truck, BarChart3 } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getCardStyles, getTextStyles, getInputStyles, getButtonStyles } from '@/utils/cardStyles';
+import { getDomainColors } from '@/utils/colors';
+import { useDomain } from '@/contexts/DomainContext';
+import { voiceAssistant } from '@/services/voiceAssistant';
+import { Mic, MicOff, Volume2 } from 'lucide-react';
 
 interface Listing {
   id: string;
@@ -45,7 +49,7 @@ export default function FeedPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreatePost, setShowCreatePost] = useState(false);
-  const [selectedSector, setSelectedSector] = useState<'all' | 'agriculture' | 'elevage'>('all');
+  const { selectedDomain: selectedSector, setSelectedDomain: setSelectedSector } = useDomain();
   const [selectedFilter, setSelectedFilter] = useState<'domain' | 'specialization'>('domain');
   const [searchQuery, setSearchQuery] = useState('');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -53,6 +57,8 @@ export default function FeedPage() {
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [toastMessage, setToastMessage] = useState<{text: string; type: 'success' | 'info'} | null>(null);
+  const [activeStory, setActiveStory] = useState<{id: number; name: string; image: string; time: string} | null>(null);
+  const [storyProgress, setStoryProgress] = useState(0);
 
   useEffect(() => {
     if (user?.profile?.domain) {
@@ -153,6 +159,8 @@ export default function FeedPage() {
   const [demoChatContact, setDemoChatContact] = useState<{id: string; name: string; domain: string; activityType: string; lastProduct: string; region: string} | null>(null);
   const [demoChatMessages, setDemoChatMessages] = useState<Array<{ sender: 'me' | 'seller'; text: string; time: string }>>([]);
   const [demoChatInput, setDemoChatInput] = useState('');
+  const [isVoiceActive, setIsVoiceActive] = useState(false);
+  const [voiceStatus, setVoiceStatus] = useState('idle'); // idle, listening, processing, speaking
 
   // Intelligent demo response generator - analyzes user message and responds contextually
   const getIntelligentResponse = (userMessage: string, contact: {name: string; activityType: string; lastProduct: string; region: string}, messageCount: number): string => {
@@ -315,6 +323,53 @@ export default function FeedPage() {
     }, typingDelay);
   };
 
+  // Voice Assistant Functions
+  const toggleVoiceAssistant = () => {
+    if (isVoiceActive) {
+      stopVoiceAssistant();
+    } else {
+      startVoiceAssistant();
+    }
+  };
+
+  const startVoiceAssistant = () => {
+    setIsVoiceActive(true);
+    setVoiceStatus('listening');
+    voiceAssistant.startListening();
+    
+    // Add visual feedback
+    setTimeout(() => {
+      setVoiceStatus('processing');
+    }, 3000);
+    
+    // Reset status after processing
+    setTimeout(() => {
+      setVoiceStatus('idle');
+    }, 5000);
+  };
+
+  const stopVoiceAssistant = () => {
+    setIsVoiceActive(false);
+    setVoiceStatus('idle');
+    voiceAssistant.stopListening();
+  };
+
+  // Initialize voice assistant on component mount
+  useEffect(() => {
+    // Check if speech recognition is supported
+    const status = voiceAssistant.getStatus();
+    if (!status.isSupported) {
+      console.warn('Speech recognition not supported in this browser');
+    }
+    
+    return () => {
+      // Cleanup on unmount
+      if (isVoiceActive) {
+        voiceAssistant.stopListening();
+      }
+    };
+  }, []);
+
   useEffect(() => {
     loadFeed();
     loadCategories();
@@ -475,7 +530,7 @@ export default function FeedPage() {
   };
 
   const handleSendChatMessage = () => {
-    if (!chatMessage.trim()) return;
+    if (!chatMessage.trim() || !selectedListing) return;
 
     const newMessage = {
       sender: 'me' as const,
@@ -802,7 +857,7 @@ export default function FeedPage() {
                     <X className="h-4 w-4 text-gray-400 hover:text-red-500 transition-colors" />
                   </button>
                 ) : (
-                  <Sparkles className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-emerald-500 animate-pulse" />
+                  <Sparkles className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-pulse" style={{ color: getDomainColors(selectedSector).primary }} />
                 )}
               </div>
               
@@ -822,12 +877,12 @@ export default function FeedPage() {
                         <button
                           key={idx}
                           onClick={() => handleSearch(suggestion)}
-                          className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-all ${theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-emerald-50'}`}
+                          className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-all ${theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-gray-50'}`}
                           style={{ color: getTextStyles(theme).body }}
                         >
-                          <Search className="h-3.5 w-3.5 text-emerald-500" />
+                          <Search className="h-3.5 w-3.5" style={{ color: getDomainColors(selectedSector).primary }} />
                           <span dangerouslySetInnerHTML={{ 
-                            __html: suggestion.replace(new RegExp(`(${searchQuery})`, 'gi'), '<strong class="text-emerald-500">$1</strong>') 
+                            __html: suggestion.replace(new RegExp(`(${searchQuery})`, 'gi'), `<strong style="color: ${getDomainColors(selectedSector).primary}">$1</strong>`) 
                           }} />
                         </button>
                       ))}
@@ -873,7 +928,8 @@ export default function FeedPage() {
                           <button
                             key={idx}
                             onClick={() => handleSearch(trend)}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105 ${theme === 'dark' ? 'bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}
+                            className="px-3 py-1.5 rounded-full text-xs font-medium transition-all hover:scale-105 hover:opacity-80"
+                            style={{ backgroundColor: `${getDomainColors(selectedSector).primary}20`, color: getDomainColors(selectedSector).primary }}
                           >
                             {trend}
                           </button>
@@ -901,15 +957,68 @@ export default function FeedPage() {
               )}
             </div>
             
+            {/* Mobile Menu Button */}
+            <button 
+              className="sm:hidden p-2 rounded-full transition-colors"
+              onClick={() => {/* TODO: Add mobile menu */}}
+              style={{ color: getTextStyles(theme).muted }}
+            >
+              <div className="w-5 h-5 flex flex-col justify-center gap-1">
+                <div className="w-full h-0.5 rounded-full" style={{ backgroundColor: 'currentColor' }}></div>
+                <div className="w-full h-0.5 rounded-full" style={{ backgroundColor: 'currentColor' }}></div>
+                <div className="w-full h-0.5 rounded-full" style={{ backgroundColor: 'currentColor' }}></div>
+              </div>
+            </button>
+            
+            {/* Voice Assistant Button */}
+            <button 
+              className="relative p-2 rounded-full transition-all duration-300 shadow-sm hover:scale-105 group"
+              onClick={toggleVoiceAssistant}
+              style={{ 
+                backgroundColor: isVoiceActive 
+                  ? getDomainColors(selectedSector).primary 
+                  : theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : '#F3F4F6',
+                color: isVoiceActive 
+                  ? '#FFFFFF' 
+                  : getTextStyles(theme).muted
+              }}
+              title="Assistant Vocal Bigiss"
+            >
+              {isVoiceActive ? (
+                <MicOff className="h-5 w-5" />
+              ) : (
+                <Mic className="h-5 w-5" />
+              )}
+              {/* Voice status indicator */}
+              {isVoiceActive && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full animate-pulse" 
+                  style={{ 
+                    backgroundColor: voiceStatus === 'listening' ? '#10B981' : 
+                                     voiceStatus === 'processing' ? '#F59E0B' : '#6B7280'
+                  }} />
+              )}
+            </button>
+            
+            {/* Mobile Search Icon */}
+            <button 
+              className="sm:hidden p-2 rounded-full transition-colors"
+              onClick={() => setSearchFocused(!searchFocused)}
+              style={{ color: getTextStyles(theme).muted }}
+            >
+              <Search className="h-5 w-5" />
+            </button>
+            
             {/* All Navigation Icons Grouped Together */}
             <div className={`flex items-center gap-2 rounded-full p-1.5 shadow-sm ${theme === 'dark' ? 'bg-white/[0.05] border border-white/10' : 'bg-gray-100'}`}>
               {/* Domain Filter - Icon Only */}
               <div className={`relative inline-flex rounded-full p-1 shadow-sm ${theme === 'dark' ? 'bg-white/[0.05] border border-white/10' : 'bg-white'}`}>
                 <div
-                  className={`absolute top-1 bottom-1 rounded-full shadow-md transition-all duration-300 ease-out ${theme === 'dark' ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-emerald-500'}`}
+                  className="absolute top-1 bottom-1 rounded-full shadow-md transition-all duration-300 ease-out"
                   style={{
                     left: selectedSector === 'all' ? '2px' : selectedSector === 'agriculture' ? 'calc(33.33% + 1px)' : 'calc(66.66%)',
-                    width: 'calc(33.33% - 2px)'
+                    width: 'calc(33.33% - 2px)',
+                    backgroundColor: theme === 'dark' ? `${getDomainColors(selectedSector).primary}30` : getDomainColors(selectedSector).primary,
+                    border: theme === 'dark' ? `1px solid ${getDomainColors(selectedSector).primary}50` : 'none'
                   }}
                 />
                 
@@ -955,7 +1064,8 @@ export default function FeedPage() {
               {user && (
                 <button
                   onClick={() => navigate('/my-activity')}
-                  className={`p-2 rounded-full transition-all duration-300 shadow-sm hover:scale-105 ${theme === 'dark' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+                  className="p-2 rounded-full transition-all duration-300 shadow-sm hover:scale-105 text-white hover:opacity-90"
+                  style={{ backgroundColor: getDomainColors(selectedSector).primary }}
                   title={user.profile?.activity_type === 'seed_provider' ? 'Mes Fournitures' : user.profile?.activity_type === 'producer' ? 'Mes Productions' : 'Mes Demandes'}
                 >
                   {user.profile?.activity_type === 'seed_provider' ? (
@@ -1003,7 +1113,7 @@ export default function FeedPage() {
                     >
                       <User className="h-5 w-5" strokeWidth={2} />
                     </div>
-                    <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 shadow-sm animate-pulse ${theme === 'dark' ? 'border-[#060D0A]' : 'border-white'}`}></div>
+                    <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 shadow-sm animate-pulse ${theme === 'dark' ? 'border-[#060D0A]' : 'border-white'}`} style={{ backgroundColor: getDomainColors(selectedSector).primary }}></div>
                   </button>
                 </>
               )}
@@ -1012,7 +1122,8 @@ export default function FeedPage() {
               {!user && (
                 <button
                   onClick={() => navigate('/login')}
-                  className={`px-4 py-2 rounded-full font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 text-sm whitespace-nowrap ${theme === 'dark' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/30' : 'bg-emerald-500 text-white hover:bg-emerald-600'}`}
+                  className="px-4 py-2 rounded-full font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 text-sm whitespace-nowrap text-white"
+                  style={{ backgroundColor: getDomainColors(selectedSector).primary }}
                 >
                   <span className="hidden sm:inline">Se connecter</span>
                   <span className="sm:hidden">Connexion</span>
@@ -1023,970 +1134,443 @@ export default function FeedPage() {
         </div>
       </header>
 
-      {/* 3-Column Layout Container - Facebook Style */}
-      <div className="w-full px-2 lg:px-4 py-4">
-        <div className="flex gap-2 lg:gap-4">
-          {/* LEFT SIDEBAR - Navigation (hidden on mobile) */}
-          <aside className="hidden lg:block lg:w-60 xl:w-72 flex-shrink-0 sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto">
-            <div className="space-y-2">
-              {/* User Profile Card */}
-              {user && (
-                <button
-                  onClick={() => navigate('/profile')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:scale-[1.02] ${theme === 'dark' ? 'hover:bg-white/[0.05]' : 'hover:bg-gray-100'}`}
-                >
-                  <div 
-                    className="w-9 h-9 rounded-full flex items-center justify-center font-bold"
-                    style={{
-                      background: theme === 'dark' ? 'linear-gradient(to bottom right, rgba(16, 185, 129, 0.3), rgba(13, 148, 136, 0.3))' : '#E5E7EB',
-                      border: theme === 'dark' ? '1px solid rgba(16, 185, 129, 0.3)' : 'none',
-                      color: theme === 'dark' ? '#6EE7B7' : getTextStyles(theme).body
-                    }}
-                  >
-                    {user.profile?.display_name?.[0] || 'U'}
-                  </div>
-                  <span className="font-semibold" style={{ color: getTextStyles(theme).title }}>
-                    {user.profile?.display_name || 'Mon Profil'}
-                  </span>
-                </button>
-              )}
-
-              {/* Navigation Links */}
+      {/* Mobile Search Bar - Hidden on desktop */}
+      {searchFocused && (
+        <div className="sm:hidden sticky top-16 z-20 px-4 py-3 border-b" style={{ 
+          backgroundColor: theme === 'dark' ? '#060D0A' : '#F0F2F5',
+          borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#E5E7EB'
+        }}>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+            <input
+              type="text"
+              placeholder="Rechercher produits, vendeurs..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearch(searchQuery)}
+              className="w-full pl-10 pr-10 py-2.5 text-sm rounded-full"
+              style={{
+                ...getInputStyles(theme),
+                boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+              }}
+              autoFocus
+            />
+            {searchQuery && (
               <button
-                onClick={() => navigate('/feed')}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${theme === 'dark' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-emerald-50 text-emerald-700'}`}
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-10"
               >
-                <Globe className="h-5 w-5" />
-                <span className="font-medium">Fil d'actualité</span>
+                <X className="h-4 w-4 text-gray-400 hover:text-red-500 transition-colors" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Facebook-style 3-Column Layout */}
+      <div className="flex justify-between max-w-[1920px] mx-auto">
+        {/* LEFT SIDEBAR - Fixed Static */}
+        <aside className="hidden xl:block fixed left-0 top-16 w-[280px] h-[calc(100vh-4rem)] overflow-y-auto scrollbar-none p-4 space-y-3">
+          {/* User Profile Card */}
+          <div className={`rounded-2xl p-4 ${theme === 'dark' ? 'bg-white/[0.03] border border-white/10 backdrop-blur-xl' : 'bg-white shadow-sm'}`}>
+            <button
+              onClick={() => alert('Fonction de création en cours de développement')}
+              className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl font-medium transition-all hover:scale-[1.02]"
+              style={getButtonStyles(theme, 'secondary', 'emerald')}
+            >
+              <Plus className="h-5 w-5" />
+              <span>Créer une publication</span>
+            </button>
+          </div>
+
+          {/* Navigation Links */}
+          <div className={`rounded-2xl p-2 ${theme === 'dark' ? 'bg-white/[0.03] border border-white/10' : 'bg-white shadow-sm'}`}>
+            {[
+              { icon: BarChart3, label: 'Tableau de Bord', path: '/dashboard' },
+              { icon: User, label: 'Mon Compte', path: '/profile' },
+              { icon: Home, label: 'Fil d\'actualité', path: '/feed', active: true },
+              { icon: MessageCircle, label: 'Messages', path: '/messages', badge: unreadMessages },
+              { icon: Activity, label: 'Mon Activité', path: '/activity' },
+              { icon: ShoppingBag, label: 'Marketplace', path: '/marketplace' },
+            ].map((item, idx) => (
+              <button
+                key={idx}
+                onClick={() => navigate(item.path)}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-colors ${
+                  item.active 
+                    ? '' 
+                    : theme === 'dark' ? 'text-gray-300 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-50'
+                }`}
+                style={item.active ? { backgroundColor: `${getDomainColors(selectedSector).primary}15`, color: getDomainColors(selectedSector).primary } : undefined}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="font-medium text-sm">{item.label}</span>
+                {item.badge && item.badge > 0 && (
+                  <span className="ml-auto bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">{item.badge}</span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Quick Access */}
+          <div className={`rounded-2xl p-4 ${theme === 'dark' ? 'bg-white/[0.03] border border-white/10' : 'bg-white shadow-sm'}`}>
+            <h3 className="text-xs font-bold uppercase tracking-wider mb-3 px-2" style={{ color: getTextStyles(theme).muted }}>
+              Raccourcis
+            </h3>
+            <div className="space-y-1">
+              <button 
+                onClick={() => setSelectedSector('agriculture')}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}
+              >
+                <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
+                  <Leaf className="w-4 h-4 text-green-600" />
+                </div>
+                <span className="text-sm font-medium" style={{ color: getTextStyles(theme).title }}>Agriculture</span>
+              </button>
+              <button 
+                onClick={() => setSelectedSector('elevage')}
+                className={`w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors ${theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}
+              >
+                <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
+                  <Truck className="w-4 h-4 text-amber-600" />
+                </div>
+                <span className="text-sm font-medium" style={{ color: getTextStyles(theme).title }}>Élevage</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Middle Column - Feed - Centered like Facebook */}
+        <div className="w-full xl:ml-[280px] xl:mr-[360px] px-4 xl:px-8 space-y-6 pb-20">
+            {/* Stories/Status Section */}
+            <div className="flex gap-2 sm:gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0">
+              {/* Add Story Button */}
+              <button className="flex-shrink-0 w-24 h-40 sm:w-28 sm:h-48 rounded-2xl relative overflow-hidden group shadow-md hover:shadow-lg transition-all duration-300">
+                <div className={`absolute inset-0 ${theme === 'dark' ? 'bg-[#1a1a1a]' : 'bg-gray-100'} transition-transform duration-500 group-hover:scale-110`}>
+                  {(user?.profile as any)?.avatar_url && (
+                    <img src={(user.profile as any).avatar_url} alt="" className="w-full h-full object-cover opacity-60" />
+                  )}
+                </div>
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
+                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 w-full">
+                  <div className="w-8 h-8 rounded-full border-2 border-[#060D0A] flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: getDomainColors(selectedSector).primary }}>
+                    <Plus className="w-5 h-5" />
+                  </div>
+                  <span className="text-xs font-semibold text-white text-center w-full px-1 truncate">Créer une story</span>
+                </div>
               </button>
 
-              {user && (
-                <>
-                  <button
-                    onClick={() => navigate('/chat')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:scale-[1.02] ${theme === 'dark' ? 'hover:bg-white/[0.05]' : 'hover:bg-gray-100'}`}
-                  >
-                    <MessageCircle className="h-5 w-5" style={{ color: getTextStyles(theme).body }} />
-                    <span className="font-medium" style={{ color: getTextStyles(theme).body }}>Messages</span>
-                  </button>
-
-                  <button
-                    onClick={() => navigate('/my-activity')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:scale-[1.02] ${theme === 'dark' ? 'hover:bg-white/[0.05]' : 'hover:bg-gray-100'}`}
-                  >
-                    <Sprout className="h-5 w-5" style={{ color: getTextStyles(theme).body }} />
-                    <span className="font-medium" style={{ color: getTextStyles(theme).body }}>Mon Activité</span>
-                  </button>
-
-                  <button
-                    onClick={() => navigate('/listings')}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:scale-[1.02] ${theme === 'dark' ? 'hover:bg-white/[0.05]' : 'hover:bg-gray-100'}`}
-                  >
-                    <Package className="h-5 w-5" style={{ color: getTextStyles(theme).body }} />
-                    <span className="font-medium" style={{ color: getTextStyles(theme).body }}>Marketplace</span>
-                  </button>
-                </>
-              )}
-
-              {/* Shortcuts Section */}
-              <div className={`mt-6 pt-4 border-t ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
-                <p className="px-4 text-xs font-semibold mb-2" style={{ color: getTextStyles(theme).muted }}>
-                  RACCOURCIS
-                </p>
-                <button
-                  onClick={() => setSelectedSector('agriculture')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:scale-[1.02] ${theme === 'dark' ? 'hover:bg-white/[0.05]' : 'hover:bg-gray-100'}`}
+              {/* Demo Stories */}
+              {[
+                { id: 1, name: 'Marie Agricultrice', image: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&h=600&fit=crop', time: 'Il y a 2h' },
+                { id: 2, name: 'Jean Éleveur', image: 'https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=400&h=600&fit=crop', time: 'Il y a 3h' },
+                { id: 3, name: 'Fatou Maraîchère', image: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=400&h=600&fit=crop', time: 'Il y a 4h' },
+                { id: 4, name: 'Amadou Producteur', image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400&h=600&fit=crop', time: 'Il y a 5h' },
+                { id: 5, name: 'Aïcha Semencière', image: 'https://images.unsplash.com/photo-1592982537447-6f2a6a0c8b8b?w=400&h=600&fit=crop', time: 'Il y a 6h' },
+              ].map((story) => (
+                <button 
+                  key={story.id} 
+                  onClick={() => {
+                    setActiveStory(story);
+                    setStoryProgress(0);
+                  }}
+                  className="flex-shrink-0 w-24 h-40 sm:w-28 sm:h-48 rounded-2xl relative overflow-hidden group shadow-md hover:shadow-lg transition-all duration-300"
                 >
-                  <Wheat className="h-5 w-5 text-green-500" />
-                  <span className="font-medium" style={{ color: getTextStyles(theme).body }}>Agriculture</span>
+                  <div className="absolute inset-0 bg-gray-800 transition-transform duration-500 group-hover:scale-110">
+                    <img 
+                      src={story.image} 
+                      alt={story.name} 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
+                  <div className="absolute top-3 left-3 w-8 h-8 rounded-full border-2 p-0.5 bg-black/20 backdrop-blur-sm" style={{ borderColor: getDomainColors(selectedSector).primary }}>
+                    <img 
+                      src={`https://i.pravatar.cc/100?img=${story.id + 10}`} 
+                      alt="" 
+                      className="w-full h-full rounded-full object-cover" 
+                    />
+                  </div>
+                  <div className="absolute bottom-3 left-3 right-3">
+                    <span className="text-xs font-semibold text-white truncate block">{story.name}</span>
+                  </div>
                 </button>
-                <button
-                  onClick={() => setSelectedSector('elevage')}
-                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all hover:scale-[1.02] ${theme === 'dark' ? 'hover:bg-white/[0.05]' : 'hover:bg-gray-100'}`}
-                >
-                  <Beef className="h-5 w-5 text-amber-500" />
-                  <span className="font-medium" style={{ color: getTextStyles(theme).body }}>Élevage</span>
-                </button>
-              </div>
+              ))}
             </div>
-          </aside>
 
-          {/* CENTER FEED - Main Content */}
-          <main className="flex-1 w-full max-w-5xl mx-auto">
-            {/* Create Post Button */}
-            {user && (
-              <div className={`rounded-2xl p-4 mb-6 ${theme === 'dark' ? 'bg-white/[0.03] border border-white/10 backdrop-blur-xl shadow-sm' : 'bg-white shadow-sm'}`} style={{ boxShadow: theme === 'light' ? '0 1px 2px rgba(0, 0, 0, 0.1)' : undefined }}>
-                <button
-                  onClick={() => setShowCreatePost(true)}
-                  className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl font-medium transition-all hover:scale-[1.02]"
-                  style={getButtonStyles(theme, 'secondary', 'emerald')}
-                >
-                  <Plus className="h-5 w-5" />
-                  <span>Créer une publication</span>
-                </button>
-              </div>
-            )}
-
-        {/* Create Post Modal */}
-        {showCreatePost && (
-          <div className={`fixed inset-0 backdrop-blur-sm flex items-center justify-center z-50 p-0 sm:p-4 ${theme === 'dark' ? 'bg-black/80' : 'bg-black/50'}`}>
-            <div 
-              className="backdrop-blur-md rounded-none sm:rounded-2xl max-w-full sm:max-w-2xl w-full h-full sm:h-auto sm:max-h-[90vh] overflow-y-auto border-0 sm:border shadow-2xl"
-              style={{
-                ...getCardStyles(theme, 'emerald'),
-                borderColor: theme === 'light' ? '#10B981' : 'rgba(255, 255, 255, 0.2)'
-              }}
-            >
-              <div className="p-4 sm:p-6">
-                <div className="flex items-center justify-between mb-6">
-                  <h2 className="text-xl sm:text-2xl font-bold" style={{ color: getTextStyles(theme).title }}>Nouvelle Publication</h2>
-                  <button
-                    onClick={() => setShowCreatePost(false)}
-                    className="transition-colors hover:scale-110"
-                    style={{ color: getTextStyles(theme).muted }}
-                  >
-                    <X className="h-6 w-6" />
-                  </button>
-                </div>
-
-                <form onSubmit={handleCreatePost} className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).body }}>
-                      Catégorie *
-                    </label>
-                    <select
-                      value={newPost.category_id}
-                      onChange={(e) => setNewPost({ ...newPost, category_id: e.target.value })}
-                      required
-                      className="w-full rounded-xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      style={getInputStyles(theme)}
-                    >
-                      <option value="">Sélectionnez une catégorie</option>
-                      {categories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name_fr}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).body }}>
-                      Titre *
-                    </label>
-                    <input
-                      type="text"
-                      value={newPost.title}
-                      onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-                      required
-                      placeholder="Ex: Maïs de qualité supérieure"
-                      className="w-full rounded-xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      style={getInputStyles(theme)}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).body }}>
-                      Variété
-                    </label>
-                    <input
-                      type="text"
-                      value={newPost.variety}
-                      onChange={(e) => setNewPost({ ...newPost, variety: e.target.value })}
-                      placeholder="Ex: Hybride F1"
-                      className="w-full rounded-xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      style={getInputStyles(theme)}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).body }}>
-                        Quantité *
-                      </label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        value={newPost.quantity}
-                        onChange={(e) => setNewPost({ ...newPost, quantity: e.target.value })}
-                        required
-                        placeholder="100"
-                        className="w-full rounded-xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        style={getInputStyles(theme)}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).body }}>
-                        Unité *
-                      </label>
-                      <select
-                        value={newPost.unit}
-                        onChange={(e) => setNewPost({ ...newPost, unit: e.target.value })}
-                        required
-                        className="w-full rounded-xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        style={getInputStyles(theme)}
-                      >
-                        <option value="kg">kg</option>
-                        <option value="tonne">tonne</option>
-                        <option value="sac">sac</option>
-                        <option value="unité">unité</option>
-                        <option value="régime">régime</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).body }}>
-                      Prix par unité (XAF) *
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      value={newPost.price_per_unit}
-                      onChange={(e) => setNewPost({ ...newPost, price_per_unit: e.target.value })}
-                      required
-                      placeholder="2500"
-                      className="w-full rounded-xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      style={getInputStyles(theme)}
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).body }}>
-                        Région *
-                      </label>
-                      <input
-                        type="text"
-                        value={newPost.region}
-                        onChange={(e) => setNewPost({ ...newPost, region: e.target.value })}
-                        required
-                        placeholder="Centre"
-                        className="w-full rounded-xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        style={getInputStyles(theme)}
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).body }}>
-                        Localité
-                      </label>
-                      <input
-                        type="text"
-                        value={newPost.locality}
-                        onChange={(e) => setNewPost({ ...newPost, locality: e.target.value })}
-                        placeholder="Yaoundé"
-                        className="w-full rounded-xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        style={getInputStyles(theme)}
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).body }}>
-                      Images / Vidéos
-                    </label>
-                    
-                    {/* File Upload */}
-                    <div className="mb-4">
-                      <label className={`flex items-center justify-center w-full px-4 py-6 border-2 border-dashed rounded-lg cursor-pointer transition-colors ${theme === 'dark' ? 'border-white/20 hover:border-emerald-500/50 bg-white/[0.02] hover:bg-white/[0.05]' : 'border-gray-300 hover:border-emerald-500 bg-gray-50 hover:bg-gray-100'}`}>
-                        <div className="flex flex-col items-center space-y-2">
-                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24" style={{ color: theme === 'dark' ? '#10B981' : '#059669' }}>
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                          </svg>
-                          <div className="text-center">
-                            <p className="text-sm font-medium" style={{ color: getTextStyles(theme).body }}>
-                              Cliquez pour télécharger des fichiers
-                            </p>
-                            <p className="text-xs" style={{ color: getTextStyles(theme).muted }}>
-                              Images (JPG, PNG, GIF) ou Vidéos (MP4, MOV)
-                            </p>
-                          </div>
-                        </div>
-                        <input
-                          type="file"
-                          multiple
-                          accept="image/*,video/*"
-                          onChange={handleFileSelect}
-                          className="hidden"
-                        />
-                      </label>
-                    </div>
-
-                    {/* Preview uploaded files */}
-                    {previewUrls.length > 0 && (
-                      <div className="grid grid-cols-2 gap-2 mb-4">
-                        {previewUrls.map((url, index) => (
-                          <div key={index} className="relative rounded-lg overflow-hidden border" style={{ borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#D1D5DB' }}>
-                            {selectedFiles[index]?.type.startsWith('video/') ? (
-                              <video src={url} className="w-full h-32 object-cover" controls />
-                            ) : (
-                              <img src={url} alt={`Preview ${index + 1}`} className="w-full h-32 object-cover" />
-                            )}
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveFile(index)}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600 transition-colors"
-                            >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                              </svg>
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {/* URL Input as alternative */}
-                    <div className="mt-4">
-                      <p className={`text-xs mb-2 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-500'}`}>
-                        Ou entrez une URL d'image :
-                      </p>
-                      <input
-                        type="url"
-                        value={newPost.image_url}
-                        onChange={(e) => setNewPost({ ...newPost, image_url: e.target.value })}
-                        placeholder="https://exemple.com/image.jpg"
-                        className="w-full rounded-xl px-4 py-3 border focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        style={getInputStyles(theme)}
-                      />
-                      {newPost.image_url && previewUrls.length === 0 && (
-                        <div className="mt-2 rounded-lg overflow-hidden border" style={{ borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.2)' : '#D1D5DB' }}>
-                          <img
-                            src={newPost.image_url}
-                            alt="Aperçu URL"
-                            className="w-full h-48 object-cover"
-                            onError={(e) => {
-                              (e.target as HTMLImageElement).style.display = 'none';
-                            }}
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
-                    <button
-                      type="button"
-                      onClick={() => setShowCreatePost(false)}
-                      className="w-full sm:flex-1 px-4 py-3 rounded-xl font-semibold transition-all hover:scale-105 text-sm sm:text-base"
-                      style={getButtonStyles(theme, 'secondary', 'emerald')}
-                    >
-                      Annuler
-                    </button>
-                    <button
-                      type="submit"
-                      className="w-full sm:flex-1 px-4 py-3 rounded-xl font-semibold transition-all hover:scale-105 text-sm sm:text-base"
-                      style={getButtonStyles(theme, 'primary', 'emerald')}
-                    >
-                      Publier
-                    </button>
-                  </div>
-                </form>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Feed */}
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-          </div>
-        ) : filteredListings.length === 0 ? (
-          <div className={`rounded-3xl p-20 text-center ${theme === 'dark' ? 'bg-white/[0.03] border border-white/10 backdrop-blur-xl shadow-xl' : 'bg-white shadow-sm'}`} style={{ boxShadow: theme === 'light' ? '0 1px 2px rgba(0, 0, 0, 0.1)' : undefined }}>
-            {selectedSector === 'elevage' ? (
-              <>
-                <div className="mb-6">
-                  <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-orange-100 to-amber-100 rounded-full mb-4">
-                    <Beef className="h-12 w-12 text-amber-600" strokeWidth={1.5} />
-                  </div>
-                </div>
-                <h3 className="text-2xl font-bold mb-3" style={{ color: getTextStyles(theme).title }}>Pas encore de publications</h3>
-                <p className="text-lg mb-2" style={{ color: getTextStyles(theme).body }}>
-                  Le secteur Élevage arrive bientôt!
-                </p>
-                <p className="text-gray-500 text-sm max-w-md mx-auto">
-                  Les publications d'élevage (bovins, volailles, porcs, etc.) seront disponibles prochainement. Revenez bientôt!
-                </p>
-              </>
-            ) : selectedSector === 'agriculture' ? (
-              <>
-                <div className="mb-6">
-                  <div className="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-green-100 to-teal-100 rounded-full mb-4">
-                    <Wheat className="h-12 w-12 text-green-600" strokeWidth={1.5} />
-                  </div>
-                </div>
-                <h3 className="text-2xl font-bold mb-3" style={{ color: getTextStyles(theme).title }}>Aucune publication</h3>
-                <p className="text-lg mb-2" style={{ color: getTextStyles(theme).body }}>
-                  Pas encore de publications agricoles
-                </p>
-                <p className="text-gray-500 text-sm max-w-md mx-auto">
-                  Soyez le premier à publier une annonce dans le secteur Agriculture!
-                </p>
-              </>
-            ) : (
-              <>
-                <Package className="mx-auto h-20 w-20 text-gray-500 mb-6" strokeWidth={1.5} />
-                <h3 className="text-2xl font-bold mb-3" style={{ color: getTextStyles(theme).title }}>Aucune publication</h3>
-                <p className="text-lg" style={{ color: getTextStyles(theme).body }}>Soyez le premier à publier!</p>
-              </>
-            )}
-          </div>
-        ) : (
-          <>
-            <div className="space-y-6">
-              {filteredListings.map((listing) => {
-                return (
-                  <div 
-                    key={listing.id} 
-                    className="backdrop-blur-md rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.005]"
-                    style={{
-                      ...getCardStyles(theme, 'emerald'),
-                      border: 'none',
-                      boxShadow: theme === 'light' 
-                        ? '0 4px 25px rgba(0, 0, 0, 0.08), 0 2px 10px rgba(0, 0, 0, 0.04)' 
-                        : '0 4px 25px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3)'
-                    }}
-                  >
-                  {/* Post Header - Alignement Vertical Parfait */}
-                  <div className={`px-6 py-4 border-b ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div 
-                          className="h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm"
-                          style={{
-                            background: theme === 'dark' ? 'linear-gradient(to bottom right, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3))' : '#E5E7EB',
-                            border: theme === 'dark' ? '1px solid rgba(16, 185, 129, 0.3)' : 'none',
-                            color: theme === 'dark' ? '#6EE7B7' : getTextStyles(theme).body
-                          }}
-                        >
-                          {listing.seller?.profile?.display_name?.[0] || 'U'}
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-medium" style={{ color: getTextStyles(theme).title, fontFamily: 'Inter, system-ui, sans-serif' }}>
-                            {listing.seller?.profile?.display_name || 'Utilisateur'}
-                          </h3>
-                          <p className="text-xs text-gray-500">{formatDate(listing.created_at)}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {/* Domain Badge */}
-                        {listing.seller?.profile?.domain && (
-                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg ${theme === 'dark' ? 'border' : ''} ${
-                            listing.seller.profile.domain === 'agriculture'
-                              ? (theme === 'dark' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-green-50 text-green-700')
-                              : (theme === 'dark' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-amber-50 text-amber-700')
-                          }`}>
-                            {listing.seller.profile.domain === 'agriculture' ? (
-                              <><Wheat className="h-3.5 w-3.5" strokeWidth={2} /> Agriculture</>
-                            ) : (
-                              <><Beef className="h-3.5 w-3.5" strokeWidth={2} /> Élevage</>
-                            )}
-                          </span>
-                        )}
-                        {/* Category Badge - Discret */}
-                        {listing.title.startsWith('VENTE:') && (
-                          <span className={`px-3 py-1 text-xs font-semibold rounded-lg ${theme === 'dark' ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-green-50 text-green-700'}`}>
-                            VENTE
-                          </span>
-                        )}
-                        {listing.title.startsWith('ACHAT:') && (
-                          <span className={`px-3 py-1 text-xs font-semibold rounded-lg ${theme === 'dark' ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30' : 'bg-blue-50 text-blue-700'}`}>
-                            ACHAT
-                          </span>
-                        )}
-                        {listing.title.startsWith('FOURNITURE:') && (
-                          <span className={`px-3 py-1 text-xs font-semibold rounded-lg ${theme === 'dark' ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' : 'bg-purple-50 text-purple-700'}`}>
-                            FOURNISSEUR
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Post Image - Dynamisée avec coins arrondis */}
-                  {listing.images && listing.images.length > 0 && (
-                    <div className={theme === 'dark' ? 'px-6 pt-4' : 'w-full'}>
-                      <div className={`w-full aspect-[16/9] relative overflow-hidden ${theme === 'dark' ? 'bg-gradient-to-br from-white/[0.05] to-white/[0.02] rounded-2xl border border-white/10' : 'bg-gray-100'}`}>
-                        <img
-                          src={listing.images[0]}
-                          alt={listing.title}
-                          className="w-full h-full object-cover hover:scale-110 transition-all duration-[1200ms] ease-out"
-                          style={{ 
-                            willChange: 'transform',
-                            backfaceVisibility: 'hidden',
-                            transform: 'translateZ(0)'
-                          }}
-                        />
-                      </div>
+            {/* Create Post Input (Mobile/Tablet) */}
+            <div className={`lg:hidden rounded-2xl p-4 shadow-sm border ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}>
+              <div className="flex gap-3">
+                <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
+                  {(user?.profile as any)?.avatar_url ? (
+                    <img src={(user.profile as any).avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center font-bold text-gray-500">
+                      {user?.profile?.display_name?.charAt(0) || 'U'}
                     </div>
                   )}
-
-                  {/* Post Content - Hiérarchie Optimisée */}
-                  <div className="px-6 py-5">
-                    {/* Titre avec typographie moderne */}
-                    <h2 className="text-2xl font-bold mb-2" style={{ color: getTextStyles(theme).title, fontFamily: 'Plus Jakarta Sans, Inter, system-ui, sans-serif' }}>
-                      {listing.title.replace('VENTE: ', '').replace('ACHAT: ', '').replace('FOURNITURE: ', '').replace('FOURNISSEUR: ', '')}
-                    </h2>
-                    
-                    {/* Prix en avant - Couleur primaire */}
-                    <div className="mb-4">
-                      <p className={`text-4xl font-extrabold ${theme === 'dark' ? 'text-green-400' : 'text-emerald-600'}`} style={{ fontFamily: 'Plus Jakarta Sans, Inter, system-ui, sans-serif' }}>
-                        {listing.price_per_unit.toLocaleString()} <span className="text-lg text-gray-500 font-normal">{listing.currency}/{listing.unit}</span>
-                      </p>
-                    </div>
-
-                    {listing.variety && (
-                      <p className="text-sm mb-3" style={{ color: getTextStyles(theme).body, fontFamily: 'Inter, system-ui, sans-serif' }}>Variété: {listing.variety}</p>
-                    )}
-                    
-                    {/* Infos regroupées - Alignement Baseline Parfait */}
-                    <div className="flex items-baseline gap-4 mb-5 text-xs" style={{ color: getTextStyles(theme).muted }}>
-                      <div className="flex items-center gap-1.5">
-                        <Package className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
-                        <span>{listing.quantity} {listing.unit}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <MapPin className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
-                        <span>{listing.region}{listing.locality ? `, ${listing.locality}` : ''}</span>
-                      </div>
-                    </div>
-
-                    {/* Actions - Alignement Horizontal Parfait */}
-                    <div className={`flex items-center justify-between pt-5 border-t ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
-                      <div className="flex items-center">
-                        {/* Like Button - Cœur avec animation rebond */}
-                        <button 
-                          onClick={() => toggleFavorite(listing.id)}
-                          className={`p-3 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 ${
-                            favorites.has(listing.id) 
-                              ? 'bg-red-500/20 text-red-500' 
-                              : `text-gray-500 ${theme === 'dark' ? 'hover:bg-red-500/10 hover:text-red-400' : 'hover:bg-red-50 hover:text-red-500'}`
-                          }`}
-                          aria-label="J'aime"
-                        >
-                          <Heart className={`h-6 w-6 transition-all duration-300 ${favorites.has(listing.id) ? 'fill-red-500' : ''}`} strokeWidth={2} />
-                        </button>
-                      </div>
-                      
-                      {/* Boutons d'action */}
-                      <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => {
-                            if (!user) {
-                              navigate('/login');
-                              return;
-                            }
-                            setSelectedListing(listing);
-                            setShowChatModal(true);
-                            setChatMessages([{
-                              sender: 'seller',
-                              text: `Bonjour! Je suis ${listing.seller?.profile?.display_name || 'le vendeur'}. Comment puis-je vous aider concernant ${listing.title}?`,
-                              time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-                            }]);
-                          }}
-                          className="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 font-medium text-xs sm:text-sm"
-                          style={{ ...getButtonStyles(theme, 'secondary', 'emerald'), fontFamily: 'Inter, system-ui, sans-serif' }}
-                        >
-                          <MessageCircle className="h-4 w-4" strokeWidth={2} />
-                          <span>Contacter</span>
-                        </button>
-                        
-                        <button
-                          onClick={() => navigate(`/listings/${listing.id}?action=order`, { 
-                            state: { 
-                              listing: {
-                                id: listing.id,
-                                title: listing.title,
-                                price: listing.price_per_unit,
-                                unit: listing.unit,
-                                quantity: listing.quantity,
-                                images: listing.images,
-                                seller_name: listing.seller?.profile?.display_name || 'Vendeur',
-                                seller_id: listing.seller_id,
-                                region: listing.region,
-                                locality: listing.locality,
-                                variety: listing.variety,
-                                description: ''
-              }
-                            }
-                          })}
-                          className="group flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 font-medium text-xs sm:text-sm"
-                          style={{ ...getButtonStyles(theme, 'primary', 'emerald'), fontFamily: 'Inter, system-ui, sans-serif' }}
-                        >
-                          <ShoppingCart className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-[-2px]" strokeWidth={2} />
-                          <span>Commander</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
                 </div>
-              );
-            })}
-          </div>
-
-          {/* Suggested Posts Section - Fills empty space like Facebook */}
-          {filteredListings.length > 0 && (
-            <div className="mt-8 space-y-4">
-              {/* Divider */}
-              <div className="flex items-center gap-4 my-8">
-                <div className={`flex-1 h-px ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-300'}`}></div>
-                <p className="text-sm font-medium" style={{ color: getTextStyles(theme).muted }}>
-                  Publications suggérées
-                </p>
-                <div className={`flex-1 h-px ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-300'}`}></div>
-              </div>
-
-              {/* Show all listings again as suggestions (infinite scroll effect) */}
-              <div className="space-y-6">
-                {listings.slice(0, 5).map((listing, idx) => (
-                  <div 
-                    key={`suggested-${listing.id}-${idx}`}
-                    className="backdrop-blur-md rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.005]"
-                    style={{
-                      ...getCardStyles(theme, 'emerald'),
-                      border: 'none',
-                      boxShadow: theme === 'light' 
-                        ? '0 4px 25px rgba(0, 0, 0, 0.08), 0 2px 10px rgba(0, 0, 0, 0.04)' 
-                        : '0 4px 25px rgba(0, 0, 0, 0.5), 0 2px 10px rgba(0, 0, 0, 0.3)'
-                    }}
-                  >
-                    {/* Post Header */}
-                    <div className={`px-6 py-4 border-b ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div 
-                            className="h-10 w-10 rounded-full flex items-center justify-center font-semibold text-sm"
-                            style={{
-                              background: theme === 'dark' ? 'linear-gradient(to bottom right, rgba(16, 185, 129, 0.3), rgba(5, 150, 105, 0.3))' : '#E5E7EB',
-                              border: theme === 'dark' ? '1px solid rgba(16, 185, 129, 0.3)' : 'none',
-                              color: theme === 'dark' ? '#6EE7B7' : getTextStyles(theme).body
-                            }}
-                          >
-                            {listing.seller?.profile?.display_name?.[0] || 'U'}
-                          </div>
-                          <div>
-                            <h3 className="text-sm font-medium" style={{ color: getTextStyles(theme).title }}>
-                              {listing.seller?.profile?.display_name || 'Utilisateur'}
-                            </h3>
-                            <p className="text-xs text-gray-500">{formatDate(listing.created_at)}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {listing.seller?.profile?.domain && (
-                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-semibold rounded-lg ${theme === 'dark' ? 'border' : ''} ${
-                              listing.seller.profile.domain === 'agriculture'
-                                ? (theme === 'dark' ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-green-50 text-green-700')
-                                : (theme === 'dark' ? 'bg-amber-500/20 text-amber-400 border-amber-500/30' : 'bg-amber-50 text-amber-700')
-                            }`}>
-                              {listing.seller.profile.domain === 'agriculture' ? (
-                                <><Wheat className="h-3.5 w-3.5" strokeWidth={2} /> Agriculture</>
-                              ) : (
-                                <><Beef className="h-3.5 w-3.5" strokeWidth={2} /> Élevage</>
-                              )}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Post Image */}
-                    {listing.images && listing.images.length > 0 && (
-                      <div className={theme === 'dark' ? 'px-6 pt-4' : 'w-full'}>
-                        <div className={`w-full aspect-[16/9] relative overflow-hidden ${theme === 'dark' ? 'bg-gradient-to-br from-white/[0.05] to-white/[0.02] rounded-2xl border border-white/10' : 'bg-gray-100'}`}>
-                          <img
-                            src={listing.images[0]}
-                            alt={listing.title}
-                            className="w-full h-full object-cover hover:scale-110 transition-all duration-[1200ms] ease-out"
-                          />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Post Content */}
-                    <div className="px-6 py-5">
-                      <h2 className="text-2xl font-bold mb-2" style={{ color: getTextStyles(theme).title }}>
-                        {listing.title.replace('VENTE: ', '').replace('ACHAT: ', '').replace('FOURNITURE: ', '')}
-                      </h2>
-                      
-                      <div className="mb-4">
-                        <p className={`text-4xl font-extrabold ${theme === 'dark' ? 'text-green-400' : 'text-emerald-600'}`}>
-                          {listing.price_per_unit.toLocaleString()} <span className="text-lg text-gray-500 font-normal">{listing.currency}/{listing.unit}</span>
-                        </p>
-                      </div>
-
-                      <div className="flex items-baseline gap-4 mb-5 text-xs" style={{ color: getTextStyles(theme).muted }}>
-                        <div className="flex items-center gap-1.5">
-                          <Package className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
-                          <span>{listing.quantity} {listing.unit}</span>
-                        </div>
-                        <div className="flex items-center gap-1.5">
-                          <MapPin className="h-3.5 w-3.5 text-gray-500 flex-shrink-0" strokeWidth={1.5} />
-                          <span>{listing.region}{listing.locality ? `, ${listing.locality}` : ''}</span>
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className={`flex items-center justify-between pt-5 border-t ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
-                        <div className="flex items-center">
-                          <button 
-                            onClick={() => toggleFavorite(listing.id)}
-                            className={`p-3 rounded-full transition-all duration-300 transform hover:scale-110 active:scale-95 ${
-                              favorites.has(listing.id) 
-                                ? 'bg-red-500/20 text-red-500' 
-                                : `text-gray-500 ${theme === 'dark' ? 'hover:bg-red-500/10 hover:text-red-400' : 'hover:bg-red-50 hover:text-red-500'}`
-                            }`}
-                          >
-                            <Heart className={`h-6 w-6 transition-all duration-300 ${favorites.has(listing.id) ? 'fill-red-500' : ''}`} strokeWidth={2} />
-                          </button>
-                        </div>
-                        
-                        <div className="flex items-center gap-3">
-                          <button
-                            onClick={() => {
-                              if (!user) {
-                                navigate('/login');
-                                return;
-                              }
-                              setSelectedListing(listing);
-                              setShowChatModal(true);
-                              setChatMessages([{
-                                sender: 'seller',
-                                text: `Bonjour! Je suis ${listing.seller?.profile?.display_name || 'le vendeur'}. Comment puis-je vous aider concernant ${listing.title}?`,
-                                time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-                              }]);
-                            }}
-                            className="flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 font-medium text-xs sm:text-sm"
-                            style={getButtonStyles(theme, 'secondary', 'emerald')}
-                          >
-                            <MessageCircle className="h-4 w-4" strokeWidth={2} />
-                            <span>Contacter</span>
-                          </button>
-                          
-                          <button
-                            onClick={() => navigate(`/listings/${listing.id}?action=order`, { 
-                              state: { 
-                                listing: {
-                                  id: listing.id,
-                                  title: listing.title,
-                                  price: listing.price_per_unit,
-                                  unit: listing.unit,
-                                  quantity: listing.quantity,
-                                  images: listing.images,
-                                  seller_name: listing.seller?.profile?.display_name || 'Vendeur',
-                                  seller_id: listing.seller_id,
-                                  region: listing.region,
-                                  locality: listing.locality,
-                                  variety: listing.variety,
-                                  description: ''
-                                }
-                              }
-                            })}
-                            className="group flex items-center gap-1 sm:gap-2 px-3 sm:px-5 py-2 sm:py-2.5 rounded-full transition-all duration-300 transform hover:scale-105 active:scale-95 font-medium text-xs sm:text-sm"
-                            style={getButtonStyles(theme, 'primary', 'emerald')}
-                          >
-                            <ShoppingCart className="h-4 w-4 transition-transform duration-300 group-hover:translate-y-[-2px]" strokeWidth={2} />
-                            <span>Commander</span>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {/* End of feed message */}
-              <div className="text-center py-8">
-                <p className="text-sm" style={{ color: getTextStyles(theme).muted }}>
-                  Vous avez tout vu pour le moment
-                </p>
                 <button
-                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-                  className="mt-4 px-6 py-2 rounded-full font-medium transition-all hover:scale-105"
-                  style={getButtonStyles(theme, 'secondary', 'emerald')}
+                  onClick={() => alert('Fonction de création en cours de développement')}
+                  className={`flex-1 text-left px-4 py-2.5 rounded-full text-sm transition-colors ${theme === 'dark' ? 'bg-white/5 text-gray-400 hover:bg-white/10' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                 >
-                  Retour en haut
+                  Quoi de neuf, {user?.profile?.display_name?.split(' ')[0] || 'Agriculteur'} ?
                 </button>
               </div>
             </div>
-          )}
-        </>
-        )}
-          </main>
 
-          {/* RIGHT SIDEBAR - Contacts & Suggestions (hidden on mobile) */}
-          <aside className="hidden xl:block xl:w-80 2xl:w-96 flex-shrink-0 sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-500 scrollbar-track-transparent hover:scrollbar-thumb-emerald-600">
-            <style>{`
-              aside::-webkit-scrollbar {
-                width: 8px;
-              }
-              aside::-webkit-scrollbar-track {
-                background: ${theme === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)'};
-                border-radius: 10px;
-              }
-              aside::-webkit-scrollbar-thumb {
-                background: ${theme === 'dark' ? 'rgba(16, 185, 129, 0.5)' : '#10B981'};
-                border-radius: 10px;
-              }
-              aside::-webkit-scrollbar-thumb:hover {
-                background: ${theme === 'dark' ? 'rgba(16, 185, 129, 0.7)' : '#059669'};
-              }
-            `}</style>
+            {/* Feed Posts */}
             <div className="space-y-6">
-              {/* Sponsored Section */}
-              <div>
-                <p className="px-2 text-xs font-semibold mb-3" style={{ color: getTextStyles(theme).muted }}>
-                  SPONSORISÉ
-                </p>
-                <div className={`rounded-xl p-4 ${theme === 'dark' ? 'bg-white/[0.03] border border-white/10' : 'bg-white shadow-sm'}`}>
-                  <div className="flex items-center gap-3 mb-2">
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
-                      <Wheat className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-sm" style={{ color: getTextStyles(theme).title }}>
-                        Semences Premium
-                      </h4>
-                      <p className="text-xs" style={{ color: getTextStyles(theme).muted }}>
-                        Qualité garantie
-                      </p>
+              {loading ? (
+                // Loading Skeletons
+                [1, 2, 3].map((i) => (
+                  <div key={i} className={`rounded-2xl p-4 shadow-sm border ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}>
+                    <div className="animate-pulse space-y-4">
+                      <div className="flex items-center gap-3">
+                        <div className={`w-10 h-10 rounded-full ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-200'}`} />
+                        <div className="space-y-2">
+                          <div className={`h-4 w-32 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-200'}`} />
+                          <div className={`h-3 w-24 rounded ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-200'}`} />
+                        </div>
+                      </div>
+                      <div className={`h-48 rounded-xl ${theme === 'dark' ? 'bg-white/10' : 'bg-gray-200'}`} />
                     </div>
                   </div>
-                  <p className="text-xs mb-2" style={{ color: getTextStyles(theme).body }}>
-                    Découvrez nos semences certifiées pour un rendement optimal
-                  </p>
+                ))
+              ) : filteredListings.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${theme === 'dark' ? 'bg-white/5 text-gray-600' : 'bg-gray-100 text-gray-400'}`}>
+                    <PackageSearch className="w-8 h-8" />
+                  </div>
+                  <h3 className="text-lg font-medium mb-2" style={{ color: getTextStyles(theme).title }}>Aucune publication trouvée</h3>
+                  <p style={{ color: getTextStyles(theme).muted }}>Essayez de modifier vos filtres ou effectuez une nouvelle recherche.</p>
                 </div>
-              </div>
+              ) : (
+                filteredListings.map((listing) => (
+                  <div 
+                    key={listing.id}
+                    className={`rounded-2xl shadow-sm border overflow-hidden transition-all hover:shadow-md ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}
+                  >
+                    {/* Post Header */}
+                    <div className="p-4 flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="relative">
+                          <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm" style={{ background: getDomainColors(selectedSector).gradientDiagonal }}>
+                            {listing.seller?.profile?.display_name?.charAt(0) || 'U'}
+                          </div>
+                          <div className="absolute -bottom-1 -right-1 bg-white dark:bg-[#1a1a1a] rounded-full p-0.5">
+                            <div className="w-3 h-3 rounded-full border-2 border-white dark:border-[#1a1a1a]" style={{ backgroundColor: getDomainColors(selectedSector).primary }} />
+                          </div>
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-sm hover:underline cursor-pointer" style={{ color: getTextStyles(theme).title }}>
+                            {listing.seller?.profile?.display_name || 'Utilisateur'}
+                          </h3>
+                          <div className="flex items-center gap-2 text-xs" style={{ color: getTextStyles(theme).muted }}>
+                            <span>{formatDate(listing.created_at)}</span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <Globe className="w-3 h-3" />
+                              {listing.region}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      <button className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'hover:bg-white/5 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}>
+                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                          <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
+                        </svg>
+                      </button>
+                    </div>
 
-              {/* Contacts Section - Dynamic from listings */}
-              <div>
-                <div className="flex items-center justify-between px-2 mb-3">
-                  <p className="text-xs font-semibold flex items-center gap-1.5" style={{ color: getTextStyles(theme).muted }}>
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                    </span>
-                    VENDEURS ACTIFS
-                  </p>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 font-medium">
-                    {listings.filter(l => l.seller?.profile?.display_name).reduce((acc, l) => {
-                      if (!acc.includes(l.seller_id)) acc.push(l.seller_id);
-                      return acc;
-                    }, [] as string[]).length}
-                  </span>
-                </div>
-                <div className="space-y-1">
-                  {/* Dynamic contacts from listings sellers */}
-                  {(() => {
-                    // Extract unique sellers from listings with more data
-                    const uniqueSellers = listings
-                      .filter(l => l.seller?.profile?.display_name)
-                      .reduce((acc, listing) => {
-                        const sellerId = listing.seller_id;
-                        if (!acc.find(s => s.id === sellerId)) {
-                          acc.push({
-                            id: sellerId,
+                    {/* Post Content */}
+                    <div className="px-4 pb-3">
+                      <h4 className="font-bold text-lg mb-1" style={{ color: getTextStyles(theme).title }}>
+                        {listing.title} {listing.variety && <span className="font-normal text-base opacity-80">- {listing.variety}</span>}
+                      </h4>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="px-2 py-0.5 rounded text-xs font-medium border" style={{ backgroundColor: `${getDomainColors(selectedSector).primary}15`, color: getDomainColors(selectedSector).primary, borderColor: `${getDomainColors(selectedSector).primary}30` }}>
+                          {listing.category_id === 'agriculture' ? 'Agriculture' : 'Élevage'}
+                        </span>
+                        {listing.quantity > 0 && (
+                          <span className={`px-2 py-0.5 rounded text-xs font-medium border ${theme === 'dark' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
+                            Stock: {listing.quantity} {listing.unit}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-xl font-bold mb-2" style={{ color: getDomainColors(selectedSector).primary }}>
+                        {listing.price_per_unit.toLocaleString()} {listing.currency}/{listing.unit}
+                      </p>
+                    </div>
+
+                    {/* Post Media */}
+                    {listing.images && listing.images.length > 0 && (
+                      <div className="relative cursor-pointer group" onClick={() => { setSelectedListing(listing); setShowChatModal(true); }}>
+                        <div className={`grid ${listing.images.length > 1 ? 'grid-cols-2 sm:grid-cols-2' : 'grid-cols-1'} gap-0.5 bg-gray-100 dark:bg-gray-800`}>
+                          {listing.images.slice(0, 4).map((img, idx) => (
+                            <div key={idx} className={`relative ${listing.images && listing.images.length === 3 && idx === 0 ? 'row-span-2' : ''} h-48 sm:h-64 lg:h-72 overflow-hidden`}>
+                              <img 
+                                src={img} 
+                                alt={`${listing.title} - ${idx + 1}`} 
+                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                              />
+                              {listing.images && listing.images.length > 4 && idx === 3 && (
+                                <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
+                                  <span className="text-white text-xl font-bold">+{listing.images.length - 4}</span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Post Actions */}
+                    <div className={`px-2 py-1 border-t flex items-center justify-between ${theme === 'dark' ? 'border-white/10' : 'border-gray-100'}`}>
+                      <button 
+                        onClick={() => toggleFavorite(listing.id, listing.title)}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors ${favorites.has(listing.id) ? 'text-red-500' : (theme === 'dark' ? 'text-gray-400 hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50')}`}
+                      >
+                        <Heart className={`w-5 h-5 ${favorites.has(listing.id) ? 'fill-current' : ''}`} />
+                        <span className="text-sm font-medium hidden sm:inline">{favorites.has(listing.id) ? 'Favori' : 'J\'aime'}</span>
+                      </button>
+                      
+                      <button 
+                        onClick={() => { setSelectedListing(listing); setShowChatModal(true); }}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-gray-400 hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                        <span className="text-sm font-medium hidden sm:inline">Commenter</span>
+                      </button>
+
+                      <button 
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-gray-400 hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
+                      >
+                        <Send className="w-5 h-5" />
+                        <span className="text-sm font-medium hidden sm:inline">Partager</span>
+                      </button>
+                      
+                      <button 
+                        onClick={() => {
+                          const contact = {
+                            id: listing.seller_id,
                             name: listing.seller?.profile?.display_name || 'Vendeur',
-                            domain: listing.seller?.profile?.domain || 'agriculture',
+                            domain: listing.category_id,
                             activityType: listing.seller?.profile?.activity_type || 'producer',
-                            isOnline: Math.random() > 0.3,
                             lastProduct: listing.title,
                             region: listing.region
-                          });
-                        }
-                        return acc;
-                      }, [] as Array<{id: string; name: string; domain: string; activityType: string; isOnline: boolean; lastProduct: string; region: string}>)
-                      .slice(0, 6);
-
-                    if (uniqueSellers.length === 0) {
-                      return (
-                        <div className={`text-center py-4 rounded-xl ${theme === 'dark' ? 'bg-white/[0.02]' : 'bg-gray-50'}`}>
-                          <User className="h-8 w-8 mx-auto mb-2 text-gray-400" />
-                          <p className="text-xs" style={{ color: getTextStyles(theme).muted }}>Aucun vendeur actif</p>
-                        </div>
-                      );
-                    }
-
-                    return uniqueSellers.map((contact) => (
-                      <button
-                        key={contact.id}
-                        onClick={() => startDemoChat(contact)}
-                        className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all duration-200 group ${theme === 'dark' ? 'hover:bg-emerald-500/10' : 'hover:bg-emerald-50'}`}
+                          };
+                          startDemoChat(contact);
+                        }}
+                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors" style={{ color: getDomainColors(selectedSector).primary }}
                       >
-                        <div className="relative flex-shrink-0">
-                          <div 
-                            className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm shadow-sm group-hover:shadow-md transition-shadow"
-                            style={{
-                              background: contact.domain === 'agriculture' 
-                                ? (theme === 'dark' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.4), rgba(5, 150, 105, 0.4))' : 'linear-gradient(135deg, #D1FAE5, #A7F3D0)')
-                                : (theme === 'dark' ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.4), rgba(245, 158, 11, 0.4))' : 'linear-gradient(135deg, #FEF3C7, #FDE68A)'),
-                              border: theme === 'dark' ? '2px solid rgba(16, 185, 129, 0.3)' : '2px solid transparent',
-                              color: contact.domain === 'agriculture' 
-                                ? (theme === 'dark' ? '#6EE7B7' : '#059669')
-                                : (theme === 'dark' ? '#FCD34D' : '#D97706')
-                            }}
-                          >
-                            {contact.name[0].toUpperCase()}
-                          </div>
-                          <div 
-                            className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${contact.isOnline ? 'bg-emerald-500' : 'bg-gray-400'}`}
-                            style={{ borderColor: theme === 'dark' ? '#060D0A' : '#FFFFFF' }}
-                          />
-                        </div>
-                        <div className="flex-1 text-left min-w-0">
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-semibold truncate" style={{ color: getTextStyles(theme).title }}>
-                              {contact.name}
-                            </span>
-                            {contact.isOnline && (
-                              <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-500 font-medium">
-                                En ligne
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs truncate" style={{ color: getTextStyles(theme).muted }}>
-                            {contact.lastProduct} • {contact.region}
-                          </p>
-                        </div>
-                        <MessageCircle className={`h-4 w-4 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-600'}`} />
+                        <MessageCircle className="w-5 h-5" />
+                        <span className="text-sm font-medium">Contacter</span>
                       </button>
-                    ));
-                  })()}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+
+        {/* RIGHT SIDEBAR - Fixed Static */}
+        <aside className="hidden xl:block fixed right-0 top-16 w-[360px] h-[calc(100vh-4rem)] overflow-y-auto scrollbar-none">
+            <div className="h-full overflow-y-auto scrollbar-none p-4 space-y-6">
+              {/* Sponsored */}
+              <div className={`p-4 rounded-3xl shadow-sm border ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}>
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: getTextStyles(theme).muted }}>
+                  Sponsorisé
+                </h3>
+                <div className="space-y-4">
+                  <a href="#" className="flex items-center gap-3 group">
+                    <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
+                      <img src="https://source.unsplash.com/random/200x200?seeds" alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm mb-1 transition-colors" style={{ color: getTextStyles(theme).title }}>
+                        Semences Premium
+                      </h4>
+                      <p className="text-xs line-clamp-2 mb-2" style={{ color: getTextStyles(theme).muted }}>
+                        Découvrez nos semences certifiées pour un rendement optimal.
+                      </p>
+                      <span className="text-xs font-medium" style={{ color: getDomainColors(selectedSector).primary }}>agrisemen.cm</span>
+                    </div>
+                  </a>
                 </div>
               </div>
 
-              {/* Suggestions Section */}
-              <div>
-                <p className="px-2 text-xs font-semibold mb-3" style={{ color: getTextStyles(theme).muted }}>
-                  SUGGESTIONS POUR VOUS
-                </p>
-                <div className="space-y-3">
+              {/* Active Sellers */}
+              <div className={`p-4 rounded-3xl shadow-sm border ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: getTextStyles(theme).muted }}>
+                    Vendeurs Actifs
+                  </h3>
+                  <span className="text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ backgroundColor: getDomainColors(selectedSector).primary }}>46</span>
+                </div>
+                
+                <div className="space-y-1">
                   {[
-                    { name: 'Groupe Maïs Cameroun', members: '2.3k', icon: Wheat },
-                    { name: 'Éleveurs du Centre', members: '1.8k', icon: Beef },
-                    { name: 'Marketplace Bio', members: '5.1k', icon: Package },
-                  ].map((group, idx) => (
-                    <div
-                      key={idx}
-                      className={`rounded-xl p-3 ${theme === 'dark' ? 'bg-white/[0.03] border border-white/10' : 'bg-white shadow-sm'}`}
+                    { name: 'Hassan Producteur', role: 'producteur', item: 'Veaux', status: 'online' },
+                    { name: 'Lamine Acheteur', role: 'acheteur', item: 'Poivrons', status: 'online' },
+                    { name: 'Aissatou Fournisseur', role: 'seed_provider', item: 'Canne à sucre', status: 'offline' },
+                    { name: 'Ibrahim Fournisseur', role: 'seed_provider', item: 'Porcelets', status: 'online' },
+                    { name: 'Aminata Acheteur', role: 'acheteur', item: 'Tracteur', status: 'online' },
+                  ].map((contact, i) => (
+                    <button
+                      key={i}
+                      className={`w-full flex items-center gap-3 px-2 py-2 rounded-xl transition-colors group ${theme === 'dark' ? 'hover:bg-white/5' : 'hover:bg-gray-50'}`}
                     >
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-green-600/20 flex items-center justify-center">
-                          <group.icon className="h-5 w-5 text-emerald-500" />
+                      <div className="relative">
+                        <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm ${
+                          contact.role === 'producteur' ? 'bg-amber-100 text-amber-700' :
+                          contact.role === 'seed_provider' ? 'bg-green-100 text-green-700' :
+                          'bg-blue-100 text-blue-700'
+                        }`}>
+                          {contact.name.charAt(0)}
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-sm truncate" style={{ color: getTextStyles(theme).title }}>
-                            {group.name}
-                          </h4>
+                        {contact.status === 'online' && (
+                          <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white dark:border-[#1a1a1a]" style={{ backgroundColor: getDomainColors(selectedSector).primary }} />
+                        )}
+                      </div>
+                      <div className="text-left flex-1 min-w-0">
+                        <h4 className="font-semibold text-sm truncate" style={{ color: getTextStyles(theme).title }}>
+                          {contact.name}
+                        </h4>
+                        <p className="text-xs truncate" style={{ color: getTextStyles(theme).muted }}>
+                          {contact.role === 'producteur' ? 'VENTE: ' : contact.role === 'acheteur' ? 'ACHAT: ' : 'FOURNITURE: '}{contact.item}
+                        </p>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Suggestions Groups */}
+              <div className={`p-4 rounded-3xl shadow-sm border ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}>
+                <h3 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: getTextStyles(theme).muted }}>
+                  Groupes suggérés
+                </h3>
+                <div className="space-y-4">
+                  {[
+                    { name: 'Agri-Tech Cameroun', members: '12k', image: 'https://source.unsplash.com/random/100x100?tech,farm' },
+                    { name: 'Élevage Moderne', members: '8.5k', image: 'https://source.unsplash.com/random/100x100?animal,farm' },
+                  ].map((group, i) => (
+                    <div key={i} className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200">
+                          <img src={group.image} alt="" className="w-full h-full object-cover" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-sm" style={{ color: getTextStyles(theme).title }}>{group.name}</h4>
                           <p className="text-xs" style={{ color: getTextStyles(theme).muted }}>
                             {group.members} membres
                           </p>
                         </div>
                       </div>
                       <button
-                        className="w-full px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-[1.02]"
+                        className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-[1.02]"
                         style={getButtonStyles(theme, 'secondary', 'emerald')}
                       >
                         Rejoindre
@@ -1999,20 +1583,110 @@ export default function FeedPage() {
               {/* Footer Links */}
               <div className="px-2 pt-4 border-t" style={{ borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#E5E7EB' }}>
                 <div className="flex flex-wrap gap-2 text-xs" style={{ color: getTextStyles(theme).muted }}>
-                  <a href="#" className="hover:underline">Confidentialité</a>
+                  <button onClick={() => navigate('/privacy')} className="hover:underline transition-colors" style={{ color: 'inherit' }}>Confidentialité</button>
                   <span>·</span>
                   <a href="#" className="hover:underline">Conditions</a>
                   <span>·</span>
                   <a href="#" className="hover:underline">Aide</a>
                 </div>
                 <p className="text-xs mt-2" style={{ color: getTextStyles(theme).muted }}>
-                  MBOA Market © 2026
+                  MBOA Market &copy; 2026
                 </p>
               </div>
             </div>
-          </aside>
-        </div>
+        </aside>
       </div>
+
+      {/* Voice Assistant Floating UI */}
+      {isVoiceActive && (
+        <div className="fixed bottom-4 right-4 z-50 flex flex-col items-end gap-3">
+          {/* Voice Status Card */}
+          <div 
+            className={`rounded-2xl p-4 shadow-2xl backdrop-blur-xl border transition-all duration-300 ${
+              voiceStatus === 'listening' ? 'animate-pulse' : ''
+            }`}
+            style={{
+              ...getCardStyles(theme, 'emerald'),
+              borderColor: theme === 'light' ? '#10B981' : 'rgba(16, 185, 129, 0.3)',
+              backgroundColor: voiceStatus === 'listening' 
+                ? 'rgba(16, 185, 129, 0.1)' 
+                : theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)'
+            }}
+          >
+            <div className="flex items-center gap-3 mb-3">
+              <div className={`w-3 h-3 rounded-full animate-pulse`} 
+                style={{ 
+                  backgroundColor: voiceStatus === 'listening' ? '#10B981' : 
+                                   voiceStatus === 'processing' ? '#F59E0B' : '#6B7280'
+                }} 
+              />
+              <span className="text-sm font-medium" style={{ color: getTextStyles(theme).title }}>
+                {voiceStatus === 'listening' ? 'Bigiss écoute...' : 
+                 voiceStatus === 'processing' ? 'Bigiss traite...' : 
+                 'Bigiss prêt'}
+              </span>
+            </div>
+            
+            {/* Voice Wave Animation */}
+            {voiceStatus === 'listening' && (
+              <div className="flex items-center gap-1 justify-center">
+                {[1, 2, 3, 4, 5].map((i) => (
+                  <div
+                    key={i}
+                    className="w-1 bg-emerald-500 rounded-full animate-pulse"
+                    style={{
+                      height: `${Math.random() * 20 + 10}px`,
+                      animationDelay: `${i * 0.1}s`,
+                      animationDuration: '1s'
+                    }}
+                  />
+                ))}
+              </div>
+            )}
+            
+            {/* Processing Animation */}
+            {voiceStatus === 'processing' && (
+              <div className="flex items-center justify-center">
+                <div className="w-6 h-6 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+            
+            {/* Help Text */}
+            <div className="mt-3 text-xs" style={{ color: getTextStyles(theme).muted }}>
+              {voiceStatus === 'listening' 
+                ? 'Dites "Bigiss" suivi de votre commande...' 
+                : voiceStatus === 'processing'
+                ? 'Analyse de votre demande...'
+                : 'Cliquez sur le micro pour recommencer'
+              }
+            </div>
+          </div>
+          
+          {/* Quick Commands */}
+          <div className={`rounded-2xl p-3 shadow-lg backdrop-blur-xl border`}
+            style={{
+              ...getCardStyles(theme, 'emerald'),
+              borderColor: theme === 'light' ? '#10B981' : 'rgba(16, 185, 129, 0.3)',
+              backgroundColor: theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.95)'
+            }}
+          >
+            <p className="text-xs font-medium mb-2" style={{ color: getTextStyles(theme).title }}>
+              Commandes rapides:
+            </p>
+            <div className="space-y-1">
+              <div className="text-xs" style={{ color: getTextStyles(theme).muted }}>
+                • "Bigiss cherche du maïs"
+              </div>
+              <div className="text-xs" style={{ color: getTextStyles(theme).muted }}>
+                • "Bigiss va au profil"
+              </div>
+              <div className="text-xs" style={{ color: getTextStyles(theme).muted }}>
+                • "Bigiss analyse les prix"
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Chat Modal */}
       {showChatModal && selectedListing && (
@@ -2111,7 +1785,8 @@ export default function FeedPage() {
             }}
           >
             {/* Chat Header */}
-            <div className={`px-4 py-3 flex items-center gap-3 border-b ${theme === 'dark' ? 'border-white/10 bg-emerald-500/10' : 'border-gray-200 bg-emerald-50'}`}>
+            <div className={`px-4 py-3 flex items-center gap-3 border-b ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}
+              style={{ backgroundColor: `${getDomainColors(selectedSector).primary}15` }}>
               <div className="relative">
                 <div 
                   className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
@@ -2124,12 +1799,12 @@ export default function FeedPage() {
                 >
                   {demoChatContact.name[0].toUpperCase()}
                 </div>
-                <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-white"></div>
+                <div className="absolute bottom-0 right-0 w-3.5 h-3.5 rounded-full border-2 border-white" style={{ backgroundColor: getDomainColors(selectedSector).primary }}></div>
               </div>
               <div className="flex-1">
                 <h3 className="font-bold" style={{ color: getTextStyles(theme).title }}>{demoChatContact.name}</h3>
                 <p className="text-xs flex items-center gap-1" style={{ color: getTextStyles(theme).muted }}>
-                  <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></span>
+                  <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: getDomainColors(selectedSector).primary }}></span>
                   En ligne • {demoChatContact.region}
                 </p>
               </div>
@@ -2185,6 +1860,62 @@ export default function FeedPage() {
                 Appuyez sur Entrée pour envoyer • Le vendeur répondra automatiquement
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Story Viewer Modal */}
+      {activeStory && (
+        <div 
+          className="fixed inset-0 bg-black z-50 flex items-center justify-center"
+          onClick={() => setActiveStory(null)}
+        >
+          {/* Progress Bar */}
+          <div className="absolute top-4 left-4 right-4 h-1 bg-white/20 rounded-full overflow-hidden">
+            <div 
+              className="h-full bg-white rounded-full transition-all duration-100"
+              style={{ width: `${storyProgress}%` }}
+            />
+          </div>
+
+          {/* Header */}
+          <div className="absolute top-8 left-4 right-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full border-2 border-white overflow-hidden">
+                <img 
+                  src={`https://i.pravatar.cc/100?img=${activeStory.id + 10}`} 
+                  alt="" 
+                  className="w-full h-full object-cover" 
+                />
+              </div>
+              <div>
+                <h3 className="text-white font-semibold text-sm">{activeStory.name}</h3>
+                <p className="text-white/60 text-xs">{activeStory.time}</p>
+              </div>
+            </div>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setActiveStory(null);
+              }}
+              className="p-2 hover:bg-white/10 rounded-full transition-colors"
+            >
+              <X className="w-6 h-6 text-white" />
+            </button>
+          </div>
+
+          {/* Story Image */}
+          <div className="max-w-lg w-full h-[80vh] relative">
+            <img 
+              src={activeStory.image} 
+              alt={activeStory.name}
+              className="w-full h-full object-contain"
+            />
+          </div>
+
+          {/* Navigation hints */}
+          <div className="absolute bottom-8 left-0 right-0 text-center">
+            <p className="text-white/60 text-sm">Cliquez n'importe où pour fermer</p>
           </div>
         </div>
       )}

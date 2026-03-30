@@ -1,10 +1,10 @@
 from sqlalchemy import Column, String, Boolean, DateTime, ForeignKey, Enum as SQLEnum, UniqueConstraint, Index
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 import enum
 from app.core.database import Base
+from app.core.types import GUID
 
 
 class UserStatus(str, enum.Enum):
@@ -22,7 +22,7 @@ class BadgeLevel(str, enum.Enum):
 class User(Base):
     __tablename__ = "users"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     phone = Column(String, nullable=False, unique=True, index=True)
     phone_verified = Column(Boolean, nullable=False, default=False)
     email = Column(String, nullable=True)
@@ -48,8 +48,8 @@ class User(Base):
 class Profile(Base):
     __tablename__ = "profiles"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, unique=True)
     display_name = Column(String, nullable=False)
     activity_type = Column(String, nullable=False)
     domain = Column(String, nullable=True)
@@ -66,7 +66,7 @@ class Profile(Base):
 class Role(Base):
     __tablename__ = "roles"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
     code = Column(String, nullable=False, unique=True)
     name = Column(String, nullable=False)
     description = Column(String, nullable=True)
@@ -77,9 +77,9 @@ class Role(Base):
 class UserRole(Base):
     __tablename__ = "user_roles"
     
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, primary_key=True)
-    role_id = Column(UUID(as_uuid=True), ForeignKey("roles.id", ondelete="CASCADE"), nullable=False, primary_key=True)
-    granted_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, primary_key=True)
+    role_id = Column(GUID(), ForeignKey("roles.id", ondelete="CASCADE"), nullable=False, primary_key=True)
+    granted_by = Column(GUID(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     granted_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     
     __table_args__ = (

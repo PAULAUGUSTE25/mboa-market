@@ -1,12 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
 import { Search, Filter, MapPin, Package, Heart, MessageCircle, ShoppingCart, Wheat, Beef, ArrowLeft, X, Grid, List } from 'lucide-react';
 import ScrollToTop from '@/components/ScrollToTop';
 import Logo from '@/components/Logo';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getCardStyles, getTextStyles, getInputStyles, getButtonStyles } from '@/utils/cardStyles';
 
 interface Listing {
   id: string;
@@ -34,7 +32,6 @@ interface Listing {
 
 export default function ListingsPage() {
   const { theme } = useTheme();
-  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [listings, setListings] = useState<Listing[]>([]);
   const [filteredListings, setFilteredListings] = useState<Listing[]>([]);
@@ -149,21 +146,33 @@ export default function ListingsPage() {
   };
 
   return (
-    <div className={`min-h-screen ${theme === 'dark' ? 'bg-[#060D0A]' : 'bg-[#F0F2F5]'}`}>
+    <div className="min-h-screen relative font-['Inter','Plus_Jakarta_Sans',sans-serif]">
+      {/* Background Image */}
+      <div 
+        className="fixed inset-0 z-0"
+        style={{
+          backgroundImage: `url('/background pic.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+        }}
+      >
+        <div className={`absolute inset-0 ${theme === 'dark' ? 'bg-black/80' : 'bg-black/40'}`} />
+      </div>
+
       {/* Header */}
-      <header className={`sticky top-0 z-20 ${theme === 'dark' ? 'bg-[#060D0A]/95 backdrop-blur-xl border-b border-white/10' : 'bg-white/95 backdrop-blur-xl shadow-sm border-b border-gray-200'}`}>
+      <header className="sticky top-0 z-20 backdrop-blur-xl bg-black/20 border-b border-white/10 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 py-3">
           <div className="flex items-center justify-between gap-4">
             {/* Back & Logo */}
             <div className="flex items-center gap-3">
               <button
                 onClick={() => navigate(-1)}
-                className={`p-2 rounded-full transition-all ${theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
+                className="p-2 rounded-full transition-all hover:bg-white/10 text-white"
               >
-                <ArrowLeft className="h-5 w-5" style={{ color: getTextStyles(theme).body }} />
+                <ArrowLeft className="h-5 w-5" />
               </button>
               <Logo size="sm" />
-              <h1 className="text-lg font-bold hidden sm:block" style={{ color: getTextStyles(theme).title }}>
+              <h1 className="text-lg font-bold hidden sm:block text-white">
                 Marketplace
               </h1>
             </div>
@@ -171,21 +180,20 @@ export default function ListingsPage() {
             {/* Search Bar */}
             <div className="flex-1 max-w-xl">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-white/60" />
                 <input
                   type="text"
                   placeholder="Rechercher produits, vendeurs..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-full text-sm transition-all"
-                  style={getInputStyles(theme)}
+                  className="w-full pl-10 pr-4 py-2.5 rounded-full text-sm transition-all bg-white/10 border border-white/20 text-white placeholder-white/50 focus:bg-white/20 focus:border-white/40 focus:outline-none"
                 />
                 {searchQuery && (
                   <button
                     onClick={() => setSearchQuery('')}
                     className="absolute right-3 top-1/2 -translate-y-1/2"
                   >
-                    <X className="h-4 w-4 text-gray-400 hover:text-gray-600" />
+                    <X className="h-4 w-4 text-white/60 hover:text-white" />
                   </button>
                 )}
               </div>
@@ -195,20 +203,20 @@ export default function ListingsPage() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className={`p-2.5 rounded-full transition-all ${showFilters ? 'bg-emerald-500 text-white' : theme === 'dark' ? 'hover:bg-white/10' : 'hover:bg-gray-100'}`}
+                className={`p-2.5 rounded-full transition-all ${showFilters ? 'bg-emerald-600 text-white' : 'hover:bg-white/10 text-white'}`}
               >
                 <Filter className="h-5 w-5" />
               </button>
-              <div className={`hidden sm:flex rounded-full p-1 ${theme === 'dark' ? 'bg-white/5' : 'bg-gray-100'}`}>
+              <div className="hidden sm:flex rounded-full p-1 bg-white/5 border border-white/10">
                 <button
                   onClick={() => setViewMode('grid')}
-                  className={`p-2 rounded-full transition-all ${viewMode === 'grid' ? 'bg-emerald-500 text-white' : ''}`}
+                  className={`p-2 rounded-full transition-all ${viewMode === 'grid' ? 'bg-emerald-600 text-white' : 'text-white/60 hover:text-white'}`}
                 >
                   <Grid className="h-4 w-4" />
                 </button>
                 <button
                   onClick={() => setViewMode('list')}
-                  className={`p-2 rounded-full transition-all ${viewMode === 'list' ? 'bg-emerald-500 text-white' : ''}`}
+                  className={`p-2 rounded-full transition-all ${viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-white/60 hover:text-white'}`}
                 >
                   <List className="h-4 w-4" />
                 </button>
@@ -218,11 +226,11 @@ export default function ListingsPage() {
 
           {/* Filters Panel */}
           {showFilters && (
-            <div className={`mt-4 p-4 rounded-xl ${theme === 'dark' ? 'bg-white/5 border border-white/10' : 'bg-gray-50 border border-gray-200'}`}>
+            <div className="mt-4 p-4 rounded-xl bg-black/40 border border-white/10 backdrop-blur-xl">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 {/* Sector Filter */}
                 <div>
-                  <label className="text-xs font-semibold mb-2 block" style={{ color: getTextStyles(theme).muted }}>
+                  <label className="text-xs font-semibold mb-2 block text-white/60">
                     SECTEUR
                   </label>
                   <div className="flex gap-2">
@@ -236,10 +244,9 @@ export default function ListingsPage() {
                         onClick={() => setSelectedSector(option.value as any)}
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                           selectedSector === option.value
-                            ? 'bg-emerald-500 text-white'
-                            : theme === 'dark' ? 'bg-white/5 hover:bg-white/10' : 'bg-white hover:bg-gray-100'
+                            ? 'bg-emerald-600 text-white border border-emerald-500'
+                            : 'bg-white/5 hover:bg-white/10 text-white/80 border border-white/10'
                         }`}
-                        style={selectedSector !== option.value ? { color: getTextStyles(theme).body } : {}}
                       >
                         {option.icon}
                         <span className="hidden sm:inline">{option.label}</span>
@@ -250,37 +257,35 @@ export default function ListingsPage() {
 
                 {/* Region Filter */}
                 <div>
-                  <label className="text-xs font-semibold mb-2 block" style={{ color: getTextStyles(theme).muted }}>
+                  <label className="text-xs font-semibold mb-2 block text-white/60">
                     RÉGION
                   </label>
                   <select
                     value={selectedRegion}
                     onChange={(e) => setSelectedRegion(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg text-sm"
-                    style={getInputStyles(theme)}
+                    className="w-full px-3 py-2 rounded-lg text-sm bg-white/10 border border-white/20 text-white focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="all">Toutes les régions</option>
+                    <option value="all" className="bg-gray-900">Toutes les régions</option>
                     {regions.map((region) => (
-                      <option key={region} value={region}>{region}</option>
+                      <option key={region} value={region} className="bg-gray-900">{region}</option>
                     ))}
                   </select>
                 </div>
 
                 {/* Price Filter */}
                 <div>
-                  <label className="text-xs font-semibold mb-2 block" style={{ color: getTextStyles(theme).muted }}>
+                  <label className="text-xs font-semibold mb-2 block text-white/60">
                     PRIX
                   </label>
                   <select
                     value={priceRange}
                     onChange={(e) => setPriceRange(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-lg text-sm"
-                    style={getInputStyles(theme)}
+                    className="w-full px-3 py-2 rounded-lg text-sm bg-white/10 border border-white/20 text-white focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="all">Tous les prix</option>
-                    <option value="low">Moins de 5,000 FCFA</option>
-                    <option value="medium">5,000 - 20,000 FCFA</option>
-                    <option value="high">Plus de 20,000 FCFA</option>
+                    <option value="all" className="bg-gray-900">Tous les prix</option>
+                    <option value="low" className="bg-gray-900">Moins de 5,000 FCFA</option>
+                    <option value="medium" className="bg-gray-900">5,000 - 20,000 FCFA</option>
+                    <option value="high" className="bg-gray-900">Plus de 20,000 FCFA</option>
                   </select>
                 </div>
               </div>
@@ -290,16 +295,16 @@ export default function ListingsPage() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 py-6">
+      <main className="max-w-7xl mx-auto px-4 py-6 relative z-10">
         {/* Results Count */}
         <div className="flex items-center justify-between mb-6">
-          <p className="text-sm" style={{ color: getTextStyles(theme).muted }}>
+          <p className="text-sm text-white/60">
             {filteredListings.length} annonce{filteredListings.length !== 1 ? 's' : ''} trouvée{filteredListings.length !== 1 ? 's' : ''}
           </p>
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              className="text-sm text-emerald-500 hover:text-emerald-600 font-medium"
+              className="text-sm text-emerald-400 hover:text-emerald-300 font-medium"
             >
               Effacer la recherche
             </button>
@@ -313,12 +318,12 @@ export default function ListingsPage() {
           </div>
         ) : filteredListings.length === 0 ? (
           /* Empty State */
-          <div className={`text-center py-16 rounded-2xl ${theme === 'dark' ? 'bg-white/5' : 'bg-white'}`}>
-            <Package className="h-16 w-16 mx-auto mb-4 text-gray-400" />
-            <h3 className="text-lg font-semibold mb-2" style={{ color: getTextStyles(theme).title }}>
+          <div className="text-center py-16 rounded-2xl bg-black/40 border border-white/10 backdrop-blur-xl">
+            <Package className="h-16 w-16 mx-auto mb-4 text-white/20" />
+            <h3 className="text-lg font-semibold mb-2 text-white">
               Aucune annonce trouvée
             </h3>
-            <p className="text-sm mb-4" style={{ color: getTextStyles(theme).muted }}>
+            <p className="text-sm mb-4 text-white/60">
               Essayez de modifier vos filtres ou votre recherche
             </p>
             <button
@@ -328,8 +333,7 @@ export default function ListingsPage() {
                 setSelectedRegion('all');
                 setPriceRange('all');
               }}
-              className="px-6 py-2 rounded-full font-medium transition-all hover:scale-105"
-              style={getButtonStyles(theme, 'primary', 'emerald')}
+              className="px-6 py-2 rounded-full font-medium transition-all hover:scale-105 bg-emerald-600 text-white"
             >
               Réinitialiser les filtres
             </button>
@@ -343,9 +347,7 @@ export default function ListingsPage() {
             {filteredListings.map((listing) => (
               <div
                 key={listing.id}
-                className={`group rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer ${
-                  theme === 'dark' ? 'bg-white/[0.03] border border-white/10 hover:border-emerald-500/50' : 'bg-white shadow-sm hover:shadow-lg'
-                } ${viewMode === 'list' ? 'flex' : ''}`}
+                className={`group rounded-2xl overflow-hidden transition-all duration-300 hover:scale-[1.02] cursor-pointer bg-black/40 border border-white/10 hover:border-emerald-500/50 backdrop-blur-md shadow-lg ${viewMode === 'list' ? 'flex' : ''}`}
                 onClick={() => navigate(`/listings/${listing.id}`, { 
                   state: { 
                     listing: {
@@ -400,15 +402,15 @@ export default function ListingsPage() {
                 {/* Content */}
                 <div className={`p-4 ${viewMode === 'list' ? 'flex-1 flex flex-col justify-between' : ''}`}>
                   <div>
-                    <h3 className="font-semibold text-sm mb-1 line-clamp-2" style={{ color: getTextStyles(theme).title }}>
+                    <h3 className="font-semibold text-sm mb-1 line-clamp-2 text-white group-hover:text-emerald-400 transition-colors">
                       {listing.title}
                     </h3>
                     {listing.variety && (
-                      <p className="text-xs mb-2" style={{ color: getTextStyles(theme).muted }}>
+                      <p className="text-xs mb-2 text-white/60">
                         Variété: {listing.variety}
                       </p>
                     )}
-                    <div className="flex items-center gap-1 text-xs mb-2" style={{ color: getTextStyles(theme).muted }}>
+                    <div className="flex items-center gap-1 text-xs mb-2 text-white/60">
                       <MapPin className="h-3 w-3" />
                       <span>{listing.region}{listing.locality ? `, ${listing.locality}` : ''}</span>
                     </div>
@@ -416,10 +418,10 @@ export default function ListingsPage() {
 
                   <div className="flex items-center justify-between mt-2">
                     <div>
-                      <p className="text-lg font-bold text-emerald-500">
-                        {listing.price_per_unit.toLocaleString()} <span className="text-xs font-normal">FCFA/{listing.unit}</span>
+                      <p className="text-lg font-bold text-emerald-400">
+                        {listing.price_per_unit.toLocaleString()} <span className="text-xs font-normal text-white/50">FCFA/{listing.unit}</span>
                       </p>
-                      <p className="text-xs" style={{ color: getTextStyles(theme).muted }}>
+                      <p className="text-xs text-white/50">
                         {listing.quantity} {listing.unit} disponible{listing.quantity > 1 ? 's' : ''}
                       </p>
                     </div>
@@ -431,8 +433,7 @@ export default function ListingsPage() {
                             e.stopPropagation();
                             navigate('/chat');
                           }}
-                          className="p-2 rounded-full transition-all"
-                          style={getButtonStyles(theme, 'secondary', 'emerald')}
+                          className="p-2 rounded-full transition-all bg-white/10 hover:bg-white/20 text-white"
                         >
                           <MessageCircle className="h-4 w-4" />
                         </button>
@@ -441,8 +442,7 @@ export default function ListingsPage() {
                             e.stopPropagation();
                             navigate(`/listings/${listing.id}?action=order`, { state: { listing } });
                           }}
-                          className="p-2 rounded-full transition-all"
-                          style={getButtonStyles(theme, 'primary', 'emerald')}
+                          className="p-2 rounded-full transition-all bg-emerald-600 hover:bg-emerald-500 text-white"
                         >
                           <ShoppingCart className="h-4 w-4" />
                         </button>
@@ -451,24 +451,14 @@ export default function ListingsPage() {
                   </div>
 
                   {/* Seller Info */}
-                  <div className={`flex items-center gap-2 mt-3 pt-3 border-t ${theme === 'dark' ? 'border-white/10' : 'border-gray-100'}`}>
-                    <div 
-                      className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold"
-                      style={{
-                        background: listing.seller?.profile?.domain === 'elevage'
-                          ? (theme === 'dark' ? 'rgba(251, 191, 36, 0.2)' : '#FEF3C7')
-                          : (theme === 'dark' ? 'rgba(16, 185, 129, 0.2)' : '#D1FAE5'),
-                        color: listing.seller?.profile?.domain === 'elevage'
-                          ? (theme === 'dark' ? '#FCD34D' : '#D97706')
-                          : (theme === 'dark' ? '#6EE7B7' : '#059669')
-                      }}
-                    >
+                  <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/10">
+                    <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center text-white text-xs font-bold border border-emerald-500/30">
                       {listing.seller?.profile?.display_name?.[0] || 'V'}
                     </div>
-                    <span className="text-xs font-medium truncate" style={{ color: getTextStyles(theme).body }}>
+                    <span className="text-xs font-medium truncate text-white/80">
                       {listing.seller?.profile?.display_name || 'Vendeur'}
                     </span>
-                    <div className="ml-auto flex items-center gap-1 text-xs" style={{ color: getTextStyles(theme).muted }}>
+                    <div className="ml-auto flex items-center gap-1 text-xs text-white/40">
                       {getActivityIcon(listing.seller?.profile?.activity_type)}
                     </div>
                   </div>

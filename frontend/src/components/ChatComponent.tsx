@@ -134,11 +134,11 @@ export default function ChatComponent({ listingId: _listingId, sellerId: _seller
   };
 
   return (
-    <div className="flex h-[600px] bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className="flex flex-col md:flex-row h-[400px] sm:h-[500px] md:h-[600px] bg-white rounded-lg shadow-lg overflow-hidden">
       {/* Conversations List */}
-      <div className="w-1/3 border-r border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200 flex justify-between items-center">
-          <h2 className="text-lg font-semibold text-gray-900">Messages</h2>
+      <div className="w-full md:w-1/3 border-b md:border-b-0 md:border-r border-gray-200 flex flex-col max-h-[150px] md:max-h-full">
+        <div className="p-3 sm:p-4 border-b border-gray-200 flex justify-between items-center">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900">Messages</h2>
           {onClose && (
             <button
               onClick={onClose}
@@ -151,9 +151,9 @@ export default function ChatComponent({ listingId: _listingId, sellerId: _seller
         
         <div className="flex-1 overflow-y-auto">
           {conversations.length === 0 ? (
-            <div className="p-4 text-center text-gray-500">
-              <MessageCircle className="mx-auto h-12 w-12 text-gray-300 mb-2" />
-              <p className="text-sm">Aucune conversation</p>
+            <div className="p-3 sm:p-4 text-center text-gray-500">
+              <MessageCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mb-2" />
+              <p className="text-xs sm:text-sm">Aucune conversation</p>
             </div>
           ) : (
             <ul className="divide-y divide-gray-200">
@@ -161,16 +161,16 @@ export default function ChatComponent({ listingId: _listingId, sellerId: _seller
                 <li
                   key={conv.id}
                   onClick={() => setActiveConversation(conv.id)}
-                  className={`p-4 cursor-pointer hover:bg-gray-50 ${
+                  className={`p-3 sm:p-4 cursor-pointer hover:bg-gray-50 ${
                     activeConversation === conv.id ? 'bg-green-50' : ''
                   }`}
                 >
                   <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <h3 className="text-sm font-medium text-gray-900">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xs sm:text-sm font-medium text-gray-900 truncate">
                         {conv.participant_name}
                       </h3>
-                      <p className="mt-1 text-sm text-gray-500 truncate">
+                      <p className="mt-0.5 sm:mt-1 text-xs sm:text-sm text-gray-500 truncate">
                         {conv.last_message}
                       </p>
                     </div>
@@ -192,7 +192,7 @@ export default function ChatComponent({ listingId: _listingId, sellerId: _seller
         {activeConversation ? (
           <>
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 sm:space-y-4">
               {loading ? (
                 <div className="flex justify-center items-center h-full">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
@@ -207,7 +207,7 @@ export default function ChatComponent({ listingId: _listingId, sellerId: _seller
                       }`}
                     >
                       <div
-                        className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                        className={`max-w-[80%] sm:max-w-xs lg:max-w-md px-3 sm:px-4 py-2 rounded-lg ${
                           message.sender_id === user?.id
                             ? 'bg-green-600 text-white'
                             : 'bg-gray-200 text-gray-900'
@@ -235,7 +235,7 @@ export default function ChatComponent({ listingId: _listingId, sellerId: _seller
             </div>
 
             {/* Input */}
-            <div className="border-t border-gray-200 p-4">
+            <div className="border-t border-gray-200 p-3 sm:p-4">
               <div className="flex space-x-2">
                 <input
                   type="text"
@@ -243,23 +243,24 @@ export default function ChatComponent({ listingId: _listingId, sellerId: _seller
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Tapez votre message..."
-                  className="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="flex-1 border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!newMessage.trim()}
-                  className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ backgroundColor: '#2E7D32' }}
                 >
-                  <Send className="h-5 w-5" />
+                  <Send className="h-4 w-4 sm:h-5 sm:w-5" />
                 </button>
               </div>
             </div>
           </>
         ) : (
-          <div className="flex-1 flex items-center justify-center text-gray-500">
+          <div className="flex-1 flex items-center justify-center text-gray-500 p-4">
             <div className="text-center">
-              <MessageCircle className="mx-auto h-12 w-12 text-gray-300 mb-2" />
-              <p>Sélectionnez une conversation</p>
+              <MessageCircle className="mx-auto h-8 w-8 sm:h-12 sm:w-12 text-gray-300 mb-2" />
+              <p className="text-sm sm:text-base">Sélectionnez une conversation</p>
             </div>
           </div>
         )}

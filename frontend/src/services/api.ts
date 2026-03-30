@@ -1,6 +1,8 @@
 import axios, { AxiosInstance } from 'axios';
+import { localAuth } from './localAuth';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const USE_LOCAL_AUTH = !import.meta.env.VITE_API_URL; // Utiliser auth locale si pas de backend configuré
 
 interface RegisterRequest {
   phone: string;
@@ -71,25 +73,71 @@ class ApiService {
   }
 
   async register(data: RegisterRequest): Promise<any> {
-    const response = await this.client.post('/auth/register', data);
-    const { access_token, refresh_token, user } = response.data;
-    
-    if (access_token && refresh_token) {
-      localStorage.setItem('access_token', access_token);
-      localStorage.setItem('refresh_token', refresh_token);
+    // Utiliser l'authentification locale si pas de backend configuré
+    if (USE_LOCAL_AUTH) {
+      console.log('📱 Utilisation de l\'authentification locale (pas de backend)');
+      const user = await localAuth.register(data);
+      return user;
     }
-    
-    return user;
+
+    // Sinon, utiliser le backend
+    try {
+      const response = await this.client.post('/auth/register', data);
+      const { access_token, refresh_token, user } = response.data;
+      
+      if (access_token && refresh_token) {
+        localStorage.setItem('access_token', access_token);
+        localStorage.setItem('refresh_token', refresh_token);
+      }
+      
+      return user;
+    } catch (error: any) {
+      // Fallback vers l'auth locale si le backend échoue
+      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+        console.warn('⚠️ Backend non disponible, utilisation de l\'auth locale');
+        const user = await localAuth.register(data);
+        return user;
+      }
+      throw error;
+    }
   }
 
   async login(credentials: LoginRequest): Promise<LoginResponse> {
-    const response = await this.client.post('/auth/login', credentials);
-    const { access_token, refresh_token } = response.data;
-    
-    localStorage.setItem('access_token', access_token);
-    localStorage.setItem('refresh_token', refresh_token);
-    
-    return response.data;
+    // Utiliser l'authentification locale si pas de backend configuré
+    if (USE_LOCAL_AUTH) {
+      console.log('📱 Utilisation de l\'authentification locale (pas de backend)');
+      const user = await localAuth.login(credentials);
+      return {
+        access_token: 'local_token',
+        refresh_token: 'local_refresh',
+        token_type: 'bearer',
+        user
+      };
+    }
+
+    // Sinon, utiliser le backend
+    try {
+      const response = await this.client.post('/auth/login', credentials);
+      const { access_token, refresh_token } = response.data;
+      
+      localStorage.setItem('access_token', access_token);
+      localStorage.setItem('refresh_token', refresh_token);
+      
+      return response.data;
+    } catch (error: any) {
+      // Fallback vers l'auth locale si le backend échoue
+      if (error.code === 'ERR_NETWORK' || error.message.includes('Network Error')) {
+        console.warn('⚠️ Backend non disponible, utilisation de l\'auth locale');
+        const user = await localAuth.login(credentials);
+        return {
+          access_token: 'local_token',
+          refresh_token: 'local_refresh',
+          token_type: 'bearer',
+          user
+        };
+      }
+      throw error;
+    }
   }
 
   async logout(): Promise<void> {
@@ -154,12 +202,16 @@ class ApiService {
 
   async getConversations(): Promise<any[]> {
     const response = await this.client.get('/messages/conversations');
-    return response.data;
+    // Handle paginated response
+    const data = response.data;
+    return data.items || data || [];
   }
 
   async getConversation(conversationId: string): Promise<any> {
     const response = await this.client.get(`/messages/conversations/${conversationId}/messages`);
-    return response.data;
+    // Handle paginated response
+    const data = response.data;
+    return data.items || data || [];
   }
 
   async sendMessage(conversationId: string, content: string): Promise<any> {

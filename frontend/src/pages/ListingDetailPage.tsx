@@ -320,7 +320,7 @@ export default function ListingDetailPage() {
   if (loading) {
     return (
       <div className="min-h-screen relative overflow-hidden">
-        <div className="fixed inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000')` }}>
+        <div className="fixed inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1597916829826-02e5bb4a54e0?q=80&w=2000')` }}>
           <div className="absolute inset-0 bg-gradient-to-br from-green-950/85 via-teal-950/80 to-amber-950/85"></div>
         </div>
         <div className="relative z-10 flex items-center justify-center min-h-screen">
@@ -333,7 +333,7 @@ export default function ListingDetailPage() {
   if (!listing) {
     return (
       <div className="min-h-screen relative overflow-hidden">
-        <div className="fixed inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000')` }}>
+        <div className="fixed inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1597916829826-02e5bb4a54e0?q=80&w=2000')` }}>
           <div className="absolute inset-0 bg-gradient-to-br from-green-950/85 via-teal-950/80 to-amber-950/85"></div>
         </div>
         <div className="relative z-10 flex items-center justify-center min-h-screen">
@@ -350,7 +350,7 @@ export default function ListingDetailPage() {
 
   return (
     <div className="min-h-screen relative overflow-hidden">
-      <div className="fixed inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000')` }}>
+      <div className="fixed inset-0 bg-cover bg-center bg-fixed" style={{ backgroundImage: `url('https://images.unsplash.com/photo-1597916829826-02e5bb4a54e0?q=80&w=2000')` }}>
         <div className={`absolute inset-0 bg-gradient-to-br ${styles.background}`}></div>
       </div>
 
@@ -410,7 +410,7 @@ export default function ListingDetailPage() {
               className="backdrop-blur-md rounded-2xl p-4 border"
               style={{
                 ...getCardStyles(theme, 'emerald'),
-                borderColor: theme === 'light' ? '#10B981' : 'rgba(255, 255, 255, 0.2)'
+                borderColor: theme === 'light' ? '#2E7D32' : 'rgba(255, 255, 255, 0.2)'
               }}
             >
               <div className="flex items-center gap-3">
@@ -487,7 +487,7 @@ export default function ListingDetailPage() {
             className="backdrop-blur-md rounded-none sm:rounded-2xl max-w-full sm:max-w-2xl w-full h-full sm:h-auto sm:max-h-[80vh] flex flex-col shadow-2xl border-0 sm:border"
             style={{
               ...getCardStyles(theme, 'emerald'),
-              borderColor: theme === 'light' ? '#10B981' : 'rgba(255, 255, 255, 0.2)'
+              borderColor: theme === 'light' ? '#2E7D32' : 'rgba(255, 255, 255, 0.2)'
             }}
           >
             {/* Header */}
@@ -608,7 +608,7 @@ export default function ListingDetailPage() {
             className="backdrop-blur-md rounded-none sm:rounded-2xl max-w-full sm:max-w-md w-full h-full sm:h-auto shadow-2xl border-0 sm:border"
             style={{
               ...getCardStyles(theme, 'emerald'),
-              borderColor: theme === 'light' ? '#10B981' : 'rgba(255, 255, 255, 0.2)'
+              borderColor: theme === 'light' ? '#2E7D32' : 'rgba(255, 255, 255, 0.2)'
             }}
           >
             {/* Header */}

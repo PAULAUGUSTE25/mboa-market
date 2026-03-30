@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from app.core.config import settings
 # from app.core.rate_limiter import limiter, rate_limit_exceeded_handler
-from app.api import auth, users, listings, orders, b2b, logistics, livestock, messaging
+from app.api import auth, users, listings, orders, b2b, logistics, livestock, messaging, security
 # from slowapi.errors import RateLimitExceeded
 import traceback
 import logging
@@ -28,7 +28,14 @@ app = FastAPI(
 # CORS middleware - Must be added FIRST before other middlewares
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "https://mboa-market.netlify.app",
+        "https://*.netlify.app",
+        "*"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,6 +60,7 @@ app.include_router(b2b.router, prefix="/api")
 app.include_router(logistics.router, prefix="/api")
 app.include_router(livestock.router, prefix="/api")
 app.include_router(messaging.router, prefix="/api")
+app.include_router(security.router, prefix="/api")
 
 
 @app.get("/")

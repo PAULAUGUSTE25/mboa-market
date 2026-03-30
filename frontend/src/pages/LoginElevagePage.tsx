@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
 import { getCardStyles, getTextStyles, getInputStyles, getButtonStyles } from '@/utils/cardStyles';
 import Logo from '@/components/Logo';
-import { Beef, Phone, Lock } from 'lucide-react';
+import { Beef, Phone, Lock, ChevronLeft } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 export default function LoginElevagePage() {
@@ -41,11 +41,11 @@ export default function LoginElevagePage() {
     setFieldErrors({});
     
     try {
-      const loginResponse = await login(formData);
+      await login(formData);
       
       // Update user profile with elevage domain
       try {
-        const updatedProfile = await api.updateProfile({ domain: 'elevage' });
+        await api.updateProfile({ domain: 'elevage' });
         // Refresh user data with updated profile
         const currentUser = await api.getCurrentUser();
         setUser(currentUser);
@@ -72,20 +72,20 @@ export default function LoginElevagePage() {
             className="backdrop-blur-md rounded-3xl shadow-2xl p-8 mx-4 max-w-md border-2"
             style={{
               ...getCardStyles(theme, 'amber'),
-              borderColor: theme === 'light' ? '#F59E0B' : 'rgba(251, 146, 60, 0.4)'
+              borderColor: theme === 'light' ? '#B71C1C' : 'rgba(183, 28, 28, 0.4)'
             }}
           >
             <div className="text-center">
-              <div className="mb-4 inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-amber-500 to-amber-600 rounded-full shadow-lg">
+              <div className="mb-4 inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-red-600 to-red-700 rounded-full shadow-lg">
                 <span className="text-3xl text-white">✓</span>
               </div>
               <h2 className="text-2xl font-bold mb-3" style={{ color: getTextStyles(theme).title }}>Connexion Réussie!</h2>
               <div className="flex items-center justify-center gap-2 mb-2">
                 <p style={{ color: getTextStyles(theme).body }}>Bienvenue dans le secteur Élevage</p>
-                <Beef className="h-5 w-5 text-amber-400" strokeWidth={2} />
+                <Beef className="h-5 w-5 text-red-600" strokeWidth={2} />
               </div>
-              <div className="flex items-center justify-center space-x-2 text-amber-400 mt-4">
-                <div className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
+              <div className="flex items-center justify-center space-x-2 text-red-600 mt-4">
+                <div className="w-2 h-2 bg-red-600 rounded-full animate-pulse"></div>
                 <span className="text-sm">Redirection...</span>
               </div>
             </div>
@@ -98,14 +98,12 @@ export default function LoginElevagePage() {
       <div 
         className="absolute inset-0 bg-cover bg-center bg-fixed"
         style={{
-          backgroundImage: theme === 'light' 
-            ? `url('/light%20mode%20.png')`
-            : `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000')`,
+          backgroundImage: `url('https://images.unsplash.com/photo-1548550023-2bdb3c5beed7?q=80&w=2000')`,
         }}
       >
         <div className={`absolute inset-0 ${theme === 'dark' ? 'bg-gradient-to-br from-green-950/85 via-teal-950/80 to-amber-950/85' : ''}`} style={{
-          backdropFilter: theme === 'light' ? 'blur(2px)' : undefined,
-          backgroundColor: theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : undefined
+          backdropFilter: theme === 'light' ? 'blur(0.5px)' : undefined,
+          backgroundColor: theme === 'light' ? 'rgba(255, 255, 255, 0.15)' : undefined
         }}></div>
       </div>
 
@@ -125,7 +123,7 @@ export default function LoginElevagePage() {
           className="backdrop-blur-[25px] rounded-[24px] sm:rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-6 sm:p-8 border relative overflow-hidden"
           style={{
             ...getCardStyles(theme, 'amber'),
-            borderColor: theme === 'light' ? '#F59E0B' : 'rgba(255, 255, 255, 0.2)'
+            borderColor: theme === 'light' ? '#B71C1C' : 'rgba(183, 28, 28, 0.4)'
           }}
         >
           {/* Bordure Lumineuse */}
@@ -134,23 +132,37 @@ export default function LoginElevagePage() {
           {/* Bouton Retour */}
           <button
             onClick={() => navigate('/select-sector')}
-            className="mb-8 transition-all transform hover:scale-110 text-2xl font-bold"
-            style={{ color: theme === 'light' ? '#374151' : '#9CA3AF' }}
+            className="mb-6 transition-all transform hover:scale-110 w-10 h-10 rounded-full flex items-center justify-center"
+            style={{ 
+              backgroundColor: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
+              border: theme === 'light' ? '2px solid #1A1A1A' : '2px solid rgba(255, 255, 255, 0.5)',
+              boxShadow: theme === 'light' ? '0 2px 8px rgba(0, 0, 0, 0.15)' : 'none'
+            }}
           >
-            ←
+            <ChevronLeft 
+              className="w-6 h-6" 
+              strokeWidth={2.5}
+              style={{ color: theme === 'light' ? '#1A1A1A' : '#FFFFFF' }}
+            />
           </button>
 
           {/* Logo Responsive */}
-          <div className="text-center mb-6 sm:mb-8">
-            <Logo size="lg" className="mb-4 sm:mb-6 sm:scale-125" />
+          <div className="text-center mb-4 sm:mb-6">
+            <Logo size="lg" className="mb-3 sm:mb-4" />
             {/* Icône SVG Élevage Responsive */}
-            <div className="flex justify-center mb-3 sm:mb-4">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
-                <Beef className="h-7 w-7 sm:h-8 sm:w-8 text-amber-300" strokeWidth={1.5} />
+            <div className="flex justify-center mb-2 sm:mb-3">
+              <div 
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center"
+                style={{
+                  background: theme === 'light' ? '#B71C1C' : 'rgba(183, 28, 28, 0.3)',
+                  boxShadow: theme === 'light' ? '0 4px 16px rgba(0, 0, 0, 0.2)' : 'none'
+                }}
+              >
+                <Beef className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={theme === 'light' ? 3 : 1.5} style={{ color: theme === 'light' ? '#FFFFFF' : '#FCD34D' }} />
               </div>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold mb-2" style={{ letterSpacing: '0.05em', color: getTextStyles(theme).title }}>ÉLEVAGE</h2>
-            <p className="text-sm sm:text-base" style={{ color: getTextStyles(theme).subtitle }}>Animaux et produits d'élevage</p>
+            <h2 className="text-xl sm:text-2xl font-extrabold mb-1 text-left pl-2" style={{ letterSpacing: '0.05em', color: getTextStyles(theme).title }}>ÉLEVAGE</h2>
+            <p className="text-sm sm:text-base text-left pl-2" style={{ color: getTextStyles(theme).subtitle }}>Animaux et produits d'élevage</p>
           </div>
 
           {(error || fieldErrors.general) && (
@@ -227,7 +239,7 @@ export default function LoginElevagePage() {
               type="submit"
               disabled={loading}
               className="w-full py-4 rounded-full font-bold text-lg uppercase tracking-wide transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 mt-8"
-              style={getButtonStyles(theme, 'primary', 'amber')}
+              style={getButtonStyles(theme, 'primary', 'red')}
             >
               {loading ? 'Connexion...' : 'Se Connecter'}
             </button>
@@ -236,7 +248,7 @@ export default function LoginElevagePage() {
           {/* Lien Inscription */}
           <p className="text-center text-sm mt-6" style={{ color: getTextStyles(theme).body }}>
             Pas de compte?{' '}
-            <Link to="/register" className="font-bold transition-colors underline" style={{ color: theme === 'light' ? '#F59E0B' : '#FCD34D' }}>
+            <Link to="/register" className="font-bold transition-colors underline" style={{ color: '#B71C1C' }}>
               S'inscrire
             </Link>
           </p>

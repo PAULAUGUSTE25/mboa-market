@@ -1,9 +1,8 @@
-// Demo community posts - Expert advice, tips, and announcements
+// Demo community posts - Publications avec images du net et prix réalistes du marché camerounais 2024
 export const generateDemoCommunityPosts = () => {
   const expertNames = [
     'Dr. Mbarga Jean', 'Ing. Amadou Hassan', 'Prof. Marie Nguema', 'Dr. Sophie Kamga',
-    'Ing. Paul Nkolo', 'Dr. Fatima Bello', 'Ing. André Tchouta', 'Dr. Aissatou Diallo',
-    'Prof. Ibrahim Sani', 'Ing. Mariama Fofana', 'Dr. Ousmane Traoré', 'Ing. Aminata Sy'
+    'Ing. Paul Nkolo', 'Dr. Fatima Bello', 'Ing. André Tchouta', 'Dr. Aissatou Diallo'
   ];
 
   const regions = [
@@ -42,400 +41,496 @@ export const generateDemoCommunityPosts = () => {
     });
   };
 
-  // === ANNONCE MAJEURE IRAD ===
-  createPost(
-    '🔬🌟 DÉCOUVERTE RÉVOLUTIONNAIRE DE L\'IRAD - Nouvelle Variété de Maïs !',
-    '🎉 GRANDE NOUVELLE ! L\'Institut de Recherche Agricole pour le Développement (IRAD) vient d\'annoncer une découverte majeure qui va RÉVOLUTIONNER l\'agriculture camerounaise !\n\n✨ UNE NOUVELLE VARIÉTÉ DE MAÏS EXCEPTIONNELLE :\n• Rendement DOUBLÉ : 8-10 tonnes/hectare (vs 4-5 tonnes habituellement)\n• Résistance totale à la sécheresse - Parfait pour notre climat\n• Cycle court : Récolte en 90 jours au lieu de 120 jours\n• Résistance naturelle aux maladies et ravageurs\n• Grains plus gros et plus nutritifs\n\n💰 IMPACT ÉCONOMIQUE :\nVos revenus peuvent DOUBLER avec cette nouvelle variété ! Un hectare peut rapporter jusqu\'à 2 millions FCFA au lieu de 1 million.\n\n📍 DISPONIBILITÉ :\nLes semences seront disponibles dès le mois prochain dans tous les centres IRAD. Prix subventionné : 4 000 FCFA/kg.\n\n🎯 FORMATION GRATUITE :\nL\'IRAD organise des sessions de formation gratuites dans toutes les régions pour apprendre les techniques de culture optimales.\n\n👨‍🌾 C\'est le moment de moderniser votre agriculture ! Cette découverte est le fruit de 10 ans de recherche. Ne ratez pas cette opportunité historique !',
-    'agriculture',
-    'announcement'
-  );
+  // ============================================
+  // AGRICULTURE - Publications avec images internet
+  // ============================================
 
+  // TOMATES
   createPost(
-    '🐄🔬 IRAD ANNONCE : Nouveau Vaccin Révolutionnaire pour Bovins !',
-    '🎊 ANNONCE EXCEPTIONNELLE ! L\'IRAD vient de développer un vaccin révolutionnaire qui va transformer l\'élevage bovin au Cameroun !\n\n✨ LE VACCIN "PROTEC-BOVIN 2024" :\n• Protection contre 5 maladies majeures en UNE SEULE injection\n• Efficacité prouvée à 98% pendant 12 mois\n• Réduit la mortalité de 80%\n• Augmente la production laitière de 30%\n• Sans effets secondaires\n\n💉 MALADIES COUVERTES :\n1. Péripneumonie contagieuse bovine\n2. Charbon symptomatique\n3. Fièvre aphteuse\n4. Pasteurellose\n5. Dermatose nodulaire\n\n💰 ÉCONOMIES MASSIVES :\nPlus besoin de 5 vaccins différents ! Un seul vaccin = 15 000 FCFA au lieu de 50 000 FCFA. Économisez 70% sur vos frais vétérinaires !\n\n📅 CAMPAGNE DE VACCINATION :\nLancement national le 1er mars. Vaccination gratuite pour les 1000 premiers éleveurs inscrits dans chaque région !\n\n🏆 RECONNAISSANCE INTERNATIONALE :\nCe vaccin a reçu le Prix d\'Excellence de l\'Union Africaine pour l\'Innovation Agricole 2024.\n\n👨‍🌾 Inscrivez-vous dès maintenant auprès de votre délégation d\'élevage ! Cette innovation va sauver des milliers de bovins et augmenter vos revenus. L\'avenir de l\'élevage commence aujourd\'hui !',
-    'elevage',
-    'announcement'
-  );
-
-  // === AGRICULTURE - CONSEILS EXPERTS SAISON SÈCHE ===
-  createPost(
-    '🌡️ Alerte Saison Sèche - Préparez vos cultures maintenant !',
-    'La saison sèche approche dans 2 mois. Il est crucial de préparer vos champs dès maintenant. Voici les actions prioritaires : 1) Installer un système d\'irrigation goutte-à-goutte, 2) Pailler vos sols pour conserver l\'humidité, 3) Choisir des variétés résistantes à la sécheresse. N\'attendez pas le dernier moment !',
+    '🍅 Tomates fraîches - Récolte abondante',
+    'Tomates fraîches disponibles ! Variété Roma, bien mûres et fermes. Prix : 800 FCFA/kg ou 15 000 FCFA/cagette de 25 kg. Idéal pour sauce et salade. Livraison possible à Douala.',
     'agriculture',
-    'expert_advice'
-  );
-
-  createPost(
-    '💧 Gestion de l\'eau en saison sèche',
-    'Avec la saison sèche qui arrive, voici mes recommandations pour optimiser votre consommation d\'eau : Arrosez tôt le matin ou tard le soir pour minimiser l\'évaporation. Installez des bassins de récupération d\'eau de pluie dès maintenant. Privilégiez le paillage organique (paille, feuilles mortes) autour de vos plants.',
-    'agriculture',
-    'expert_advice'
-  );
-
-  createPost(
-    '🌾 Cultures recommandées pour la saison sèche',
-    'Pour la saison sèche à venir, je recommande fortement : le mil, le sorgho, le niébé (haricot), et l\'arachide. Ces cultures sont naturellement résistantes à la sécheresse et donnent de bons rendements même avec peu d\'eau. Commencez à vous procurer les semences dès maintenant !',
-    'agriculture',
-    'expert_advice'
-  );
-
-  createPost(
-    '⚠️ Attention aux maladies en saison sèche',
-    'La saison sèche favorise certaines maladies et ravageurs. Surveillez particulièrement : les acariens (araignées rouges), la mouche blanche, et l\'oïdium. Préparez vos traitements bio : décoction d\'ail, savon noir, neem. Inspectez vos plants régulièrement.',
-    'agriculture',
-    'warning'
-  );
-
-  createPost(
-    '🌱 Préparation du sol avant la saison sèche',
-    'Il vous faut absolument enrichir votre sol maintenant ! Incorporez du compost ou du fumier bien décomposé. Un sol riche en matière organique retient mieux l\'eau. Faites aussi un labour léger pour améliorer la structure du sol. C\'est le moment ou jamais !',
-    'agriculture',
-    'expert_advice'
-  );
-
-  // === AGRICULTURE - CONSEILS PRATIQUES ===
-  createPost(
-    '🥕 Astuce : Conservation des légumes sans frigo',
-    'Pour conserver vos légumes plus longtemps sans réfrigérateur : Enterrez les carottes dans du sable sec. Suspendez les oignons dans des filets. Gardez les tomates à l\'ombre sur des clayettes. Les pommes de terre se conservent bien dans un endroit sombre et frais.',
-    'agriculture',
-    'tip'
-  );
-
-  createPost(
-    '🌿 Fabrication d\'insecticide naturel',
-    'Recette efficace et économique : Mixez 5 gousses d\'ail + 1 oignon + 1 piment dans 1L d\'eau. Laissez macérer 24h. Filtrez et diluez dans 5L d\'eau. Pulvérisez sur vos plants le soir. Répétez tous les 7 jours. Efficace contre pucerons et chenilles !',
-    'agriculture',
-    'tip'
-  );
-
-  createPost(
-    '💰 Subvention disponible pour l\'irrigation',
-    'Le Ministère de l\'Agriculture annonce une subvention de 50% pour l\'achat de matériel d\'irrigation. Dossiers à déposer avant fin du mois. Documents requis : carte d\'identité, titre foncier ou bail, devis du matériel. Renseignez-vous vite auprès de votre délégation !',
-    'agriculture',
-    'announcement'
-  );
-
-  createPost(
-    '📚 Formation gratuite : Techniques de compostage',
-    'Formation pratique de 3 jours sur le compostage organisée à Yaoundé du 15 au 17 février. Apprenez à transformer vos déchets en or noir ! Inscription gratuite mais places limitées. Contactez la Chambre d\'Agriculture pour vous inscrire.',
-    'agriculture',
-    'announcement'
-  );
-
-  createPost(
-    '🎉 Succès : 500 régimes de plantain récoltés !',
-    'Je viens de terminer ma récolte : 500 régimes de plantain sur 1 hectare ! Mon secret : bon espacement (3m x 3m), fumure organique, et rejets sélectionnés. Investissement de 600 000 FCFA, revenu de 3 millions FCFA. Le plantain est vraiment rentable quand on maîtrise la technique !',
-    'agriculture',
-    'success_story',
+    'announcement',
     true,
-    '/plantain-fresh.png'
+    'https://images.pexels.com/photos/1327838/pexels-photo-1327838.jpeg?auto=compress&cs=tinysrgb&w=800'
   );
 
-  // === AGRICULTURE - QUESTIONS & RÉPONSES ===
+  // MAÏS
   createPost(
-    '❓ Quelle densité pour le maïs ?',
-    'Question fréquente : Pour le maïs, je recommande 62 500 plants/hectare, soit 80cm entre les lignes et 20cm entre les plants. Pour les variétés précoces, vous pouvez augmenter légèrement la densité. N\'oubliez pas : une bonne densité = meilleur rendement !',
+    '🌽 Maïs grain sec - Nouvelle récolte',
+    'Maïs grain disponible ! Qualité supérieure, bien séché (14% humidité). Prix : 250 FCFA/kg ou 12 000 FCFA/sac de 50 kg. Idéal pour alimentation humaine ou animale. Stock : 5 tonnes.',
     'agriculture',
-    'expert_advice'
-  );
-
-  createPost(
-    '🌽 Calendrier cultural pour le Centre',
-    'Région Centre - Calendrier recommandé : Mars-Avril : Maïs, arachide. Mai-Juin : Manioc, macabo. Juillet-Août : Haricot, légumes. Septembre-Octobre : Préparation sols. Adaptez selon votre micro-climat local. Notez bien ces dates !',
-    'agriculture',
-    'expert_advice'
-  );
-
-  createPost(
-    '🔬 Analyse de sol : Pourquoi c\'est important',
-    'Beaucoup négligent l\'analyse de sol. C\'est une erreur ! Une analyse vous dit exactement quels engrais utiliser et en quelle quantité. Coût : 15 000 à 25 000 FCFA. Économies réalisées : jusqu\'à 40% sur les intrants. Rentabilité garantie !',
-    'agriculture',
-    'expert_advice'
-  );
-
-  createPost(
-    '🌾 Rotation des cultures : Le guide complet',
-    'Ne plantez jamais la même culture 2 années de suite ! Rotation recommandée : Année 1 : Maïs. Année 2 : Haricot/niébé (fixe l\'azote). Année 3 : Tomate/légumes. Année 4 : Retour au maïs. Cette rotation maintient la fertilité du sol et réduit les maladies.',
-    'agriculture',
-    'expert_advice'
-  );
-
-  createPost(
-    '💡 Astuce : Germination rapide des semences',
-    'Pour accélérer la germination : Trempez vos graines dans l\'eau tiède pendant 12h. Ajoutez une cuillère de miel (stimule la germination). Semez immédiatement après. Gain de temps : 2-3 jours. Taux de germination amélioré de 20% !',
-    'agriculture',
-    'tip'
-  );
-
-  // === AGRICULTURE - ALERTES & AVERTISSEMENTS ===
-  createPost(
-    '⚠️ Alerte : Chenilles légionnaires signalées',
-    'Attention ! Des chenilles légionnaires ont été signalées dans la région de l\'Ouest. Elles attaquent le maïs, le riz et le sorgho. Inspectez vos champs quotidiennement. Traitement recommandé : Bacillus thuringiensis ou ramassage manuel. Agissez vite !',
-    'agriculture',
-    'warning'
-  );
-
-  createPost(
-    '🌧️ Prévisions météo : Pluies précoces attendues',
-    'Bonne nouvelle ! Les prévisions annoncent des pluies précoces cette année. Préparez vos champs dès maintenant pour profiter de ces premières pluies. Labourez, apportez le fumier, et ayez vos semences prêtes. Qui est prêt gagne !',
-    'agriculture',
-    'announcement'
-  );
-
-  createPost(
-    '🚜 Nouveau : Service de labour mécanisé',
-    'Je propose mes services de labour avec tracteur dans les régions Centre et Littoral. Tarif : 25 000 FCFA/hectare. Disponible dès maintenant. Réservez tôt pour la saison ! Contact : 237 6XX XXX XXX',
-    'agriculture',
-    'announcement'
-  );
-
-  createPost(
-    '🌱 Semences certifiées disponibles',
-    'Semences certifiées de maïs (variétés CMS 8704, Kasai) maintenant disponibles. Prix : 3 500 FCFA/kg. Rendement garanti : 4-6 tonnes/ha. Stock limité. Commandez avant rupture ! Livraison possible dans toute la région.',
-    'agriculture',
-    'announcement'
-  );
-
-  createPost(
-    '📊 Prix du marché cette semaine',
-    'Prix moyens au marché de Yaoundé : Tomate 800 FCFA/kg, Oignon 600 FCFA/kg, Maïs 250 FCFA/kg, Haricot 1200 FCFA/kg, Plantain 150 FCFA/régime. Tendance à la hausse pour les légumes. Bon moment pour vendre !',
-    'agriculture',
-    'announcement'
-  );
-
-  // === ÉLEVAGE - CONSEILS EXPERTS SAISON SÈCHE ===
-  createPost(
-    '🐄 Saison sèche : Préparez l\'alimentation de vos animaux',
-    'La saison sèche arrive ! Il vous faut absolument constituer des réserves de fourrage dès maintenant. Fauchez et conservez l\'herbe en foin. Prévoyez aussi des aliments concentrés (tourteau, son). Un animal bien nourri = un animal productif !',
-    'elevage',
-    'expert_advice'
-  );
-
-  createPost(
-    '💧 Abreuvement en saison sèche',
-    'L\'eau est vitale ! En saison sèche, un bovin boit 40-60L/jour, une chèvre 3-5L/jour, un poulet 0.5L/jour. Assurez-vous d\'avoir des points d\'eau suffisants. Nettoyez les abreuvoirs quotidiennement. L\'eau sale = maladies !',
-    'elevage',
-    'expert_advice'
-  );
-
-  createPost(
-    '🐓 Volaille : Attention à la chaleur !',
-    'Avec la saison sèche, vos poulets vont souffrir de la chaleur. Solutions : Ombrage suffisant, ventilation, eau fraîche en permanence. Ajoutez des vitamines C dans l\'eau (anti-stress thermique). Réduisez la densité dans les poulaillers.',
-    'elevage',
-    'expert_advice'
-  );
-
-  createPost(
-    '🐷 Porcs : Gestion de la chaleur',
-    'Les porcs ne transpirent pas ! En saison sèche, ils sont très sensibles à la chaleur. Créez des zones de boue pour qu\'ils se rafraîchissent. Mouillez le sol de la porcherie. Donnez à manger tôt le matin et tard le soir. Température idéale : 18-24°C.',
-    'elevage',
-    'expert_advice'
-  );
-
-  createPost(
-    '🐐 Chèvres : Complémentation alimentaire',
-    'En saison sèche, l\'herbe se raréfie. Complétez l\'alimentation de vos chèvres avec : feuilles de manioc, épluchures, son de maïs, tourteau. Une chèvre bien nourrie produit plus de lait et de viande. Investissez dans l\'alimentation !',
-    'elevage',
-    'expert_advice'
-  );
-
-  // === ÉLEVAGE - CONSEILS PRATIQUES ===
-  createPost(
-    '💉 Calendrier de vaccination',
-    'Vaccinations essentielles : Bovins - Péripneumonie (tous les 6 mois), Charbon (annuel). Volaille - Newcastle (tous les 3 mois), Gumboro (21 jours). Porcs - Peste porcine (annuel). Chèvres - Peste des petits ruminants (annuel). Notez ces dates !',
-    'elevage',
-    'expert_advice'
-  );
-
-  createPost(
-    '🏥 Trousse de premiers soins pour éleveurs',
-    'Ayez toujours : Thermomètre, seringues, antibiotiques (Terramycine), anti-parasitaires, désinfectant (Bétadine), pansements, gants. Coût total : ~15 000 FCFA. Peut sauver vos animaux en urgence !',
-    'elevage',
-    'tip'
-  );
-
-  createPost(
-    '🥚 Augmenter la ponte de vos poules',
-    'Mes astuces pour plus d\'œufs : 1) Lumière 14-16h/jour, 2) Aliment riche en protéines (18%), 3) Calcium (coquilles d\'huîtres broyées), 4) Eau propre en permanence, 5) Nids confortables. Résultat : +30% de ponte !',
-    'elevage',
-    'tip'
-  );
-
-  createPost(
-    '🐟 Pisciculture : Densité d\'empoissonnement',
-    'Pour un bac de 2m x 1m (2m³) : 100-150 alevins de poisson-chat. Nourrissez 2-3 fois/jour (3-5% du poids total). Changez 20% de l\'eau chaque semaine. Récolte après 5-6 mois. Rendement : 30-40 kg de poisson !',
-    'elevage',
-    'expert_advice'
-  );
-
-  createPost(
-    '🐓 Démarrer un poulailler : Budget réaliste',
-    'Pour 100 poulets de chair : Poussin 250 FCFA x 100 = 25 000. Aliment 45 jours x 100 = 180 000. Vaccins et médicaments = 15 000. Infrastructure = 50 000. Total : 270 000 FCFA. Revenu attendu : 450 000 FCFA. Bénéfice : 180 000 FCFA en 45 jours !',
-    'elevage',
-    'expert_advice'
-  );
-
-  // === ÉLEVAGE - ANNONCES ===
-  createPost(
-    '📢 Formation : Élevage moderne de porcs',
-    'Formation de 5 jours sur l\'élevage porcin moderne. Programme : Alimentation, santé, reproduction, gestion. Dates : 20-24 février à Douala. Coût : 50 000 FCFA (hébergement inclus). Certificat délivré. Inscriptions ouvertes !',
-    'elevage',
-    'announcement'
-  );
-
-  createPost(
-    '🏆 Concours du meilleur éleveur 2024',
-    'Le Ministère de l\'Élevage organise le concours du meilleur éleveur. Prix : 1er = 2 millions FCFA, 2ème = 1 million, 3ème = 500 000. Catégories : Bovins, Porcs, Volaille, Pisciculture. Dossiers avant le 28 février. Tentez votre chance !',
-    'elevage',
-    'announcement'
-  );
-
-  createPost(
-    '💰 Crédit élevage : Taux réduit',
-    'Nouvelle offre de crédit pour éleveurs : Taux 5% sur 2 ans. Montant : 500 000 à 5 millions FCFA. Garantie : Caution solidaire. Dossier simple. Contactez votre coopérative ou la banque agricole. Opportunité à saisir !',
-    'elevage',
-    'announcement'
-  );
-
-  createPost(
-    '🐄 Vente de géniteurs de qualité',
-    'Taureaux reproducteurs race Goudali disponibles. Âge : 2-3 ans. Prix : 350 000 - 500 000 FCFA. Excellente génétique. Certificat sanitaire fourni. Région Adamaoua. Contact pour visite.',
-    'elevage',
-    'announcement'
-  );
-
-  createPost(
-    '🎉 Succès : De 10 à 100 poules en 1 an !',
-    'Mon témoignage : J\'ai commencé avec 10 poules pondeuses il y a 1 an. Aujourd\'hui j\'en ai 100 ! Revenus mensuels : 120 000 FCFA (œufs + vente poussins). Mon secret : Bonne alimentation, suivi sanitaire rigoureux, réinvestissement des bénéfices. C\'est possible !',
-    'elevage',
-    'success_story',
+    'announcement',
     true,
-    '/poulet-chair.png'
+    'https://images.pexels.com/photos/547263/pexels-photo-547263.jpeg?auto=compress&cs=tinysrgb&w=800'
   );
 
-  // === ÉLEVAGE - SANTÉ ANIMALE ===
+  // OIGNONS
   createPost(
-    '⚠️ Alerte : Grippe aviaire - Mesures préventives',
-    'Cas de grippe aviaire signalés dans la région Nord. Mesures : Isolez vos volailles, désinfectez quotidiennement, limitez les visiteurs, signalez tout oiseau mort. Vaccination recommandée. Soyez vigilants !',
+    '🧅 Oignons du Nord - Qualité premium',
+    'Oignons rouges et blancs disponibles ! Direct du Nord Cameroun. Prix : 600 FCFA/kg ou 25 000 FCFA/sac de 50 kg. Conservation longue durée. Livraison dans tout le pays.',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/4197447/pexels-photo-4197447.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // PIMENTS
+  createPost(
+    '🌶️ Piments frais - Variétés locales',
+    'Piments disponibles ! Piment rouge, piment vert, piment noir de Penja. Prix : 1 500 FCFA/kg (rouge), 2 000 FCFA/kg (Penja). Goût authentique du Cameroun.',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/4022094/pexels-photo-4022094.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // BANANES PLANTAIN
+  createPost(
+    '🍌 Plantain mûr - Livraison rapide',
+    'Régimes de plantain disponibles ! Gros régimes de 15-20 kg. Prix : 2 500 FCFA/régime. Variété locale, goût excellent. Livraison gratuite à partir de 20 régimes.',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/2238309/pexels-photo-2238309.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // MANIOC
+  createPost(
+    '🥔 Manioc frais - Direct champ',
+    'Manioc frais récolté ! Tubercules de 2-5 kg, sans fibres. Prix : 150 FCFA/kg. Parfait pour bâton de manioc, gari ou tapioca. Commande minimum : 50 kg.',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/6157049/pexels-photo-6157049.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // HARICOTS
+  createPost(
+    '🫘 Haricots rouges - Nouvelle récolte',
+    'Haricots rouges disponibles ! Grains bien formés, sans charançons. Prix : 1 200 FCFA/kg ou 55 000 FCFA/sac de 50 kg. Idéal pour koki et haricot sauce.',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/4110256/pexels-photo-4110256.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // ARACHIDES
+  createPost(
+    '🥜 Arachides décortiquées - Qualité A',
+    'Arachides disponibles ! Bien séchées, sans moisissure. Prix : 1 500 FCFA/kg. Idéal pour huile, pâte d\'arachide ou consommation directe. Stock : 2 tonnes.',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/4202466/pexels-photo-4202466.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // ANANAS
+  createPost(
+    '🍍 Ananas sucrés - Pain de sucre',
+    'Ananas Pain de sucre disponibles ! Très sucrés, parfumés. Prix : 500 FCFA/pièce (petit) ou 1 000 FCFA/pièce (gros). Direct producteur de la région Littoral.',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/1071878/pexels-photo-1071878.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // PAPAYES
+  createPost(
+    '🥭 Papayes mûres - Douces et juteuses',
+    'Papayes disponibles ! Variété Solo, chair orange, très sucrée. Prix : 300 FCFA/kg. Parfait pour dessert ou jus. Livraison possible dans Yaoundé.',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/5945755/pexels-photo-5945755.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // AVOCATS
+  createPost(
+    '🥑 Avocats de saison - Gros calibre',
+    'Avocats disponibles ! Gros calibre, chair crémeuse. Prix : 200 FCFA/pièce ou 1 500 FCFA/kg. Saison en cours, profitez-en ! Stock limité.',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/2228553/pexels-photo-2228553.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // CACAO
+  createPost(
+    '🍫 Cacao fermenté - Qualité export',
+    'Fèves de cacao disponibles ! Grade 1, bien fermentées 6 jours, séchées au soleil. Prix : 1 800 FCFA/kg. Minimum : 50 kg. Certification en cours.',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/867466/pexels-photo-867466.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // CAFÉ
+  createPost(
+    '☕ Café Arabica torréfié - Arôme intense',
+    'Café Arabica de l\'Ouest ! Torréfié artisanalement, arôme chocolaté. Prix : 5 000 FCFA/kg (torréfié) ou 3 500 FCFA/kg (vert). Qualité exceptionnelle.',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/894695/pexels-photo-894695.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // TRACTEUR
+  createPost(
+    '🚜 Service labour mécanisé - Tracteur disponible',
+    'Tracteur pour labour disponible ! Tarif : 25 000 FCFA/hectare. Travail rapide et professionnel. Régions Centre, Sud et Littoral. Réservez maintenant pour la saison !',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/2933243/pexels-photo-2933243.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // IRRIGATION
+  createPost(
+    '💧 Système d\'irrigation - Installation complète',
+    'Irrigation goutte-à-goutte disponible ! Kit complet pour 1 hectare : 150 000 FCFA. Économie d\'eau de 60%. Installation et formation incluses. Investissez malin !',
+    'agriculture',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/5231142/pexels-photo-5231142.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // ============================================
+  // ÉLEVAGE - Publications avec images internet
+  // ============================================
+
+  // POULETS
+  createPost(
+    '🐔 Poulets de chair - Prêts à vendre',
+    'Poulets de chair disponibles ! Poids : 2-2.5 kg. Prix : 3 500 FCFA/kg vif ou 4 500 FCFA/kg abattu. Élevage sain, alimentation de qualité. Commande minimum : 10 poulets.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/1300375/pexels-photo-1300375.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // ŒUFS
+  createPost(
+    '🥚 Œufs frais du jour - Livraison possible',
+    'Œufs frais disponibles ! Prix : 100 FCFA/unité ou 2 800 FCFA/plateau de 30. Poules nourries au maïs, jaune bien coloré. Livraison à domicile à Yaoundé.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/162712/egg-white-food-protein-162712.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // PORCS
+  createPost(
+    '🐷 Porcs engraissés - Prêts pour abattage',
+    'Porcs disponibles ! Poids : 80-100 kg. Prix : 2 000 FCFA/kg vif. Race Large White, bien engraissés. Certificat sanitaire fourni. Livraison possible.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/1300361/pexels-photo-1300361.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // PORCELETS
+  createPost(
+    '🐖 Porcelets sevrés - Excellente génétique',
+    'Porcelets disponibles ! Âge : 2-3 mois. Poids : 15-20 kg. Prix : 35 000 - 45 000 FCFA. Race Large White/Landrace. Vaccinés et vermifugés.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/4910743/pexels-photo-4910743.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // CHÈVRES
+  createPost(
+    '🐐 Chèvres Djallonké - Race locale rustique',
+    'Chèvres disponibles ! Race Djallonké, résistante aux maladies. Femelles : 25 000 FCFA. Mâles reproducteurs : 40 000 FCFA. Idéal pour démarrer un élevage.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/1459505/pexels-photo-1459505.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // MOUTONS
+  createPost(
+    '🐑 Moutons pour Tabaski - Réservez maintenant',
+    'Moutons disponibles ! Race Djallonké, bien conformés. Prix : 80 000 - 150 000 FCFA selon taille. Réservez dès maintenant pour la Tabaski. Livraison possible.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/288621/pexels-photo-288621.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // VACHES
+  createPost(
+    '🐄 Vaches laitières - Production garantie',
+    'Vaches laitières disponibles ! Race métisse, production 8-12 L/jour. Prix : 450 000 - 600 000 FCFA. Certificat sanitaire fourni. Région Adamaoua.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/422218/pexels-photo-422218.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // TILAPIA
+  createPost(
+    '🐟 Tilapia frais - Élevage local',
+    'Tilapia disponible ! Poids : 300-500g. Prix : 2 000 FCFA/kg. Élevé en bassin, chair ferme et savoureuse. Commande minimum : 10 kg. Livraison possible.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/3640451/pexels-photo-3640451.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // POISSON-CHAT
+  createPost(
+    '🐟 Poisson-chat (Clarias) - Gros calibre',
+    'Poissons-chats disponibles ! Poids : 800g-1.5kg. Prix : 2 500 FCFA/kg. Chair tendre, peu d\'arêtes. Idéal pour braisé ou sauce. Commande minimum : 5 kg.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/2252584/pexels-photo-2252584.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // ALEVINS
+  createPost(
+    '🐟 Alevins de tilapia - Démarrez votre élevage',
+    'Alevins disponibles ! Tilapia du Nil, taille 3-5 cm. Prix : 50 FCFA/alevin. Minimum : 500 alevins. Croissance rapide : 300g en 6 mois. Formation offerte.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/128756/pexels-photo-128756.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // LAPINS
+  createPost(
+    '🐰 Lapins reproducteurs - Race locale améliorée',
+    'Lapins disponibles ! Race locale améliorée, prolifique. Prix : 8 000 FCFA/lapin. Reproduction rapide : 6-8 petits/portée. Idéal pour viande ou élevage.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/4001296/pexels-photo-4001296.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // CANARDS
+  createPost(
+    '🦆 Canards de Barbarie - Chair savoureuse',
+    'Canards disponibles ! Race Barbarie, poids 3-4 kg. Prix : 6 000 FCFA/canard. Chair maigre et savoureuse. Élevage en plein air. Commande minimum : 5 canards.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/162140/duckling-birds-yellow-background-162140.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // RUCHE / MIEL
+  createPost(
+    '🍯 Miel pur du Cameroun - Récolte artisanale',
+    'Miel naturel disponible ! Miel de forêt, non chauffé. Prix : 4 000 FCFA/litre. Bienfaits santé garantis. Ruches disponibles aussi : 25 000 FCFA/ruche.',
+    'elevage',
+    'announcement',
+    true,
+    'https://images.pexels.com/photos/1638280/pexels-photo-1638280.jpeg?auto=compress&cs=tinysrgb&w=800'
+  );
+
+  // ============================================
+  // CONSEILS ET ALERTES (sans images)
+  // ============================================
+
+  createPost(
+    '⚠️ Alerte : Peste porcine africaine',
+    'Cas signalés dans la région de l\'Est ! Mesures urgentes : Isolez vos porcs, désinfectez, ne transportez pas d\'animaux. Mortalité 100%. Signalez tout cas suspect !',
     'elevage',
     'warning'
   );
 
   createPost(
-    '🔬 Parasites internes : Déparasitage obligatoire',
-    'Déparasitez vos animaux tous les 3 mois ! Signes de parasites : Amaigrissement, poil terne, diarrhée, baisse de production. Produits efficaces : Ivermectine, Albendazole. Coût : 500-2000 FCFA/animal. Négligence = pertes !',
+    '💡 Astuce : Conservation des œufs',
+    'Conservez vos œufs 3 semaines sans frigo ! Enduisez-les d\'huile végétale et stockez pointe vers le bas dans un endroit frais et sombre. Testez dans l\'eau avant usage.',
     'elevage',
-    'expert_advice'
+    'tip'
   );
 
   createPost(
-    '🐓 Coccidiose chez les poulets : Prévention',
-    'La coccidiose tue 30% des poussins ! Prévention : Litière sèche, anticoccidien dans l\'eau (jours 1-5), hygiène stricte. Symptômes : Diarrhée sanglante, plumes ébouriffées. Traitement : Amprolium. Agissez vite !',
+    '💡 Astuce : Abreuvoirs propres',
+    'Nettoyez et désinfectez les abreuvoirs tous les 2 jours, remplacez l\'eau quotidiennement pour limiter les maladies digestives.',
     'elevage',
-    'expert_advice'
+    'tip'
   );
 
   createPost(
-    '🐷 Peste porcine africaine : Restez vigilant',
-    'La peste porcine est mortelle à 100% ! Aucun traitement. Seule solution : PRÉVENTION. Vaccinez, isolez les nouveaux porcs 21 jours, désinfectez, évitez les restes de cuisine. Un porc malade = abattage de tout le troupeau !',
+    '💡 Astuce : Complémentation en saison sèche',
+    'Apportez des blocs multinutritionnels, du foin et des sous-produits agro (son, tourteaux). Assurez un abreuvement 2x/jour pour maintenir le poids.',
     'elevage',
+    'tip'
+  );
+
+  createPost(
+    '💡 Astuce : Vermifugation pratique',
+    'Vermifugez les jeunes animaux tous les 3 mois. Alternez les molécules et pesez pour une dose précise. Déparasitez avant la saison des pluies.',
+    'elevage',
+    'tip'
+  );
+
+  createPost(
+    '📊 Prix du marché - Douala cette semaine',
+    'Poulet vif : 3 500 FCFA/kg. Œufs : 100 FCFA/unité. Porc vif : 2 000 FCFA/kg. Poisson frais : 2 500 FCFA/kg. Tendance stable. Bon moment pour vendre !',
+    'elevage',
+    'announcement'
+  );
+
+  createPost(
+    '⚠️ Alerte : Chenilles légionnaires dans l\'Ouest',
+    'Invasion signalée ! Les chenilles attaquent maïs et sorgho. Inspectez vos champs chaque matin. Traitement bio : Bacillus thuringiensis. Agissez vite !',
+    'agriculture',
     'warning'
   );
 
   createPost(
-    '🐐 Mammite chez les chèvres laitières',
-    'Mammite = perte de production ! Prévention : Traite hygiénique, désinfection des trayons, litière propre. Traitement : Antibiotiques intra-mammaires. Détection précoce = guérison rapide. Inspectez le pis quotidiennement !',
-    'elevage',
-    'expert_advice'
-  );
-
-  // === ÉLEVAGE - ALIMENTATION ===
-  createPost(
-    '🌾 Fabriquer son aliment volaille maison',
-    'Recette économique (100kg) : Maïs 60kg, Tourteau soja 20kg, Son de blé 10kg, Farine de poisson 5kg, Coquilles 3kg, Sel 0.5kg, Prémix 1.5kg. Coût : ~18 000 FCFA vs 25 000 FCFA du commerce. Économie : 28% !',
-    'elevage',
-    'tip'
-  );
-
-  createPost(
-    '🐄 Bloc multi-nutritionnel pour bovins',
-    'En saison sèche, donnez des blocs à lécher. Recette : Mélasse 40%, Urée 5%, Son 30%, Ciment 10%, Sel 5%, Minéraux 10%. Moule et laisse sécher 7 jours. Améliore la digestion et la production !',
-    'elevage',
-    'tip'
-  );
-
-  createPost(
-    '🐟 Aliment poisson fait maison',
-    'Formule économique : Farine de poisson 40%, Tourteau soja 30%, Son de riz 20%, Farine de maïs 10%. Ajoutez vitamines. Granulés de 2-5mm. Coût réduit de 40% vs aliment commercial. Croissance identique !',
-    'elevage',
-    'tip'
-  );
-
-  createPost(
-    '🐓 Verdure pour les poules : Importance',
-    'Les poules ont besoin de verdure ! Donnez : Feuilles de manioc, moringa, amarante, herbe fraîche. Avantages : Jaune d\'œuf plus foncé, meilleure santé, économie d\'aliment. 20-30% de l\'alimentation en verdure !',
-    'elevage',
-    'tip'
-  );
-
-  createPost(
-    '🐷 Engraissement rapide des porcs',
-    'Pour un engraissement optimal : Aliment 16-18% protéines, 3 repas/jour, eau à volonté, vermifuge tous les 2 mois. Poids de vente (90-100kg) atteint en 6 mois. Gain moyen : 500-600g/jour. Rentabilité maximale !',
-    'elevage',
-    'expert_advice'
-  );
-
-  // === POSTS SUPPLÉMENTAIRES VARIÉS ===
-  createPost(
-    '📱 Application mobile pour éleveurs',
-    'Nouvelle appli gratuite "Élevage Pro" : Suivi sanitaire, rappels vaccination, calcul ration alimentaire, prix du marché. Disponible sur Android et iOS. Téléchargez maintenant ! Déjà 5000 utilisateurs satisfaits.',
-    'elevage',
-    'announcement'
-  );
-
-  createPost(
-    '🌍 Changement climatique : Adapter son élevage',
-    'Le climat change, adaptons-nous ! Choisissez des races résistantes (Goudali, Djallonké). Investissez dans l\'ombrage et la ventilation. Diversifiez (volaille + petits ruminants). Constituez des réserves fourragères. Anticipation = survie !',
-    'elevage',
-    'expert_advice'
-  );
-
-  createPost(
-    '💼 Coopérative d\'éleveurs : Rejoignez-nous !',
-    'Notre coopérative compte 150 membres. Avantages : Achat groupé d\'intrants (-20%), vente groupée (meilleurs prix), formations gratuites, accès au crédit. Cotisation : 5000 FCFA/an. Ensemble on est plus forts !',
-    'elevage',
-    'announcement'
-  );
-
-  createPost(
-    '🌱 Cultures fourragères à planter maintenant',
-    'Plantez dès maintenant pour la saison sèche : Brachiaria, Panicum, Stylosanthes, Mucuna. Ces cultures fourragères résistent bien et nourrissent vos animaux. 1 hectare nourrit 10 bovins pendant 3 mois !',
+    '💡 Astuce : Engrais naturel gratuit',
+    'Faites votre compost ! Mélangez : déchets de cuisine + feuilles mortes + fumier. Retournez chaque semaine. Prêt en 2-3 mois. Économisez 50 000 FCFA/hectare !',
     'agriculture',
-    'expert_advice'
+    'tip'
   );
 
   createPost(
-    '🚰 Système d\'irrigation solaire',
-    'Investissez dans le solaire ! Pompe solaire 1CV = 300 000 FCFA. Aucun coût d\'électricité. Durée de vie : 15 ans. Irrigue 1 hectare. Rentabilité en 2 ans. L\'avenir de l\'agriculture !',
+    '💡 Astuce : Paillage pour économiser l\'eau',
+    'Couvrez le sol avec paille ou feuilles sèches : conserve l\'humidité, limite les mauvaises herbes et améliore la structure du sol.',
+    'agriculture',
+    'tip'
+  );
+
+  createPost(
+    '💡 Astuce : Association maïs-haricot',
+    'Semez 2 grains de maïs par poquet puis 1-2 graines de haricot 10 jours après : fixation d\'azote et meilleur rendement global.',
+    'agriculture',
+    'tip'
+  );
+
+  createPost(
+    '💡 Astuce : Traitement bio contre les pucerons',
+    'Pulvérisez une solution de savon noir (10 ml/L) et ail pilé tôt le matin. Répétez 2-3 fois à 5 jours d\'intervalle.',
+    'agriculture',
+    'tip'
+  );
+
+  createPost(
+    '💡 Astuce : Conservation du manioc',
+    'Pour le bâton de manioc : éplucher, tremper 3-4 jours, fermenter, presser et sécher au soleil pour un stockage prolongé.',
+    'agriculture',
+    'tip'
+  );
+
+  createPost(
+    '📊 Prix du marché agricole - Yaoundé',
+    'Tomate : 800 FCFA/kg. Oignon : 600 FCFA/kg. Plantain : 2 500 FCFA/régime. Maïs : 250 FCFA/kg. Manioc : 150 FCFA/kg. Tendance : hausse sur les légumes.',
     'agriculture',
     'announcement'
   );
 
   createPost(
-    '🌿 Agriculture biologique : Certification',
-    'La demande en bio explose ! Certification bio = prix +50%. Processus : 3 ans de transition, contrôles annuels. Coût : 100 000 FCFA/an. Marchés : Export Europe, supermarchés locaux. Opportunité en or !',
+    '📣 Annonce : Distribution de semences certifiées – Ouest',
+    'Points de distribution à Bafoussam et Dschang cette semaine. Pièce d’identité et carte de producteur requises.',
+    'agriculture',
+    'announcement'
+  );
+  createPost(
+    '📣 Annonce : Formation CEP – Fertilité des sols',
+    'Session pratique sur compost, paillage et rotation. Inscription gratuite via la délégation départementale.',
+    'agriculture',
+    'announcement'
+  );
+  createPost(
+    '📣 Annonce : Journée de démonstration – Paillage',
+    'Démonstration de techniques de paillage et économie d’eau. Lieu: Edéa, samedi 15h.',
     'agriculture',
     'announcement'
   );
 
   createPost(
-    '🎓 Bourse d\'études en agronomie',
-    'Le gouvernement offre 100 bourses pour études en agronomie. Niveau : Licence et Master. Destinations : Maroc, Sénégal, Côte d\'Ivoire. Dossiers avant le 15 mars. Critères : Bac scientifique, moins de 25 ans. Informez-vous !',
-    'agriculture',
+    '📣 Annonce : Vaccination Newcastle – Littoral',
+    'Campagne gratuite auprès des petits élevages. Apportez vos sujets entre 8h et 12h, carnet d’élevage recommandé.',
+    'elevage',
+    'announcement'
+  );
+  createPost(
+    '📣 Annonce : Formation hygiène avicole – Centre',
+    'Biosécurité, pédiluves, désinfection et gestion des déchets. Attestation en fin de session.',
+    'elevage',
+    'announcement'
+  );
+  createPost(
+    '📣 Annonce : Distribution de vaccins LANAVET – Nord',
+    'Vaccins Newcastle et PPR disponibles dans les points agréés. Présenter un justificatif d’élevage.',
+    'elevage',
     'announcement'
   );
 
-  // Shuffle posts to randomize order
+  // Astuces supplémentaires (élevage)
+  createPost(
+    '💡 Astuce : Ventilation du poulailler',
+    "Assurez un flux d'air croisé, densité <10 sujets/m2 en saison chaude, eau fraîche disponible pour limiter le stress thermique.",
+    'elevage',
+    'tip'
+  );
+  createPost(
+    '💡 Astuce : Minéraux pour ruminants',
+    'Mettre à disposition des pierres à lécher riches en sel et oligo-éléments; favorise ingestion et reproduction.',
+    'elevage',
+    'tip'
+  );
+  createPost(
+    '💡 Astuce : Hygiène des mangeoires',
+    'Retirer les refus chaque soir, laver les mangeoires 2-3 fois/semaine pour limiter les colibacilloses.',
+    'elevage',
+    'tip'
+  );
+
+  // Astuces supplémentaires (agriculture)
+  createPost(
+    '💡 Astuce : Rotation culturale 1/3',
+    'Alternez céréales - légumineuses - tubercules pour casser les cycles de ravageurs et améliorer la fertilité.',
+    'agriculture',
+    'tip'
+  );
+  createPost(
+    '💡 Astuce : Semis en poquet',
+    'Semer en poquets de 2-3 graines et éclaircir après levée pour une meilleure vigueur et un espacement régulier.',
+    'agriculture',
+    'tip'
+  );
+  createPost(
+    '💡 Astuce : Pièges jaunes contre aleurodes',
+    'Installer des plaquettes jaunes engluées en bordure de parcelle pour réduire la pression des aleurodes.',
+    'agriculture',
+    'tip'
+  );
+
+  // Annonces supplémentaires
+  createPost(
+    "📣 Annonce : Achat groupé d'intrants",
+    "Organisation d'un groupage pour NPK 15-15-15 et urée, réductions jusqu'à 12%. Inscriptions avant vendredi.",
+    'agriculture',
+    'announcement'
+  );
+  createPost(
+    '📣 Annonce : Bourse de foin – Adamaoua',
+    'Lot de foin de Brachiaria, bottes 20 kg disponibles, remise sur quantités. Transport négociable.',
+    'elevage',
+    'announcement'
+  );
+
+  // Alertes supplémentaires
+  createPost(
+    "⚠️ Alerte : Brûlures de soleil sur bananier",
+    "Installer des ombrières temporaires pour jeunes plants; éviter une défoliation excessive lors de l'entretien.",
+    'agriculture',
+    'warning'
+  );
+  createPost(
+    '⚠️ Alerte : Coccidiose en aviculture',
+    'Diarrhées sanglantes chez les jeunes; hygiène des litières, anticoccidiens via eau de boisson, isolement des sujets.',
+    'elevage',
+    'warning'
+  );
+
+  // Shuffle posts
   const shuffleArray = (array: any[]) => {
     const shuffled = [...array];
     for (let i = shuffled.length - 1; i > 0; i--) {

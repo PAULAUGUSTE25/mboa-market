@@ -4,7 +4,7 @@ import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
 import { getCardStyles, getTextStyles, getInputStyles, getButtonStyles } from '@/utils/cardStyles';
 import Logo from '@/components/Logo';
-import { Sprout, Phone, Lock, Wheat } from 'lucide-react';
+import { Sprout, Phone, Lock, Wheat, ChevronLeft } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 export default function LoginAgriculturePage() {
@@ -72,7 +72,7 @@ export default function LoginAgriculturePage() {
             className="backdrop-blur-md rounded-3xl shadow-2xl p-8 mx-4 max-w-md border-2"
             style={{
               ...getCardStyles(theme, 'emerald'),
-              borderColor: theme === 'light' ? '#10B981' : 'rgba(16, 185, 129, 0.4)'
+              borderColor: theme === 'light' ? '#2E7D32' : 'rgba(16, 185, 129, 0.4)'
             }}
           >
             <div className="text-center">
@@ -98,14 +98,12 @@ export default function LoginAgriculturePage() {
       <div 
         className="absolute inset-0 bg-cover bg-center bg-fixed"
         style={{
-          backgroundImage: theme === 'light' 
-            ? `url('/light%20mode%20.png')`
-            : `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000')`,
+          backgroundImage: `url('https://images.unsplash.com/photo-1597916829826-02e5bb4a54e0?q=80&w=2000')`,
         }}
       >
         <div className={`absolute inset-0 ${theme === 'dark' ? 'bg-gradient-to-br from-green-950/85 via-teal-950/80 to-amber-950/85' : ''}`} style={{
-          backdropFilter: theme === 'light' ? 'blur(2px)' : undefined,
-          backgroundColor: theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : undefined
+          backdropFilter: theme === 'light' ? 'blur(0.5px)' : undefined,
+          backgroundColor: theme === 'light' ? 'rgba(255, 255, 255, 0.15)' : undefined
         }}></div>
       </div>
 
@@ -125,7 +123,7 @@ export default function LoginAgriculturePage() {
           className="backdrop-blur-[25px] rounded-[24px] sm:rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-6 sm:p-8 border relative overflow-hidden"
           style={{
             ...getCardStyles(theme, 'emerald'),
-            borderColor: theme === 'light' ? '#10B981' : 'rgba(255, 255, 255, 0.2)'
+            borderColor: theme === 'light' ? '#2E7D32' : 'rgba(255, 255, 255, 0.2)'
           }}
         >
           {/* Bordure Lumineuse */}
@@ -134,23 +132,37 @@ export default function LoginAgriculturePage() {
           {/* Bouton Retour */}
           <button
             onClick={() => navigate('/select-sector')}
-            className="mb-8 transition-all transform hover:scale-110 text-2xl font-bold"
-            style={{ color: theme === 'light' ? '#374151' : '#9CA3AF' }}
+            className="mb-6 transition-all transform hover:scale-110 w-10 h-10 rounded-full flex items-center justify-center"
+            style={{ 
+              backgroundColor: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
+              border: theme === 'light' ? '2px solid #1A1A1A' : '2px solid rgba(255, 255, 255, 0.5)',
+              boxShadow: theme === 'light' ? '0 2px 8px rgba(0, 0, 0, 0.15)' : 'none'
+            }}
           >
-            ←
+            <ChevronLeft 
+              className="w-6 h-6" 
+              strokeWidth={2.5}
+              style={{ color: theme === 'light' ? '#1A1A1A' : '#FFFFFF' }}
+            />
           </button>
 
           {/* Logo Responsive */}
-          <div className="text-center mb-6 sm:mb-8">
-            <Logo size="lg" className="mb-4 sm:mb-6 sm:scale-125" />
+          <div className="text-center mb-4 sm:mb-6">
+            <Logo size="lg" className="mb-3 sm:mb-4" />
             {/* Icône SVG Agriculture Responsive */}
-            <div className="flex justify-center mb-3 sm:mb-4">
-              <div className="w-14 h-14 sm:w-16 sm:h-16 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-sm">
-                <Sprout className="h-7 w-7 sm:h-8 sm:w-8 text-green-300" strokeWidth={1.5} />
+            <div className="flex justify-center mb-2 sm:mb-3">
+              <div 
+                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full flex items-center justify-center"
+                style={{
+                  background: theme === 'light' ? '#2E7D32' : 'rgba(255, 255, 255, 0.1)',
+                  boxShadow: theme === 'light' ? '0 4px 16px rgba(0, 0, 0, 0.2)' : 'none'
+                }}
+              >
+                <Sprout className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={theme === 'light' ? 3 : 1.5} style={{ color: theme === 'light' ? '#FFFFFF' : '#86EFAC' }} />
               </div>
             </div>
-            <h2 className="text-2xl sm:text-3xl font-extrabold mb-2" style={{ letterSpacing: '0.05em', color: getTextStyles(theme).title }}>AGRICULTURE</h2>
-            <p className="text-sm sm:text-base" style={{ color: getTextStyles(theme).subtitle }}>Cultures et Produits Agricoles</p>
+            <h2 className="text-xl sm:text-2xl font-extrabold mb-1 text-left pl-2" style={{ letterSpacing: '0.05em', color: getTextStyles(theme).title }}>AGRICULTURE</h2>
+            <p className="text-sm sm:text-base text-left pl-2" style={{ color: getTextStyles(theme).subtitle }}>Cultures et Produits Agricoles</p>
           </div>
 
           {(error || fieldErrors.general) && (
@@ -236,7 +248,7 @@ export default function LoginAgriculturePage() {
           {/* Lien Inscription */}
           <p className="text-center text-sm mt-6" style={{ color: getTextStyles(theme).body }}>
             Pas de compte?{' '}
-            <Link to="/register" className="font-bold transition-colors underline" style={{ color: theme === 'light' ? '#10B981' : '#6EE7B7' }}>
+            <Link to="/register" className="font-bold transition-colors underline" style={{ color: theme === 'light' ? '#2E7D32' : '#6EE7B7' }}>
               S'inscrire
             </Link>
           </p>

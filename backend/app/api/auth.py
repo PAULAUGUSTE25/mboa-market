@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token
 # from app.core.rate_limiter import limiter
@@ -128,7 +129,9 @@ async def login(
     # Constant-time delay to prevent timing attacks
     start_time = asyncio.get_event_loop().time()
     
-    result = await db.execute(select(User).where(User.phone == credentials.phone))
+    result = await db.execute(
+        select(User).options(selectinload(User.profile)).where(User.phone == credentials.phone)
+    )
     user = result.scalar_one_or_none()
     
     # Always verify password even if user doesn't exist (constant-time)
@@ -159,8 +162,6 @@ async def login(
     
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
-    
-    await db.refresh(user, ['profile'])
     
     logger.info(f"User logged in successfully: {user.id}")
     return LoginResponse(

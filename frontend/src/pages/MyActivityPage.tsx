@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
 import { useTheme } from '@/contexts/ThemeContext';
-import { getThemeStyles } from '@/utils/themeStyles';
 import { getCardStyles, getTextStyles, getButtonStyles } from '@/utils/cardStyles';
 import { Package, Plus, Edit, Trash2, Eye, Lightbulb, PackageSearch, Sprout, ShoppingCart, TrendingUp } from 'lucide-react';
 import ScrollToTop from '@/components/ScrollToTop';
@@ -25,7 +24,11 @@ export default function MyActivityPage() {
   const navigate = useNavigate();
   const { user } = useAuthStore();
   const { theme } = useTheme();
-  const styles = getThemeStyles(theme);
+  
+  // Dynamic text classes based on theme
+  const textTitle = theme === 'light' ? 'text-gray-900' : '${textTitle}';
+  const textBody = theme === 'light' ? 'text-gray-700' : '${textBody}';
+  const textMuted = theme === 'light' ? 'text-gray-500' : '${textMuted}';
   const [myListings, setMyListings] = useState<Listing[]>([]);
   const [supplierListings, setSupplierListings] = useState<Listing[]>([]);
   const [clientRequests, setClientRequests] = useState<Listing[]>([]);
@@ -477,10 +480,22 @@ export default function MyActivityPage() {
     try {
       setLoading(true);
       
-      // Load my listings
-      const listings = await api.getMyListings();
+      // Load my listings from API
+      let listings: any[] = [];
+      try {
+        listings = await api.getMyListings();
+      } catch (apiError) {
+        console.warn('Could not load listings from API:', apiError);
+      }
+      
+      // Load local listings from localStorage (created offline or demo)
+      const localListings = JSON.parse(localStorage.getItem('my_local_listings') || '[]');
+      
+      // Combine API listings with local listings
+      const allMyListings = [...listings, ...localListings];
+      
       // Ensure all listings have PUBLISHED status by default
-      const listingsWithStatus = listings.map((listing: any) => ({
+      const listingsWithStatus = allMyListings.map((listing: any) => ({
         ...listing,
         status: listing.status || 'PUBLISHED'
       }));
@@ -526,8 +541,8 @@ export default function MyActivityPage() {
       }
       
       setStats({
-        totalListings: listings.length,
-        activeListings: listings.filter((l: Listing) => l.status === 'active').length,
+        totalListings: allMyListings.length,
+        activeListings: allMyListings.filter((l: Listing) => l.status === 'active' || l.status === 'PUBLISHED').length,
         totalViews: Math.floor(Math.random() * 500) + 100
       });
     } catch (error) {
@@ -801,37 +816,25 @@ export default function MyActivityPage() {
   };
 
   return (
-    <div className="min-h-screen relative overflow-hidden">
+    <div className="min-h-screen relative overflow-hidden font-['Inter','Plus_Jakarta_Sans',sans-serif]">
       {/* Background Image */}
       <div 
-        className="fixed inset-0 bg-cover bg-center bg-fixed"
+        className="fixed inset-0 z-0"
         style={{
-          backgroundImage: theme === 'light' 
-            ? `url('/light%20mode%20.png')`
-            : `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000')`,
+          backgroundImage: `url('/background pic.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
         }}
       >
-        <div className={`absolute inset-0 ${theme === 'dark' ? `bg-gradient-to-br ${styles.background}` : ''}`} style={{
-          backdropFilter: theme === 'light' ? 'blur(2px)' : undefined,
-          backgroundColor: theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : undefined
-        }}></div>
+        <div className={`absolute inset-0 ${theme === 'dark' ? 'bg-black/80' : 'bg-black/40'}`} />
       </div>
 
-      {/* Animated Background Pattern - Dark Mode Only */}
-      {theme === 'dark' && (
-        <div className={`fixed inset-0 ${styles.blobs}`}>
-          <div className={`absolute top-10 left-10 w-32 h-32 ${styles.blobColors[0]} rounded-full blur-3xl animate-pulse`}></div>
-          <div className={`absolute top-40 right-20 w-40 h-40 ${styles.blobColors[1]} rounded-full blur-3xl animate-pulse`} style={{ animationDelay: '1s' }}></div>
-          <div className={`absolute bottom-20 left-1/4 w-36 h-36 ${styles.blobColors[2]} rounded-full blur-3xl animate-pulse`} style={{ animationDelay: '2s' }}></div>
-        </div>
-      )}
       <div className="relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Bouton Retour */}
         <button
           onClick={() => navigate('/feed')}
-          className="mb-4 sm:mb-6 transition-all transform hover:scale-110 text-2xl font-bold"
-          style={{ color: theme === 'light' ? '#374151' : '#9CA3AF' }}
+          className="mb-4 sm:mb-6 transition-all transform hover:scale-110 text-2xl font-bold text-white hover:text-emerald-400"
         >
           ←
         </button>
@@ -839,13 +842,12 @@ export default function MyActivityPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold" style={{ color: getTextStyles(theme).title }}>{getActivityTitle()}</h1>
-            <p className="mt-1" style={{ color: getTextStyles(theme).body }}>{getActivityDescription()}</p>
+            <h1 className="text-3xl sm:text-4xl font-bold text-white">{getActivityTitle()}</h1>
+            <p className="mt-1 text-white/80">{getActivityDescription()}</p>
           </div>
           <button
-            onClick={() => navigate('/feed')}
-            className="flex items-center space-x-2 px-4 py-2 border-2 rounded-xl font-bold transition-all text-sm shadow-lg"
-            style={getButtonStyles(theme, 'primary', 'emerald')}
+            onClick={() => navigate('/feed', { state: { openCreatePost: true } })}
+            className="flex items-center space-x-2 px-4 py-2 border border-emerald-500/50 rounded-xl font-bold transition-all text-sm shadow-lg bg-emerald-600 hover:bg-emerald-500 text-white"
           >
             <Plus className="h-4 w-4" />
             <span className="hidden sm:inline">Publier</span>
@@ -859,24 +861,22 @@ export default function MyActivityPage() {
               <>
                 <button
                   onClick={() => setActiveTab('suppliers')}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-full font-bold transition-all text-sm border-2"
-                  style={{
-                    background: theme === 'light' ? (activeTab === 'suppliers' ? '#10B981' : '#FFFFFF') : (activeTab === 'suppliers' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'),
-                    borderColor: theme === 'light' ? (activeTab === 'suppliers' ? '#10B981' : '#D1D5DB') : (activeTab === 'suppliers' ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255, 255, 255, 0.2)'),
-                    color: theme === 'light' ? (activeTab === 'suppliers' ? '#FFFFFF' : '#1A1A1A') : '#FFFFFF'
-                  }}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-bold transition-all text-sm border ${
+                    activeTab === 'suppliers' 
+                      ? 'bg-emerald-600/30 border-emerald-500 text-emerald-300' 
+                      : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
+                  }`}
                 >
                   <PackageSearch className="h-5 w-5" strokeWidth={2} />
                   Fournisseurs ({supplierListings.length})
                 </button>
                 <button
                   onClick={() => setActiveTab('requests')}
-                  className="flex items-center gap-2 px-4 py-2.5 rounded-full font-bold transition-all text-sm border-2"
-                  style={{
-                    background: theme === 'light' ? (activeTab === 'requests' ? '#F59E0B' : '#FFFFFF') : (activeTab === 'requests' ? 'rgba(251, 146, 60, 0.3)' : 'rgba(255, 255, 255, 0.1)'),
-                    borderColor: theme === 'light' ? (activeTab === 'requests' ? '#F59E0B' : '#D1D5DB') : (activeTab === 'requests' ? 'rgba(251, 146, 60, 0.5)' : 'rgba(255, 255, 255, 0.2)'),
-                    color: theme === 'light' ? (activeTab === 'requests' ? '#FFFFFF' : '#1A1A1A') : '#FFFFFF'
-                  }}
+                  className={`flex items-center gap-2 px-4 py-2.5 rounded-full font-bold transition-all text-sm border ${
+                    activeTab === 'requests' 
+                      ? 'bg-amber-600/30 border-amber-500 text-amber-300' 
+                      : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
+                  }`}
                 >
                   <ShoppingCart className="h-5 w-5" strokeWidth={2} />
                   Demandes Clients ({clientRequests.length})
@@ -887,12 +887,11 @@ export default function MyActivityPage() {
               <>
                 <button
                   onClick={() => setActiveTab('requests')}
-                  className="flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all border-2"
-                  style={{
-                    background: theme === 'light' ? (activeTab === 'requests' ? '#F59E0B' : '#FFFFFF') : (activeTab === 'requests' ? 'rgba(251, 146, 60, 0.3)' : 'rgba(255, 255, 255, 0.1)'),
-                    borderColor: theme === 'light' ? (activeTab === 'requests' ? '#F59E0B' : '#D1D5DB') : (activeTab === 'requests' ? 'rgba(251, 146, 60, 0.5)' : 'rgba(255, 255, 255, 0.2)'),
-                    color: theme === 'light' ? (activeTab === 'requests' ? '#FFFFFF' : '#1A1A1A') : '#FFFFFF'
-                  }}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all border ${
+                    activeTab === 'requests' 
+                      ? 'bg-amber-600/30 border-amber-500 text-amber-300' 
+                      : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
+                  }`}
                 >
                   <ShoppingCart className="h-5 w-5" strokeWidth={2} />
                   Demandes Clients ({clientRequests.length})
@@ -903,12 +902,11 @@ export default function MyActivityPage() {
               <>
                 <button
                   onClick={() => setActiveTab('suppliers')}
-                  className="flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all border-2"
-                  style={{
-                    background: theme === 'light' ? (activeTab === 'suppliers' ? '#10B981' : '#FFFFFF') : (activeTab === 'suppliers' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'),
-                    borderColor: theme === 'light' ? (activeTab === 'suppliers' ? '#10B981' : '#D1D5DB') : (activeTab === 'suppliers' ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255, 255, 255, 0.2)'),
-                    color: theme === 'light' ? (activeTab === 'suppliers' ? '#FFFFFF' : '#1A1A1A') : '#FFFFFF'
-                  }}
+                  className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all border ${
+                    activeTab === 'suppliers' 
+                      ? 'bg-emerald-600/30 border-emerald-500 text-emerald-300' 
+                      : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
+                  }`}
                 >
                   <Sprout className="h-5 w-5" strokeWidth={2} />
                   Offres Producteurs ({supplierListings.length})
@@ -917,12 +915,11 @@ export default function MyActivityPage() {
             )}
             <button
               onClick={() => setActiveTab('my-listings')}
-              className="flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all border-2"
-              style={{
-                background: theme === 'light' ? (activeTab === 'my-listings' ? '#10B981' : '#FFFFFF') : (activeTab === 'my-listings' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255, 255, 255, 0.1)'),
-                borderColor: theme === 'light' ? (activeTab === 'my-listings' ? '#10B981' : '#D1D5DB') : (activeTab === 'my-listings' ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255, 255, 255, 0.2)'),
-                color: theme === 'light' ? (activeTab === 'my-listings' ? '#FFFFFF' : '#1A1A1A') : '#FFFFFF'
-              }}
+              className={`flex items-center gap-2 px-6 py-3 rounded-full font-bold transition-all border ${
+                activeTab === 'my-listings' 
+                  ? 'bg-emerald-600/30 border-emerald-500 text-emerald-300' 
+                  : 'bg-white/5 border-white/10 text-white/80 hover:bg-white/10'
+              }`}
             >
               <Package className="h-5 w-5" strokeWidth={2} />
               Mes Publications ({myListings.length})
@@ -936,12 +933,7 @@ export default function MyActivityPage() {
           <div className="mb-6">
             <button
               onClick={() => setActiveTab('advice-current')}
-              className="flex items-center gap-2 px-4 py-2 rounded-full font-bold transition-all border-2"
-              style={{
-                background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
-                borderColor: theme === 'light' ? '#D1D5DB' : 'rgba(255, 255, 255, 0.2)',
-                color: theme === 'light' ? '#1A1A1A' : '#FFFFFF'
-              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-full font-bold transition-all border bg-white/5 border-white/10 text-white hover:bg-white/10"
             >
               ← Retour aux onglets
             </button>
@@ -953,12 +945,7 @@ export default function MyActivityPage() {
           <div className="mb-6">
             <button
               onClick={() => setActiveTab('requests')}
-              className="flex items-center gap-2 px-4 py-2 rounded-full font-bold transition-all border-2"
-              style={{
-                background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
-                borderColor: theme === 'light' ? '#D1D5DB' : 'rgba(255, 255, 255, 0.2)',
-                color: theme === 'light' ? '#1A1A1A' : '#FFFFFF'
-              }}
+              className="flex items-center gap-2 px-4 py-2 rounded-full font-bold transition-all border bg-white/5 border-white/10 text-white hover:bg-white/10"
             >
               ← Retour aux onglets
             </button>
@@ -968,47 +955,39 @@ export default function MyActivityPage() {
         {/* Tab Content */}
         {activeTab === 'advice-next' && user?.profile?.activity_type === 'producer' && (
           <div 
-            className="backdrop-blur-md rounded-xl shadow-lg p-8 border"
-            style={{
-              ...getCardStyles(theme, 'emerald'),
-              borderColor: theme === 'light' ? '#10B981' : 'rgba(255, 255, 255, 0.2)'
-            }}
+            className="backdrop-blur-md rounded-xl shadow-lg p-8 border border-emerald-500/30 bg-black/40"
           >
             {/* Header with crop selection */}
             <div className="mb-8">
               <div className="flex items-center justify-between mb-6">
                 <div>
-                  <h1 className="text-3xl font-bold mb-2" style={{ color: getTextStyles(theme).title }}>Guide de Production: {selectedCrop}</h1>
-                  <p style={{ color: getTextStyles(theme).body }}>Conseils complets pour réussir votre culture de {selectedCrop.toLowerCase()}</p>
+                  <h1 className="text-3xl font-bold mb-2 text-white">Guide de Production: {selectedCrop}</h1>
+                  <p className="text-white/80">Conseils complets pour réussir votre culture de {selectedCrop.toLowerCase()}</p>
                 </div>
-                <div className="w-20 h-20 bg-emerald-500/30 border-2 border-emerald-500/50 rounded-2xl flex items-center justify-center shadow-lg">
-                  <Sprout className="h-10 w-10 text-white" strokeWidth={2} />
+                <div className="w-20 h-20 bg-emerald-500/20 border-2 border-emerald-500/50 rounded-2xl flex items-center justify-center shadow-lg backdrop-blur-sm">
+                  <Sprout className="h-10 w-10 text-emerald-400" strokeWidth={2} />
                 </div>
               </div>
               
               {/* Info banner - crop is set in profile */}
               <div 
-                className="rounded-xl p-4 backdrop-blur-sm border"
-                style={{
-                  background: theme === 'light' ? '#ECFDF5' : 'rgba(6, 182, 212, 0.2)',
-                  borderColor: theme === 'light' ? '#10B981' : 'rgba(6, 182, 212, 0.3)'
-                }}
+                className="rounded-xl p-4 backdrop-blur-sm border bg-cyan-900/20 border-cyan-500/30"
               >
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-cyan-500/30 border border-cyan-500/50 rounded-lg flex items-center justify-center">
-                    <span className="text-white text-xl">ℹ️</span>
+                  <div className="w-10 h-10 bg-cyan-500/20 border border-cyan-500/50 rounded-lg flex items-center justify-center">
+                    <span className="text-xl">ℹ️</span>
                   </div>
                   <div className="flex-1">
-                    <p className="text-sm text-white">
-                      <span className="font-bold">Culture actuelle:</span> {selectedCrop}
+                    <p className="text-sm text-cyan-100">
+                      <span className="font-bold text-cyan-300">Culture actuelle:</span> {selectedCrop}
                     </p>
-                    <p className="text-xs text-white/70 mt-1">
+                    <p className="text-xs text-cyan-200/70 mt-1">
                       Régions adaptées: {currentCropData.regions.join(', ')}
                     </p>
                   </div>
                   <button
                     onClick={() => navigate('/profile')}
-                    className="px-4 py-2 bg-cyan-500/30 border-2 border-cyan-500/50 text-white rounded-xl hover:bg-cyan-500/40 font-bold text-sm transition-all"
+                    className="px-4 py-2 bg-cyan-500/20 border border-cyan-500/50 text-cyan-300 rounded-xl hover:bg-cyan-500/30 font-bold text-sm transition-all"
                   >
                     Changer dans mon profil
                   </button>
@@ -1020,38 +999,32 @@ export default function MyActivityPage() {
             <div className="space-y-4">
               {/* 1. Préparation du sol */}
               <div 
-                className="backdrop-blur-md rounded-xl p-6 border shadow-lg hover:shadow-xl transition-all"
-                style={{
-                  background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
-                  borderColor: theme === 'light' ? '#E5E7EB' : 'rgba(255, 255, 255, 0.2)',
-                  borderLeftWidth: '4px',
-                  borderLeftColor: '#10B981'
-                }}
+                className="backdrop-blur-md rounded-xl p-6 border shadow-lg hover:shadow-xl transition-all bg-black/30 border-white/10 border-l-4 border-l-emerald-500"
               >
                 <div className="flex items-start gap-4 mb-5">
-                  <div className="w-10 h-10 bg-emerald-500/30 border border-emerald-500/50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-emerald-500/20 border border-emerald-500/50 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Sprout className="h-5 w-5 text-emerald-400" strokeWidth={2} />
                   </div>
                   <div className="flex-1">
                     <h2 className="font-bold text-white text-lg tracking-tight mb-1">Préparation du Sol</h2>
-                    <p className="text-sm text-white/70">Fondation de votre réussite</p>
+                    <p className="text-sm text-white/60">Fondation de votre réussite</p>
                   </div>
                 </div>
                 <div className="space-y-4 ml-14">
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Type de labour</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Type de labour</p>
                     <p className="text-sm text-white/90">{currentCropData.soil.prep}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Matière organique</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Matière organique</p>
                     <p className="text-sm text-white/90">{currentCropData.soil.organic}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">pH du sol</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">pH du sol</p>
                     <p className="text-sm text-white/90">{currentCropData.soil.ph}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Drainage</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Drainage</p>
                     <p className="text-sm text-white/90">{currentCropData.soil.drainage}</p>
                   </div>
                 </div>
@@ -1059,38 +1032,32 @@ export default function MyActivityPage() {
 
               {/* 2. Semences */}
               <div 
-                className="backdrop-blur-md rounded-xl p-6 border shadow-lg hover:shadow-xl transition-all"
-                style={{
-                  background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
-                  borderColor: theme === 'light' ? '#E5E7EB' : 'rgba(255, 255, 255, 0.2)',
-                  borderLeftWidth: '4px',
-                  borderLeftColor: '#06B6D4'
-                }}
+                className="backdrop-blur-md rounded-xl p-6 border shadow-lg hover:shadow-xl transition-all bg-black/30 border-white/10 border-l-4 border-l-cyan-500"
               >
                 <div className="flex items-start gap-4 mb-5">
-                  <div className="w-10 h-10 bg-cyan-500/30 border border-cyan-500/50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-cyan-500/20 border border-cyan-500/50 rounded-lg flex items-center justify-center flex-shrink-0">
                     <PackageSearch className="h-5 w-5 text-cyan-400" strokeWidth={2} />
                   </div>
                   <div className="flex-1">
                     <h2 className="font-bold text-white text-lg tracking-tight mb-1">Choix des Semences</h2>
-                    <p className="text-sm text-white/70">Qualité = Rendement</p>
+                    <p className="text-sm text-white/60">Qualité = Rendement</p>
                   </div>
                 </div>
                 <div className="space-y-4 ml-14">
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Variétés recommandées</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Variétés recommandées</p>
                     <p className="text-sm text-white/90">{currentCropData.seeds.varieties}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Taux de germination</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Taux de germination</p>
                     <p className="text-sm text-white/90">{currentCropData.seeds.germination}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Traitement des semences</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Traitement des semences</p>
                     <p className="text-sm text-white/90">{currentCropData.seeds.treatment}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Densité de plantation</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Densité de plantation</p>
                     <p className="text-sm text-white/90">{currentCropData.seeds.density}</p>
                   </div>
                 </div>
@@ -1098,38 +1065,32 @@ export default function MyActivityPage() {
 
               {/* 3. Exigences Climatiques */}
               <div 
-                className="backdrop-blur-md rounded-xl p-6 border shadow-lg hover:shadow-xl transition-all"
-                style={{
-                  background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
-                  borderColor: theme === 'light' ? '#E5E7EB' : 'rgba(255, 255, 255, 0.2)',
-                  borderLeftWidth: '4px',
-                  borderLeftColor: '#EAB308'
-                }}
+                className="backdrop-blur-md rounded-xl p-6 border shadow-lg hover:shadow-xl transition-all bg-black/30 border-white/10 border-l-4 border-l-yellow-500"
               >
                 <div className="flex items-start gap-4 mb-5">
-                  <div className="w-10 h-10 bg-yellow-500/30 border border-yellow-500/50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-yellow-500/20 border border-yellow-500/50 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-xl">☀️</span>
                   </div>
                   <div className="flex-1">
                     <h2 className="font-bold text-white text-lg tracking-tight mb-1">Exigences Climatiques</h2>
-                    <p className="text-sm text-white/70">Conditions optimales</p>
+                    <p className="text-sm text-white/60">Conditions optimales</p>
                   </div>
                 </div>
                 <div className="space-y-4 ml-14">
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Température</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Température</p>
                     <p className="text-sm text-white/90">{currentCropData.climate.temp}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Pluviométrie</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Pluviométrie</p>
                     <p className="text-sm text-white/90">{currentCropData.climate.rainfall}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Ensoleillement</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Ensoleillement</p>
                     <p className="text-sm text-white/90">{currentCropData.climate.sunlight}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Humidité relative</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Humidité relative</p>
                     <p className="text-sm text-white/90">{currentCropData.climate.humidity}</p>
                   </div>
                 </div>
@@ -1137,38 +1098,32 @@ export default function MyActivityPage() {
 
               {/* 4. Calendrier Cultural */}
               <div 
-                className="backdrop-blur-md rounded-xl p-6 border shadow-lg hover:shadow-xl transition-all"
-                style={{
-                  background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
-                  borderColor: theme === 'light' ? '#E5E7EB' : 'rgba(255, 255, 255, 0.2)',
-                  borderLeftWidth: '4px',
-                  borderLeftColor: '#F59E0B'
-                }}
+                className="backdrop-blur-md rounded-xl p-6 border shadow-lg hover:shadow-xl transition-all bg-black/30 border-white/10 border-l-4 border-l-amber-500"
               >
                 <div className="flex items-start gap-4 mb-5">
-                  <div className="w-10 h-10 bg-amber-500/30 border border-amber-500/50 rounded-lg flex items-center justify-center flex-shrink-0">
+                  <div className="w-10 h-10 bg-amber-500/20 border border-amber-500/50 rounded-lg flex items-center justify-center flex-shrink-0">
                     <span className="text-xl">📅</span>
                   </div>
                   <div className="flex-1">
                     <h2 className="font-bold text-white text-lg tracking-tight mb-1">Calendrier Cultural</h2>
-                    <p className="text-sm text-white/70">Timing parfait</p>
+                    <p className="text-sm text-white/60">Timing parfait</p>
                   </div>
                 </div>
                 <div className="space-y-4 ml-14">
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Période de plantation</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Période de plantation</p>
                     <p className="text-sm text-white/90">{currentCropData.calendar.planting}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Espacement</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Espacement</p>
                     <p className="text-sm text-white/90">{currentCropData.calendar.spacing}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Cycle cultural</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Cycle cultural</p>
                     <p className="text-sm text-white/90">{currentCropData.calendar.cycle}</p>
                   </div>
                   <div>
-                    <p className="text-xs font-bold text-white/60 uppercase tracking-wide mb-1">Récolte</p>
+                    <p className="text-xs font-bold text-white/40 uppercase tracking-wide mb-1">Récolte</p>
                     <p className="text-sm text-white/90">{currentCropData.calendar.harvest}</p>
                   </div>
                 </div>
@@ -1176,19 +1131,15 @@ export default function MyActivityPage() {
 
               {/* 5. Budget Prévisionnel - Premium KPI Design */}
               <div 
-                className="backdrop-blur-md rounded-xl p-8 shadow-lg border"
-                style={{
-                  background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
-                  borderColor: theme === 'light' ? '#E5E7EB' : 'rgba(255, 255, 255, 0.2)'
-                }}
+                className="backdrop-blur-md rounded-xl p-8 shadow-lg border bg-black/30 border-white/10"
               >
                 <div className="flex items-start gap-4 mb-8">
-                  <div className="w-12 h-12 bg-purple-500/30 border-2 border-purple-500/50 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
-                    <span className="text-white text-2xl">💰</span>
+                  <div className="w-12 h-12 bg-purple-500/20 border-2 border-purple-500/50 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+                    <span className="text-2xl">💰</span>
                   </div>
                   <div className="flex-1">
                     <h2 className="font-bold text-white text-2xl tracking-tight mb-1">Budget Prévisionnel</h2>
-                    <p className="text-sm text-white/70">Analyse financière par hectare</p>
+                    <p className="text-sm text-white/60">Analyse financière par hectare</p>
                   </div>
                 </div>
 
@@ -1196,21 +1147,17 @@ export default function MyActivityPage() {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                   {/* Semences Card */}
                   <div 
-                    className="group relative rounded-2xl p-5 hover:shadow-lg transition-all duration-300 backdrop-blur-sm border"
-                    style={{
-                      background: theme === 'light' ? '#FFFFFF' : 'rgba(6, 182, 212, 0.2)',
-                      borderColor: theme === 'light' ? '#06B6D4' : 'rgba(6, 182, 212, 0.3)'
-                    }}
+                    className="group relative rounded-2xl p-5 hover:shadow-lg transition-all duration-300 backdrop-blur-sm border bg-cyan-900/10 border-cyan-500/30"
                   >
-                    <div className="absolute top-3 right-3 w-8 h-8 bg-cyan-500/30 border border-cyan-500/50 rounded-lg flex items-center justify-center">
-                      <span className="text-white text-lg">🌱</span>
+                    <div className="absolute top-3 right-3 w-8 h-8 bg-cyan-500/20 border border-cyan-500/50 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">🌱</span>
                     </div>
                     <p className="text-xs font-bold text-cyan-300 uppercase tracking-wider mb-3">Semences/Plants</p>
                     <p className="text-3xl font-bold text-white mb-1">{formatPrice(currentCropData.budget.seeds)}</p>
-                    <p className="text-xs text-white/60">FCFA</p>
+                    <p className="text-xs text-white/40">FCFA</p>
                     <div className="mt-3 pt-3 border-t border-cyan-500/30">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-white/70">% du total</span>
+                        <span className="text-white/50">% du total</span>
                         <span className="font-bold text-cyan-300">{Math.round((currentCropData.budget.seeds / currentCropData.budget.total) * 100)}%</span>
                       </div>
                     </div>
@@ -1218,21 +1165,17 @@ export default function MyActivityPage() {
 
                   {/* Engrais Card */}
                   <div 
-                    className="group relative rounded-2xl p-5 hover:shadow-lg transition-all duration-300 backdrop-blur-sm border"
-                    style={{
-                      background: theme === 'light' ? '#FFFFFF' : 'rgba(16, 185, 129, 0.2)',
-                      borderColor: theme === 'light' ? '#10B981' : 'rgba(16, 185, 129, 0.3)'
-                    }}
+                    className="group relative rounded-2xl p-5 hover:shadow-lg transition-all duration-300 backdrop-blur-sm border bg-emerald-900/10 border-emerald-500/30"
                   >
-                    <div className="absolute top-3 right-3 w-8 h-8 bg-emerald-500/30 border border-emerald-500/50 rounded-lg flex items-center justify-center">
-                      <span className="text-white text-lg">🧪</span>
+                    <div className="absolute top-3 right-3 w-8 h-8 bg-emerald-500/20 border border-emerald-500/50 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">🧪</span>
                     </div>
                     <p className="text-xs font-bold text-emerald-300 uppercase tracking-wider mb-3">Engrais & Produits</p>
                     <p className="text-3xl font-bold text-white mb-1">{formatPrice(currentCropData.budget.fertilizer)}</p>
-                    <p className="text-xs text-white/60">FCFA</p>
+                    <p className="text-xs text-white/40">FCFA</p>
                     <div className="mt-3 pt-3 border-t border-emerald-500/30">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-white/70">% du total</span>
+                        <span className="text-white/50">% du total</span>
                         <span className="font-bold text-emerald-300">{Math.round((currentCropData.budget.fertilizer / currentCropData.budget.total) * 100)}%</span>
                       </div>
                     </div>
@@ -1240,21 +1183,17 @@ export default function MyActivityPage() {
 
                   {/* Main d'œuvre Card */}
                   <div 
-                    className="group relative rounded-2xl p-5 hover:shadow-lg transition-all duration-300 backdrop-blur-sm border"
-                    style={{
-                      background: theme === 'light' ? '#FFFFFF' : 'rgba(251, 146, 60, 0.2)',
-                      borderColor: theme === 'light' ? '#F59E0B' : 'rgba(251, 146, 60, 0.3)'
-                    }}
+                    className="group relative rounded-2xl p-5 hover:shadow-lg transition-all duration-300 backdrop-blur-sm border bg-amber-900/10 border-amber-500/30"
                   >
-                    <div className="absolute top-3 right-3 w-8 h-8 bg-amber-500/30 border border-amber-500/50 rounded-lg flex items-center justify-center">
-                      <span className="text-white text-lg">👷</span>
+                    <div className="absolute top-3 right-3 w-8 h-8 bg-amber-500/20 border border-amber-500/50 rounded-lg flex items-center justify-center">
+                      <span className="text-lg">👷</span>
                     </div>
                     <p className="text-xs font-bold text-amber-300 uppercase tracking-wider mb-3">Main d'œuvre</p>
                     <p className="text-3xl font-bold text-white mb-1">{formatPrice(currentCropData.budget.labor)}</p>
-                    <p className="text-xs text-white/60">FCFA</p>
+                    <p className="text-xs text-white/40">FCFA</p>
                     <div className="mt-3 pt-3 border-t border-amber-500/30">
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-white/70">% du total</span>
+                        <span className="text-white/50">% du total</span>
                         <span className="font-bold text-amber-300">{Math.round((currentCropData.budget.labor / currentCropData.budget.total) * 100)}%</span>
                       </div>
                     </div>
@@ -1263,55 +1202,43 @@ export default function MyActivityPage() {
 
                 {/* Financial Summary - Premium Design */}
                 <div 
-                  className="rounded-2xl p-6 backdrop-blur-sm border"
-                  style={{
-                    background: theme === 'light' ? '#F9FAFB' : 'rgba(255, 255, 255, 0.05)',
-                    borderColor: theme === 'light' ? '#E5E7EB' : 'rgba(255, 255, 255, 0.1)'
-                  }}
+                  className="rounded-2xl p-6 backdrop-blur-sm border bg-white/5 border-white/10"
                 >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {/* Coût Total */}
                     <div 
-                      className="rounded-xl p-5 shadow-sm backdrop-blur-sm border"
-                      style={{
-                        background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
-                        borderColor: theme === 'light' ? '#E5E7EB' : 'rgba(255, 255, 255, 0.2)'
-                      }}
+                      className="rounded-xl p-5 shadow-sm backdrop-blur-sm border bg-black/20 border-white/10"
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-bold text-white/70">Coût Total</span>
-                        <div className="w-8 h-8 bg-red-500/30 border border-red-500/50 rounded-lg flex items-center justify-center">
-                          <span className="text-white text-sm">📉</span>
+                        <span className="text-sm font-bold text-white/60">Coût Total</span>
+                        <div className="w-8 h-8 bg-red-500/20 border border-red-500/50 rounded-lg flex items-center justify-center">
+                          <span className="text-sm">📉</span>
                         </div>
                       </div>
                       <p className="text-3xl font-bold text-white mb-1">{formatPrice(currentCropData.budget.total)}</p>
-                      <p className="text-xs text-white/60 uppercase tracking-wide">FCFA/hectare</p>
+                      <p className="text-xs text-white/40 uppercase tracking-wide">FCFA/hectare</p>
                     </div>
 
                     {/* Revenu Estimé */}
                     <div 
-                      className="rounded-xl p-5 shadow-sm backdrop-blur-sm border"
-                      style={{
-                        background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
-                        borderColor: theme === 'light' ? '#E5E7EB' : 'rgba(255, 255, 255, 0.2)'
-                      }}
+                      className="rounded-xl p-5 shadow-sm backdrop-blur-sm border bg-black/20 border-white/10"
                     >
                       <div className="flex items-center justify-between mb-3">
-                        <span className="text-sm font-bold text-white/70">Revenu Estimé</span>
-                        <div className="w-8 h-8 bg-emerald-500/30 border border-emerald-500/50 rounded-lg flex items-center justify-center">
-                          <span className="text-white text-sm">📈</span>
+                        <span className="text-sm font-bold text-white/60">Revenu Estimé</span>
+                        <div className="w-8 h-8 bg-emerald-500/20 border border-emerald-500/50 rounded-lg flex items-center justify-center">
+                          <span className="text-sm">📈</span>
                         </div>
                       </div>
                       <p className="text-3xl font-bold text-emerald-400 mb-1">{currentCropData.budget.revenue.split('-')[0].trim()}</p>
-                      <p className="text-xs text-white/60 uppercase tracking-wide">FCFA/hectare</p>
+                      <p className="text-xs text-white/40 uppercase tracking-wide">FCFA/hectare</p>
                     </div>
                   </div>
 
                   {/* Profitability Indicator */}
-                  <div className="mt-6 pt-6 border-t border-white/20">
+                  <div className="mt-6 pt-6 border-t border-white/10">
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-sm font-bold text-white">Rentabilité Estimée</span>
-                      <span className="px-3 py-1 bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 rounded-full text-xs font-bold">
+                      <span className="px-3 py-1 bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 rounded-full text-xs font-bold">
                         {Math.round((parseInt(currentCropData.budget.revenue.split('-')[0].replace(/[^0-9]/g, '')) / currentCropData.budget.total - 1) * 100)}% - {Math.round((parseInt(currentCropData.budget.revenue.split('-')[1].replace(/[^0-9]/g, '')) / currentCropData.budget.total - 1) * 100)}%
                       </span>
                     </div>
@@ -1319,9 +1246,9 @@ export default function MyActivityPage() {
                       <div className="bg-gradient-to-r from-emerald-500 to-emerald-600 h-2.5 rounded-full transition-all duration-500" style={{ width: '75%' }}></div>
                     </div>
                     <div className="mt-3 flex items-start gap-2">
-                      <span className="text-xs text-white/70">💡</span>
-                      <p className="text-xs text-white/70 leading-relaxed">
-                        <span className="font-bold">Rendement prévu:</span> {currentCropData.budget.yield}
+                      <span className="text-xs">💡</span>
+                      <p className="text-xs text-white/60 leading-relaxed">
+                        <span className="font-bold text-white">Rendement prévu:</span> {currentCropData.budget.yield}
                       </p>
                     </div>
                   </div>
@@ -1334,11 +1261,7 @@ export default function MyActivityPage() {
         {/* Seed Provider Statistics Section */}
         {activeTab === 'advice-next' && user?.profile?.activity_type === 'seed_provider' && (
           <div 
-            className="backdrop-blur-md rounded-2xl shadow-2xl p-6 sm:p-8 border"
-            style={{
-              ...getCardStyles(theme, 'emerald'),
-              borderColor: theme === 'light' ? '#10B981' : 'rgba(255, 255, 255, 0.2)'
-            }}
+            className="backdrop-blur-md rounded-2xl shadow-2xl p-6 sm:p-8 border border-white/10 bg-black/40"
           >
             {/* Header */}
             <div className="mb-8">
@@ -1349,10 +1272,10 @@ export default function MyActivityPage() {
                   </div>
                 </div>
                 <div className="flex-1">
-                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 tracking-tight" style={{ color: getTextStyles(theme).title }}>
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold mb-2 tracking-tight text-white">
                     Statistiques de Vente - {user?.profile?.domain === 'agriculture' ? 'Semences Agricoles' : 'Animaux d\'Élevage'}
                   </h1>
-                  <p className="text-sm sm:text-base font-medium" style={{ color: getTextStyles(theme).body }}>Analysez la demande et optimisez votre stock</p>
+                  <p className="text-sm sm:text-base font-medium text-white/80">Analysez la demande et optimisez votre stock</p>
                 </div>
               </div>
             </div>
@@ -1361,32 +1284,24 @@ export default function MyActivityPage() {
             <div className="space-y-6">
               {/* Semences les plus demandées */}
               <div 
-                className="backdrop-blur-md rounded-2xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border"
-                style={{
-                  background: theme === 'light' ? '#FFFFFF' : 'linear-gradient(to bottom right, rgba(16, 185, 129, 0.15), rgba(20, 184, 166, 0.1))',
-                  borderColor: theme === 'light' ? '#10B981' : 'rgba(16, 185, 129, 0.2)'
-                }}
+                className="backdrop-blur-md rounded-2xl p-6 sm:p-8 shadow-xl hover:shadow-2xl transition-all duration-300 border bg-black/30 border-white/10"
               >
                 <div className="flex items-center gap-4 mb-6">
                   <div className="w-14 h-14 bg-gradient-to-br from-emerald-500/30 to-emerald-600/20 border border-emerald-400/30 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
                     <TrendingUp className="h-7 w-7 text-emerald-300" strokeWidth={2.5} />
                   </div>
                   <div className="flex-1">
-                    <h2 className="font-bold text-lg sm:text-xl md:text-2xl tracking-tight mb-1.5" style={{ color: getTextStyles(theme).title }}>
+                    <h2 className="font-bold text-lg sm:text-xl md:text-2xl tracking-tight mb-1.5 text-white">
                       Produits les Plus Demandés
                     </h2>
-                    <p className="text-xs sm:text-sm font-medium" style={{ color: getTextStyles(theme).muted }}>Top 5 des produits recherchés ce mois</p>
+                    <p className="text-xs sm:text-sm font-medium text-white/60">Top 5 des produits recherchés ce mois</p>
                   </div>
                 </div>
                 <div className="space-y-3 max-h-96 overflow-y-auto scrollbar-thin scrollbar-thumb-emerald-500 scrollbar-track-emerald-100">
                   {user?.profile?.domain === 'agriculture' ? (
                     <>
                       <div 
-                        className="group relative flex items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 rounded-xl hover:shadow-lg transition-all duration-200 border"
-                        style={{
-                          background: theme === 'light' ? '#F0FDF4' : 'linear-gradient(to right, rgba(16, 185, 129, 0.15), rgba(16, 185, 129, 0.05))',
-                          borderColor: theme === 'light' ? '#10B981' : 'rgba(16, 185, 129, 0.2)'
-                        }}
+                        className="group relative flex items-center justify-between gap-2 sm:gap-4 p-3 sm:p-4 rounded-xl hover:shadow-lg transition-all duration-200 border bg-white/5 border-white/10 hover:bg-white/10"
                       >
                         <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
                           <span 
@@ -1396,7 +1311,7 @@ export default function MyActivityPage() {
                               color: theme === 'light' ? '#FFFFFF' : '#A7F3D0'
                             }}
                           >1</span>
-                          <span className="font-semibold text-base truncate" style={{ color: getTextStyles(theme).title }}>Maïs (Variété CMS 8704)</span>
+                          <span className="font-semibold text-base truncate" style={{ color: getTextStyles(theme).title }}>Maïs (Hybride)</span>
                         </div>
                         <span 
                           className="flex items-center justify-center gap-1 w-16 sm:w-20 py-2 text-xs sm:text-sm font-bold rounded-full shadow-md whitespace-nowrap flex-shrink-0 border"
@@ -1773,8 +1688,8 @@ export default function MyActivityPage() {
               <div className="w-16 h-16 bg-emerald-500/30 border-2 border-emerald-500/50 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Sprout className="h-8 w-8 text-emerald-400" strokeWidth={2} />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-2">Conseils pour ma Production en Cours</h2>
-              <p className="text-white/70">Optimisez vos cultures actuelles</p>
+              <h2 className={`text-2xl font-bold ${textTitle} mb-2`}>Conseils pour ma Production en Cours</h2>
+              <p className={`${textMuted}`}>Optimisez vos cultures actuelles</p>
             </div>
             <div className="space-y-4">
               <div 
@@ -1786,8 +1701,8 @@ export default function MyActivityPage() {
                   borderLeftWidth: '4px'
                 }}
               >
-                <h3 className="font-bold text-white mb-2">Irrigation et arrosage</h3>
-                <p className="text-white/90 text-sm mb-3">Arrosez régulièrement, surtout pendant la floraison et la formation des fruits. Évitez l'excès d'eau.</p>
+                <h3 className={`font-bold ${textTitle} mb-2`}>Irrigation et arrosage</h3>
+                <p className={`${textBody} text-sm mb-3`}>Arrosez régulièrement, surtout pendant la floraison et la formation des fruits. Évitez l'excès d'eau.</p>
                 <div 
                   className="p-3 rounded-lg backdrop-blur-sm border"
                   style={{
@@ -1795,7 +1710,7 @@ export default function MyActivityPage() {
                     borderColor: theme === 'light' ? '#06B6D4' : 'rgba(6, 182, 212, 0.4)'
                   }}
                 >
-                  <p className="text-xs text-white font-bold">Fréquence recommandée: 2-3 fois par semaine en saison sèche</p>
+                  <p className={`text-xs ${textTitle} font-bold`}>Fréquence recommandée: 2-3 fois par semaine en saison sèche</p>
                 </div>
               </div>
               <div 
@@ -1807,8 +1722,8 @@ export default function MyActivityPage() {
                   borderLeftWidth: '4px'
                 }}
               >
-                <h3 className="font-bold text-white mb-2">Fertilisation</h3>
-                <p className="text-white/90 text-sm mb-3">Apport d'engrais NPK 15-15-15 toutes les 3 semaines. Compléter avec engrais foliaire.</p>
+                <h3 className={`font-bold ${textTitle} mb-2`}>Fertilisation</h3>
+                <p className={`${textBody} text-sm mb-3`}>Apport d'engrais NPK 15-15-15 toutes les 3 semaines. Compléter avec engrais foliaire.</p>
                 <div 
                   className="p-3 rounded-lg backdrop-blur-sm border"
                   style={{
@@ -1816,7 +1731,7 @@ export default function MyActivityPage() {
                     borderColor: theme === 'light' ? '#10B981' : 'rgba(16, 185, 129, 0.4)'
                   }}
                 >
-                  <p className="text-xs text-white font-bold">Dose: 200kg/ha par application</p>
+                  <p className={`text-xs ${textTitle} font-bold`}>Dose: 200kg/ha par application</p>
                 </div>
               </div>
               <div 
@@ -1828,8 +1743,8 @@ export default function MyActivityPage() {
                   borderLeftWidth: '4px'
                 }}
               >
-                <h3 className="font-bold text-white mb-2">Protection phytosanitaire</h3>
-                <p className="text-white/90 text-sm mb-3">Surveillez les maladies et ravageurs. Traitez préventivement avec des produits biologiques.</p>
+                <h3 className={`font-bold ${textTitle} mb-2`}>Protection phytosanitaire</h3>
+                <p className={`${textBody} text-sm mb-3`}>Surveillez les maladies et ravageurs. Traitez préventivement avec des produits biologiques.</p>
                 <div 
                   className="p-3 rounded-lg backdrop-blur-sm border"
                   style={{
@@ -1837,7 +1752,7 @@ export default function MyActivityPage() {
                     borderColor: theme === 'light' ? '#EF4444' : 'rgba(239, 68, 68, 0.4)'
                   }}
                 >
-                  <p className="text-xs text-white font-bold">Inspection hebdomadaire recommandée</p>
+                  <p className={`text-xs ${textTitle} font-bold`}>Inspection hebdomadaire recommandée</p>
                 </div>
               </div>
               <div 
@@ -1849,8 +1764,8 @@ export default function MyActivityPage() {
                   borderLeftWidth: '4px'
                 }}
               >
-                <h3 className="font-bold text-white mb-2">Récolte prévisionnelle</h3>
-                <p className="text-white/90 text-sm">Préparez vos contenants et planifiez la commercialisation 2 semaines avant la récolte.</p>
+                <h3 className={`font-bold ${textTitle} mb-2`}>Récolte prévisionnelle</h3>
+                <p className={`${textBody} text-sm`}>Préparez vos contenants et planifiez la commercialisation 2 semaines avant la récolte.</p>
               </div>
             </div>
           </div>
@@ -1859,10 +1774,20 @@ export default function MyActivityPage() {
         {activeTab === 'suppliers' && (
           <div>
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-white mb-2">
-                {user?.profile?.activity_type === 'buyer' ? 'Offres des Producteurs' : 'Publications des Fournisseurs dans mon Domaine'}
-              </h2>
-              <p className="text-white/70 text-sm">Fournisseurs de semences et intrants dans le domaine {user?.profile?.domain === 'agriculture' ? 'Agriculture' : 'Élevage'}</p>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className={`text-xl font-bold ${textTitle}`}>
+                  {user?.profile?.activity_type === 'buyer' ? 'Offres des Producteurs' : 'Publications des Fournisseurs dans mon Domaine'}
+                </h2>
+                <button
+                  onClick={() => navigate('/feed', { state: { openCreatePost: true } })}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all text-sm"
+                  style={getButtonStyles(theme, 'primary', 'emerald')}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Ajouter</span>
+                </button>
+              </div>
+              <p className={`${textMuted} text-sm`}>Fournisseurs de semences et intrants dans le domaine {user?.profile?.domain === 'agriculture' ? 'Agriculture' : 'Élevage'}</p>
               
               {/* Smart filtering info */}
               {myListings.length > 0 && (
@@ -1876,8 +1801,8 @@ export default function MyActivityPage() {
                   <div className="flex items-start gap-3">
                     <Lightbulb className="h-5 w-5 text-cyan-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-white font-bold text-sm mb-1">🎯 Filtrage Intelligent Activé</p>
-                      <p className="text-white/80 text-xs">
+                      <p className={`${textTitle} font-bold text-sm mb-1`}>🎯 Filtrage Intelligent Activé</p>
+                      <p className={`${textMuted} text-xs`}>
                         Vos catégories de produits : <span className="font-bold text-cyan-300">{getUserProductCategories(myListings).join(', ')}</span>
                         {getUserProductCategories(myListings).length > 0 && (
                           <span className="block mt-1">Les annonces affichées correspondent à vos produits pour un meilleur ciblage.</span>
@@ -1903,8 +1828,8 @@ export default function MyActivityPage() {
                   }}
                 >
                   <PackageSearch className="h-16 w-16 text-emerald-400 mx-auto mb-4" />
-                  <h3 className="text-xl font-bold text-white mb-2">Aucune publication disponible</h3>
-                  <p className="text-white/70">Les publications apparaîtront ici</p>
+                  <h3 className={`text-xl font-bold ${textTitle} mb-2`}>Aucune publication disponible</h3>
+                  <p className={`${textMuted}`}>Les publications apparaîtront ici</p>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -1918,18 +1843,18 @@ export default function MyActivityPage() {
                     )}
                     <div className="p-5">
                       <div className="flex items-start justify-between gap-2 mb-2">
-                        <h3 className="font-bold text-white line-clamp-2 flex-1">{listing.title}</h3>
+                        <h3 className={`font-bold ${textTitle} line-clamp-2 flex-1`}>{listing.title}</h3>
                         <span className="px-2 py-1 bg-emerald-500/30 border border-emerald-500/50 text-emerald-300 text-xs font-bold rounded-full whitespace-nowrap">
                           {extractProductCategory(listing.title)}
                         </span>
                       </div>
                       <div className="flex items-center justify-between text-sm mb-2">
-                        <span className="text-white/70">Prix:</span>
+                        <span className={`${textMuted}`}>Prix:</span>
                         <span className="font-bold text-emerald-400">{formatPrice(listing.price_per_unit)} {listing.currency}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-white/70">Région:</span>
-                        <span className="font-bold text-white">{listing.region}</span>
+                        <span className={`${textMuted}`}>Région:</span>
+                        <span className={`font-bold ${textTitle}`}>{listing.region}</span>
                       </div>
                     </div>
                   </div>
@@ -1943,8 +1868,18 @@ export default function MyActivityPage() {
         {activeTab === 'requests' && (
           <div>
             <div className="mb-6">
-              <h2 className="text-xl font-bold text-white mb-2">Demandes des Clients dans mon Domaine</h2>
-              <p className="text-white/70 text-sm">Opportunités de vente dans le domaine {user?.profile?.domain === 'agriculture' ? 'Agriculture' : 'Élevage'}</p>
+              <div className="flex items-center justify-between mb-2">
+                <h2 className={`text-xl font-bold ${textTitle}`}>Demandes des Clients dans mon Domaine</h2>
+                <button
+                  onClick={() => navigate('/feed', { state: { openCreatePost: true } })}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl font-bold transition-all text-sm"
+                  style={getButtonStyles(theme, 'primary', 'amber')}
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Ajouter</span>
+                </button>
+              </div>
+              <p className={`${textMuted} text-sm`}>Opportunités de vente dans le domaine {user?.profile?.domain === 'agriculture' ? 'Agriculture' : 'Élevage'}</p>
               
               {/* Smart filtering info */}
               {myListings.length > 0 && (
@@ -1958,8 +1893,8 @@ export default function MyActivityPage() {
                   <div className="flex items-start gap-3">
                     <Lightbulb className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
                     <div>
-                      <p className="text-white font-bold text-sm mb-1">🎯 Filtrage Intelligent Activé</p>
-                      <p className="text-white/80 text-xs">
+                      <p className={`${textTitle} font-bold text-sm mb-1`}>🎯 Filtrage Intelligent Activé</p>
+                      <p className={`${textMuted} text-xs`}>
                         Vos catégories de produits : <span className="font-bold text-amber-300">{getUserProductCategories(myListings).join(', ')}</span>
                         {getUserProductCategories(myListings).length > 0 && (
                           <span className="block mt-1">Les demandes affichées correspondent à vos produits pour maximiser vos opportunités de vente.</span>
@@ -2047,17 +1982,27 @@ export default function MyActivityPage() {
         {activeTab === 'my-listings' && (
           <div>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold" style={{ color: getTextStyles(theme).title }}>Mes Publications</h2>
-              <div className="flex gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                  <span style={{ color: getTextStyles(theme).body }}>{stats.activeListings} Actives</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                  <span style={{ color: getTextStyles(theme).body }}>{stats.totalListings - stats.activeListings} Inactives</span>
+              <div>
+                <h2 className="text-xl font-bold" style={{ color: getTextStyles(theme).title }}>Mes Publications</h2>
+                <div className="flex gap-4 text-sm mt-2">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                    <span style={{ color: getTextStyles(theme).body }}>{stats.activeListings} Actives</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                    <span style={{ color: getTextStyles(theme).body }}>{stats.totalListings - stats.activeListings} Inactives</span>
+                  </div>
                 </div>
               </div>
+              <button
+                onClick={() => navigate('/feed', { state: { openCreatePost: true } })}
+                className="flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all text-sm shadow-lg hover:scale-105"
+                style={getButtonStyles(theme, 'primary', 'emerald')}
+              >
+                <Plus className="h-4 w-4" />
+                <span>Ajouter</span>
+              </button>
             </div>
             {loading ? (
               <div className="flex justify-center items-center py-12">
@@ -2089,74 +2034,128 @@ export default function MyActivityPage() {
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {myListings.map((listing) => (
-              <div
-                key={listing.id}
-                className="backdrop-blur-md bg-white/10 border border-white/20 rounded-xl shadow-lg overflow-hidden hover:shadow-xl hover:bg-white/15 transition-all"
-              >
-                {listing.images && listing.images.length > 0 && (
-                  <div className="aspect-video bg-gray-100 relative overflow-hidden">
-                    <img
-                      src={listing.images[0]}
-                      alt={listing.title}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-3 right-3">
-                      <span className={`px-3 py-1 text-xs font-bold rounded-full border-2 ${
-                        (listing.status === 'active' || listing.status === 'PUBLISHED')
-                          ? 'bg-emerald-500/30 border-emerald-500/50 text-white'
-                          : 'bg-white/20 border-white/30 text-white'
-                      }`}>
-                        {(listing.status === 'active' || listing.status === 'PUBLISHED') ? 'Active' : 'Inactive'}
-                      </span>
+                {myListings.map((listing) => (
+                  <div
+                    key={listing.id}
+                    className="rounded-2xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02]"
+                    style={{
+                      background: theme === 'light' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.1)',
+                      border: theme === 'light' ? '2px solid #10B981' : '1px solid rgba(255, 255, 255, 0.2)'
+                    }}
+                  >
+                    {/* Image Section */}
+                    {listing.images && listing.images.length > 0 ? (
+                      <div className="aspect-video relative overflow-hidden">
+                        <img
+                          src={listing.images[0]}
+                          alt={listing.title}
+                          className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                        />
+                        <div className="absolute top-3 right-3">
+                          <span 
+                            className="px-3 py-1 text-xs font-bold rounded-full backdrop-blur-md"
+                            style={{
+                              background: (listing.status === 'active' || listing.status === 'PUBLISHED') 
+                                ? 'rgba(16, 185, 129, 0.9)' 
+                                : 'rgba(156, 163, 175, 0.9)',
+                              color: '#FFFFFF'
+                            }}
+                          >
+                            {(listing.status === 'active' || listing.status === 'PUBLISHED') ? '✓ Active' : 'Inactive'}
+                          </span>
+                        </div>
+                        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                          <p className="text-white text-2xl font-bold">
+                            {formatPrice(listing.price_per_unit)} <span className="text-sm font-normal opacity-80">{listing.currency}/{listing.unit}</span>
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <div 
+                        className="aspect-video flex items-center justify-center"
+                        style={{ background: theme === 'light' ? '#F3F4F6' : 'rgba(255, 255, 255, 0.05)' }}
+                      >
+                        <Package className="h-16 w-16" style={{ color: theme === 'light' ? '#9CA3AF' : 'rgba(255, 255, 255, 0.3)' }} />
+                      </div>
+                    )}
+
+                    {/* Content Section */}
+                    <div className="p-5">
+                      <h3 className="font-bold text-lg mb-3 line-clamp-2" style={{ color: getTextStyles(theme).title }}>
+                        {listing.title}
+                      </h3>
+                      
+                      {/* Info Grid */}
+                      <div 
+                        className="rounded-xl p-4 mb-4 space-y-3"
+                        style={{ 
+                          background: theme === 'light' ? '#F9FAFB' : 'rgba(255, 255, 255, 0.05)',
+                          border: theme === 'light' ? '1px solid #E5E7EB' : '1px solid rgba(255, 255, 255, 0.1)'
+                        }}
+                      >
+                        <div className="flex items-center justify-between text-sm">
+                          <span style={{ color: getTextStyles(theme).muted }}>📦 Quantité</span>
+                          <span className="font-bold" style={{ color: getTextStyles(theme).title }}>
+                            {listing.quantity} {listing.unit}
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span style={{ color: getTextStyles(theme).muted }}>📍 Région</span>
+                          <span className="font-bold" style={{ color: getTextStyles(theme).title }}>{listing.region}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-sm">
+                          <span style={{ color: getTextStyles(theme).muted }}>📅 Publié</span>
+                          <span style={{ color: getTextStyles(theme).body }}>{formatDate(listing.created_at)}</span>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex items-center gap-2">
+                        <button 
+                          onClick={() => navigate(`/listings/${listing.id}`)}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all hover:scale-105 text-sm"
+                          style={{
+                            background: theme === 'light' ? '#10B981' : 'rgba(16, 185, 129, 0.3)',
+                            color: theme === 'light' ? '#FFFFFF' : '#6EE7B7',
+                            border: theme === 'light' ? 'none' : '1px solid rgba(16, 185, 129, 0.5)'
+                          }}
+                        >
+                          <Eye className="h-4 w-4" />
+                          <span>Voir</span>
+                        </button>
+                        <button 
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-bold transition-all hover:scale-105 text-sm"
+                          style={{
+                            background: theme === 'light' ? '#F3F4F6' : 'rgba(255, 255, 255, 0.1)',
+                            color: getTextStyles(theme).title,
+                            border: theme === 'light' ? '1px solid #D1D5DB' : '1px solid rgba(255, 255, 255, 0.2)'
+                          }}
+                        >
+                          <Edit className="h-4 w-4" />
+                          <span>Modifier</span>
+                        </button>
+                        <button 
+                          onClick={() => {
+                            if (confirm('Supprimer cette publication ?')) {
+                              const updatedListings = JSON.parse(localStorage.getItem('my_local_listings') || '[]')
+                                .filter((l: any) => l.id !== listing.id);
+                              localStorage.setItem('my_local_listings', JSON.stringify(updatedListings));
+                              setMyListings(prev => prev.filter(l => l.id !== listing.id));
+                            }
+                          }}
+                          className="p-2.5 rounded-xl transition-all hover:scale-105"
+                          style={{
+                            background: theme === 'light' ? '#FEE2E2' : 'rgba(239, 68, 68, 0.2)',
+                            color: theme === 'light' ? '#DC2626' : '#F87171',
+                            border: theme === 'light' ? '1px solid #FECACA' : '1px solid rgba(239, 68, 68, 0.3)'
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                )}
-
-                <div className="p-5">
-                  <h3 className="font-bold text-white mb-2 line-clamp-2">
-                    {listing.title}
-                  </h3>
-                  
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/70">Quantité:</span>
-                      <span className="font-bold text-white">
-                        {listing.quantity} {listing.unit}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/70">Prix:</span>
-                      <span className="font-bold text-emerald-400">
-                        {formatPrice(listing.price_per_unit)} {listing.currency}/{listing.unit}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-white/70">Région:</span>
-                      <span className="font-bold text-white">{listing.region}</span>
-                    </div>
-                  </div>
-
-                  <p className="text-xs text-white/60 mb-4">
-                    Publié le {formatDate(listing.created_at)}
-                  </p>
-
-                  <div className="flex items-center space-x-2">
-                    <button className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-cyan-500/30 border border-cyan-500/50 text-white rounded-xl hover:bg-cyan-500/40 transition-all text-sm font-bold">
-                      <Eye className="h-4 w-4" />
-                      <span>Voir</span>
-                    </button>
-                    <button className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-white/10 border border-white/20 text-white rounded-xl hover:bg-white/15 transition-all text-sm font-bold">
-                      <Edit className="h-4 w-4" />
-                      <span>Modifier</span>
-                    </button>
-                    <button className="px-3 py-2 bg-red-500/30 border border-red-500/50 text-white rounded-xl hover:bg-red-500/40 transition-all">
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
+                ))}
               </div>
             )}
           </div>

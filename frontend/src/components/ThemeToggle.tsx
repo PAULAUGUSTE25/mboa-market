@@ -9,11 +9,11 @@ export default function ThemeToggle() {
     <motion.button
       whileTap={{ scale: 0.95 }}
       onClick={toggleTheme}
-      className={`group fixed top-4 right-4 sm:top-6 sm:right-6 z-[9998] p-3 sm:p-4 rounded-xl sm:rounded-2xl shadow-2xl transition-all duration-300 ${
-        theme === 'light'
-          ? 'bg-white border-2 border-gray-300 hover:bg-gray-50'
-          : 'bg-gradient-to-br from-emerald-500/30 to-emerald-600/20 border-2 border-emerald-400/50 hover:from-emerald-500/40 hover:to-emerald-600/30'
-      }`}
+      className="group fixed top-3 right-3 sm:top-4 sm:right-4 md:top-6 md:right-6 z-[9998] p-2.5 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl shadow-2xl transition-all duration-300"
+      style={{
+        backgroundColor: theme === 'light' ? '#FFFFFF' : 'rgba(46, 125, 50, 0.2)',
+        border: theme === 'light' ? '2px solid #D1D5DB' : '2px solid rgba(46, 125, 50, 0.5)'
+      }}
       aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
     >
       <motion.div

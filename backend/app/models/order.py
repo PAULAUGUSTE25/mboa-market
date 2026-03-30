@@ -1,10 +1,10 @@
 from sqlalchemy import Column, String, DateTime, ForeignKey, Integer, Numeric, Text, Enum as SQLEnum
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
 import enum
 from app.core.database import Base
+from app.core.types import GUID
 
 
 class OrderStatus(str, enum.Enum):
@@ -49,10 +49,10 @@ class DisputeStatus(str, enum.Enum):
 class Order(Base):
     __tablename__ = "orders"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    buyer_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
-    seller_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
-    listing_id = Column(UUID(as_uuid=True), ForeignKey("listings.id", ondelete="SET NULL"), nullable=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    buyer_id = Column(GUID(), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    seller_id = Column(GUID(), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    listing_id = Column(GUID(), ForeignKey("listings.id", ondelete="SET NULL"), nullable=True)
     status = Column(SQLEnum(OrderStatus), nullable=False, default=OrderStatus.CREATED)
     subtotal = Column(Numeric(18, 2), nullable=False, default=0)
     fee_platform = Column(Numeric(18, 2), nullable=False, default=0)
@@ -77,9 +77,9 @@ class Order(Base):
 class OrderItem(Base):
     __tablename__ = "order_items"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id", ondelete="CASCADE"), nullable=False)
-    product_ref_id = Column(UUID(as_uuid=True), ForeignKey("products_ref.id", ondelete="SET NULL"), nullable=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    order_id = Column(GUID(), ForeignKey("orders.id", ondelete="CASCADE"), nullable=False)
+    product_ref_id = Column(GUID(), ForeignKey("products_ref.id", ondelete="SET NULL"), nullable=True)
     quantity = Column(Numeric(18, 3), nullable=False)
     unit = Column(String, nullable=False)
     price_per_unit = Column(Numeric(18, 2), nullable=False)
@@ -92,8 +92,8 @@ class OrderItem(Base):
 class Payment(Base):
     __tablename__ = "payments"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id", ondelete="RESTRICT"), nullable=False, unique=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    order_id = Column(GUID(), ForeignKey("orders.id", ondelete="RESTRICT"), nullable=False, unique=True)
     provider = Column(String, nullable=False)
     provider_ref = Column(String, nullable=True, unique=True)
     status = Column(SQLEnum(PaymentStatus), nullable=False, default=PaymentStatus.INITIATED)
@@ -109,9 +109,9 @@ class Payment(Base):
 class EscrowHold(Base):
     __tablename__ = "escrow_holds"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id", ondelete="RESTRICT"), nullable=False, unique=True)
-    payment_id = Column(UUID(as_uuid=True), ForeignKey("payments.id", ondelete="RESTRICT"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    order_id = Column(GUID(), ForeignKey("orders.id", ondelete="RESTRICT"), nullable=False, unique=True)
+    payment_id = Column(GUID(), ForeignKey("payments.id", ondelete="RESTRICT"), nullable=False)
     status = Column(SQLEnum(EscrowStatus), nullable=False, default=EscrowStatus.HELD)
     held_amount = Column(Numeric(18, 2), nullable=False)
     released_amount = Column(Numeric(18, 2), nullable=False, default=0)
@@ -125,12 +125,12 @@ class EscrowHold(Base):
 class Dispute(Base):
     __tablename__ = "disputes"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id", ondelete="RESTRICT"), nullable=False, unique=True)
-    opened_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    order_id = Column(GUID(), ForeignKey("orders.id", ondelete="RESTRICT"), nullable=False, unique=True)
+    opened_by = Column(GUID(), ForeignKey("users.id", ondelete="RESTRICT"), nullable=False)
     status = Column(SQLEnum(DisputeStatus), nullable=False, default=DisputeStatus.OPEN)
     reason = Column(String, nullable=False)
-    decided_by = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    decided_by = Column(GUID(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     
     order = relationship("Order", back_populates="dispute")
@@ -141,10 +141,10 @@ class Dispute(Base):
 class Review(Base):
     __tablename__ = "reviews"
     
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    from_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    to_user_id = Column(UUID(as_uuid=True), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
-    order_id = Column(UUID(as_uuid=True), ForeignKey("orders.id", ondelete="SET NULL"), nullable=True)
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    from_user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    to_user_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    order_id = Column(GUID(), ForeignKey("orders.id", ondelete="SET NULL"), nullable=True)
     rating = Column(Integer, nullable=False)
     comment = Column(Text, nullable=True)
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)

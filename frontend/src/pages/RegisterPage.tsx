@@ -1,37 +1,67 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useTheme } from '@/contexts/ThemeContext';
 import { useAuthStore } from '@/store/authStore';
-import { getCardStyles, getTextStyles, getInputStyles, getButtonStyles } from '@/utils/cardStyles';
-import Logo from '@/components/Logo';
-import { Phone, Lock, User, MapPin, PackageSearch, ShoppingCart, Sprout, Beef } from 'lucide-react';
+import { Phone, Lock, User, MapPin, PackageSearch, ShoppingCart, Sprout, Beef, ArrowLeft, CheckCircle } from 'lucide-react';
+import gsap from 'gsap';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
-  const { theme } = useTheme();
+  const [searchParams] = useSearchParams();
   const { register, loading, error } = useAuthStore();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
+  
+  const containerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  const sectorFromUrl = searchParams.get('sector');
+  const initialDomain = sectorFromUrl === 'elevage' ? 'elevage' : 'agriculture';
+  
   const [formData, setFormData] = useState({
     phone: '',
     password: '',
     profile: {
       display_name: '',
       activity_type: 'producer',
-      domain: 'agriculture',
+      domain: initialDomain,
       region: '',
       locality: '',
     },
   });
 
+  useEffect(() => {
+    if (sectorFromUrl) {
+      setFormData(prev => ({
+        ...prev,
+        profile: {
+          ...prev.profile,
+          domain: sectorFromUrl === 'elevage' ? 'elevage' : 'agriculture'
+        }
+      }));
+    }
+  }, [sectorFromUrl]);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Animation d'entrée pour la carte
+      gsap.fromTo(
+        cardRef.current,
+        { opacity: 0, y: 30 },
+        { opacity: 1, y: 0, duration: 0.8, ease: 'power3.out', delay: 0.2 }
+      );
+    }, containerRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  const isElevage = formData.profile.domain === 'elevage';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Reset errors
     const errors: {[key: string]: string} = {};
     
-    // Validation
     if (!formData.phone.startsWith('+')) {
       errors.phone = 'Le numéro doit commencer par + (ex: +237...)';
     } else if (formData.phone.length < 10) {
@@ -50,13 +80,11 @@ export default function RegisterPage() {
       errors.region = 'La région est obligatoire';
     }
     
-    // If there are validation errors, show them
     if (Object.keys(errors).length > 0) {
       setFieldErrors(errors);
       return;
     }
     
-    // Clear errors before submission
     setFieldErrors({});
     
     try {
@@ -72,564 +100,290 @@ export default function RegisterPage() {
     }
   };
 
-  return (
-    <>
-      {/* Success Modal */}
-      {showSuccessModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div 
-            className="backdrop-blur-md rounded-3xl shadow-2xl p-8 mx-4 max-w-md transform animate-scaleIn border-2"
-            style={{
-              ...getCardStyles(theme, 'emerald'),
-              borderColor: theme === 'light' ? '#10B981' : 'rgba(16, 185, 129, 0.4)'
-            }}
-          >
-            <div className="text-center">
-              <div className="mb-4 inline-flex items-center justify-center w-16 h-16 bg-teal-500 rounded-full">
-                <span className="text-3xl">✓</span>
-              </div>
-              <h2 className="text-2xl font-bold mb-3" style={{ color: getTextStyles(theme).title }}>Bienvenue sur MBOA Market!</h2>
-              <p className="mb-2" style={{ color: getTextStyles(theme).body }}>
-                Merci d'avoir rejoint notre communauté agricole et d'élevage.
-              </p>
-              <p className="text-sm mb-4" style={{ color: getTextStyles(theme).muted }}>
-                Votre inscription a été enregistrée avec succès. 🎉
-              </p>
-              <div className="flex items-center justify-center space-x-2 text-teal-600">
-                <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
-                <span className="text-sm">Redirection en cours...</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+  const activityTypes = [
+    { value: 'seed_provider', label: 'Fournisseur', icon: PackageSearch },
+    { value: 'producer', label: 'Producteur', icon: Sprout },
+    { value: 'buyer', label: 'Acheteur', icon: ShoppingCart },
+  ];
 
-      <div className="min-h-screen relative flex items-center justify-center overflow-hidden font-['Inter','Plus_Jakarta_Sans',sans-serif] py-8">
-      {/* Background Image with Overlay */}
+  return (
+    <div ref={containerRef} className="min-h-screen w-full overflow-hidden relative flex items-center justify-center lg:justify-end">
+      {/* Background Image */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-fixed"
+        className="absolute inset-0 z-0"
         style={{
-          backgroundImage: theme === 'light' 
-            ? `url('/light%20mode%20.png')`
-            : `url('https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=2000')`,
+          backgroundImage: `url('/background pic.png')`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
         }}
       >
-        <div className={`absolute inset-0 ${theme === 'dark' ? 'bg-gradient-to-br from-green-950/85 via-teal-950/80 to-amber-950/85' : ''}`} style={{
-          backdropFilter: theme === 'light' ? 'blur(2px)' : undefined,
-          backgroundColor: theme === 'light' ? 'rgba(0, 0, 0, 0.05)' : undefined
-        }}></div>
+        <div className="absolute inset-0 bg-black/20" />
       </div>
 
-      {/* Animated Background Pattern - Dark Mode Only */}
-      {theme === 'dark' && (
-        <div className="absolute inset-0 opacity-20">
-          <div className="absolute top-10 left-10 w-32 h-32 bg-green-400 rounded-full blur-3xl animate-pulse"></div>
-          <div className="absolute top-40 right-20 w-40 h-40 bg-amber-400 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
-          <div className="absolute bottom-20 left-1/4 w-36 h-36 bg-teal-400 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-white rounded-3xl p-8 mx-4 max-w-sm border border-gray-200 shadow-2xl text-center"
+          >
+            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-amber-500 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Bienvenue!</h2>
+            <p className="text-gray-500 mb-4">Votre compte a été créé avec succès</p>
+            <div className="flex items-center justify-center gap-2 text-green-600">
+              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+              <span className="text-sm">Redirection...</span>
+            </div>
+          </motion.div>
         </div>
       )}
 
-      {/* Visible Animated Icon Background */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9, rotate: -10 }}
-        animate={{ 
-          opacity: [0, 0.1, 0.08, 0.1],
-          scale: [0.98, 1, 1.01, 1],
-          rotate: 0
-        }}
-        transition={{ 
-          opacity: { duration: 1.2, times: [0, 0.4, 0.7, 1], ease: "easeInOut" },
-          scale: { duration: 4, repeat: Infinity, ease: "easeInOut" },
-          rotate: { duration: 0.8, ease: "easeOut" }
-        }}
-        className="fixed inset-0 flex items-center justify-center pointer-events-none overflow-hidden"
-      >
-        <div className="text-emerald-500/[0.12]">
-          <User 
-            className="w-[600px] h-[600px]"
-            strokeWidth={0.6}
-          />
-        </div>
-      </motion.div>
-
-      {/* Animated Glow */}
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ 
-          opacity: 1,
-          scale: [1, 1.05, 1]
-        }}
-        transition={{ 
-          opacity: { duration: 0.8 },
-          scale: { duration: 3, repeat: Infinity, ease: "easeInOut" }
-        }}
-        className="fixed inset-0 pointer-events-none"
-      >
-        <motion.div 
-          animate={{
-            opacity: [0.06, 0.09, 0.06]
-          }}
-          transition={{
-            duration: 2.5,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[120px] bg-emerald-500/[0.06]"
-        />
-      </motion.div>
-
-      {/* Conteneur Central Glassmorphism - Responsive */}
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-        className="relative z-10 w-full max-w-md mx-4 sm:mx-6 lg:mx-auto"
-      >
-        <div 
-          className="backdrop-blur-[25px] rounded-[24px] sm:rounded-[32px] shadow-[0_20px_60px_rgba(0,0,0,0.3)] p-6 sm:p-8 border relative overflow-hidden"
-          style={{
-            ...getCardStyles(theme, 'emerald'),
-            borderColor: theme === 'light' ? '#10B981' : 'rgba(255, 255, 255, 0.2)'
-          }}
+      {/* Back Button */}
+      <div className="absolute top-8 left-6 z-20">
+        <motion.button
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          onClick={() => navigate('/')}
+          className="flex items-center gap-2 text-white hover:text-white/80 transition-colors drop-shadow-md"
         >
-          {/* Bordure Lumineuse */}
-          <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
-          
-          {/* Subtle Glow */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ 
-              opacity: [0.08, 0.12, 0.08],
-              scale: [1, 1.005, 1]
-            }}
-            transition={{
-              duration: 4,
-              repeat: Infinity,
-              ease: "easeInOut"
-            }}
-            className="absolute -inset-[2px] rounded-[24px] sm:rounded-[32px] blur-2xl -z-10 bg-gradient-to-r from-emerald-500/20 to-green-600/20"
-          />
-          
-          {/* Bouton Retour */}
-          <button
-            onClick={() => navigate('/')}
-            className="mb-4 sm:mb-6 transition-all transform hover:scale-110 text-2xl font-bold"
-            style={{ color: theme === 'light' ? '#374151' : '#9CA3AF' }}
-          >
-            ←
-          </button>
+          <ArrowLeft className="w-5 h-5" />
+          <span className="text-sm font-medium">Retour</span>
+        </motion.button>
+      </div>
 
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="text-center mb-6 sm:mb-8"
-          >
-            <Logo size="md" className="mb-3 sm:mb-4" />
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-extrabold mb-2" style={{ color: getTextStyles(theme).title }}>INSCRIPTION</h2>
-            <p className="text-sm sm:text-base" style={{ color: getTextStyles(theme).subtitle }}>Rejoignez la communauté MBOA Market</p>
-          </motion.div>
+      {/* Register Card */}
+      <div 
+        ref={cardRef}
+        className="relative z-10 w-full max-w-md mr-0 lg:mr-20 px-6 py-8 m-4 h-[90vh] overflow-y-auto custom-scrollbar"
+      >
+        <div className="backdrop-blur-xl bg-white/30 border border-white/40 rounded-[2rem] shadow-2xl p-6 sm:p-8 relative">
+          {/* Shine effect */}
+          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/40 to-transparent pointer-events-none rounded-[2rem]" />
 
-          {(error || fieldErrors.general) && (
-            <div className="mb-6 p-4 bg-red-500/20 backdrop-blur-md border border-red-400/50 text-white rounded-[16px] text-sm flex items-center justify-between">
-              <span>{error || fieldErrors.general}</span>
-              <button
-                onClick={() => setFieldErrors({})}
-                className="text-white hover:text-red-200 font-bold ml-2 text-xl"
+          {/* Header with Logo */}
+          <div className="relative z-10 flex flex-col items-center text-center mb-6">
+            <motion.img
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              src="/new logo.png"
+              alt="MBOA Market"
+              className="h-16 sm:h-20 w-auto object-contain mb-4 drop-shadow-lg"
+            />
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 drop-shadow-md">Inscription</h1>
+            <p className="text-white/90 text-sm font-medium">Rejoignez MBOA Market</p>
+          </div>
+
+          <div className="relative z-10">
+            {/* Error Message */}
+            {(error || fieldErrors.general) && (
+              <div className="mb-4 p-3 bg-red-500/80 border border-red-500/50 rounded-xl text-sm text-white flex items-center justify-between shadow-sm backdrop-blur-sm">
+                <span>{error || fieldErrors.general}</span>
+                <button
+                  onClick={() => setFieldErrors({})}
+                  className="text-white hover:text-red-100 font-bold text-lg"
+                >
+                  ×
+                </button>
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {/* Phone */}
+              <div>
+                <div className="relative">
+                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="tel"
+                    placeholder="Téléphone (+237...)"
+                    value={formData.phone}
+                    onChange={(e) => {
+                      setFormData({ ...formData, phone: e.target.value });
+                      if (fieldErrors.phone) {
+                        const newErrors = {...fieldErrors};
+                        delete newErrors.phone;
+                        setFieldErrors(newErrors);
+                      }
+                    }}
+                    className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
+                      fieldErrors.phone ? 'border-red-500' : 'border-white/50'
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all shadow-inner`}
+                    required
+                  />
+                </div>
+                {fieldErrors.phone && <p className="text-red-200 text-xs mt-1 ml-1 font-medium drop-shadow-md">{fieldErrors.phone}</p>}
+              </div>
+
+              {/* Password */}
+              <div>
+                <div className="relative">
+                  <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="password"
+                    placeholder="Mot de passe (min 6 car.)"
+                    value={formData.password}
+                    onChange={(e) => {
+                      setFormData({ ...formData, password: e.target.value });
+                      if (fieldErrors.password) {
+                        const newErrors = {...fieldErrors};
+                        delete newErrors.password;
+                        setFieldErrors(newErrors);
+                      }
+                    }}
+                    className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
+                      fieldErrors.password ? 'border-red-500' : 'border-white/50'
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all shadow-inner`}
+                    required
+                  />
+                </div>
+                {fieldErrors.password && <p className="text-red-200 text-xs mt-1 ml-1 font-medium drop-shadow-md">{fieldErrors.password}</p>}
+              </div>
+
+              {/* Display Name */}
+              <div>
+                <div className="relative">
+                  <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Nom complet"
+                    value={formData.profile.display_name}
+                    onChange={(e) => {
+                      setFormData({ ...formData, profile: { ...formData.profile, display_name: e.target.value } });
+                      if (fieldErrors.display_name) {
+                        const newErrors = {...fieldErrors};
+                        delete newErrors.display_name;
+                        setFieldErrors(newErrors);
+                      }
+                    }}
+                    className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
+                      fieldErrors.display_name ? 'border-red-500' : 'border-white/50'
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all shadow-inner`}
+                    required
+                  />
+                </div>
+                {fieldErrors.display_name && <p className="text-red-200 text-xs mt-1 ml-1 font-medium drop-shadow-md">{fieldErrors.display_name}</p>}
+              </div>
+
+              {/* Domain Selection */}
+              <div>
+                <label className="block text-xs font-medium text-white/90 mb-2 drop-shadow-md">Domaine</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, profile: { ...formData.profile, domain: 'agriculture' } })}
+                    className={`p-3 rounded-xl border transition-all flex items-center justify-center gap-2 shadow-sm ${
+                      formData.profile.domain === 'agriculture'
+                        ? 'bg-green-500 text-white border-green-400'
+                        : 'bg-white/50 text-gray-700 border-white/50 hover:bg-white/70'
+                    }`}
+                  >
+                    <Sprout className="w-5 h-5" />
+                    <span className="text-sm font-medium">Agriculture</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFormData({ ...formData, profile: { ...formData.profile, domain: 'elevage' } })}
+                    className={`p-3 rounded-xl border transition-all flex items-center justify-center gap-2 shadow-sm ${
+                      formData.profile.domain === 'elevage'
+                        ? 'bg-amber-500 text-white border-amber-400'
+                        : 'bg-white/50 text-gray-700 border-white/50 hover:bg-white/70'
+                    }`}
+                  >
+                    <Beef className="w-5 h-5" />
+                    <span className="text-sm font-medium">Élevage</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Activity Type */}
+              <div>
+                <label className="block text-xs font-medium text-white/90 mb-2 drop-shadow-md">Type d'activité</label>
+                <div className="grid grid-cols-3 gap-2">
+                  {activityTypes.map((type) => {
+                    const Icon = type.icon;
+                    const isSelected = formData.profile.activity_type === type.value;
+                    return (
+                      <button
+                        key={type.value}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, profile: { ...formData.profile, activity_type: type.value } })}
+                        className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-1.5 shadow-sm ${
+                          isSelected
+                            ? isElevage 
+                              ? 'bg-amber-500 text-white border-amber-400'
+                              : 'bg-green-500 text-white border-green-400'
+                            : 'bg-white/50 text-gray-700 border-white/50 hover:bg-white/70'
+                        }`}
+                      >
+                        <Icon className="w-5 h-5" />
+                        <span className="text-xs font-medium">{type.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Region */}
+              <div>
+                <div className="relative">
+                  <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                  <input
+                    type="text"
+                    placeholder="Région"
+                    value={formData.profile.region}
+                    onChange={(e) => {
+                      setFormData({ ...formData, profile: { ...formData.profile, region: e.target.value } });
+                      if (fieldErrors.region) {
+                        const newErrors = {...fieldErrors};
+                        delete newErrors.region;
+                        setFieldErrors(newErrors);
+                      }
+                    }}
+                    className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
+                      fieldErrors.region ? 'border-red-500' : 'border-white/50'
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all shadow-inner`}
+                    required
+                  />
+                </div>
+                {fieldErrors.region && <p className="text-red-200 text-xs mt-1 ml-1 font-medium drop-shadow-md">{fieldErrors.region}</p>}
+              </div>
+
+              {/* Locality */}
+              <div className="relative">
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                <input
+                  type="text"
+                  placeholder="Localité (optionnel)"
+                  value={formData.profile.locality}
+                  onChange={(e) => setFormData({ ...formData, profile: { ...formData.profile, locality: e.target.value } })}
+                  className="w-full pl-12 pr-4 py-3.5 bg-white/90 border border-white/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all shadow-inner"
+                />
+              </div>
+
+              {/* Submit Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 text-white font-bold rounded-xl shadow-lg disabled:opacity-50 transition-all bg-gradient-to-r from-green-600 via-green-500 to-amber-500 shadow-green-500/30"
               >
-                ×
-              </button>
-            </div>
-          )}
+                {loading ? 'Inscription...' : "S'inscrire"}
+              </motion.button>
+            </form>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Input avec Icône - Téléphone */}
-            <div>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2" style={{ opacity: 0.6 }}>
-                  <Phone className="h-5 w-5" strokeWidth={1.5} style={{ color: getInputStyles(theme).color }} />
-                </div>
-                <input
-                  type="tel"
-                  required
-                  value={formData.phone}
-                  onChange={(e) => {
-                    setFormData({ ...formData, phone: e.target.value });
-                    if (fieldErrors.phone) {
-                      const newErrors = {...fieldErrors};
-                      delete newErrors.phone;
-                      setFieldErrors(newErrors);
-                    }
-                  }}
-                  className="w-full pl-12 pr-4 py-3.5 backdrop-blur-md border-2 rounded-[16px] focus:outline-none focus:ring-2 transition-all duration-300"
-                  style={getInputStyles(theme, !!fieldErrors.phone)}
-                  placeholder="Numéro de téléphone"
-                />
-              </div>
-              {fieldErrors.phone && (
-                <p className="text-red-300 text-xs mt-1.5 ml-1">{fieldErrors.phone}</p>
-              )}
-            </div>
-
-            {/* Input avec Icône - Mot de passe */}
-            <div>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2" style={{ opacity: 0.6 }}>
-                  <Lock className="h-5 w-5" strokeWidth={1.5} style={{ color: getInputStyles(theme).color }} />
-                </div>
-                <input
-                  type="password"
-                  placeholder="Mot de passe"
-                  value={formData.password}
-                  onChange={(e) => {
-                    setFormData({ ...formData, password: e.target.value });
-                    if (fieldErrors.password) {
-                      const newErrors = {...fieldErrors};
-                      delete newErrors.password;
-                      setFieldErrors(newErrors);
-                    }
-                  }}
-                  className="w-full pl-12 pr-4 py-3.5 backdrop-blur-md border-2 rounded-[16px] focus:outline-none focus:ring-2 transition-all duration-300"
-                  style={getInputStyles(theme, !!fieldErrors.password)}
-                  required
-                />
-              </div>
-              {fieldErrors.password && (
-                <p className="text-red-300 text-xs mt-1.5 ml-1">{fieldErrors.password}</p>
-              )}
-            </div>
-
-            {/* Input avec Icône - Nom complet */}
-            <div>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2" style={{ opacity: 0.6 }}>
-                  <User className="h-5 w-5" strokeWidth={1.5} style={{ color: getInputStyles(theme).color }} />
-                </div>
-                <input
-                  type="text"
-                  required
-                  value={formData.profile.display_name}
-                  onChange={(e) => {
-                    setFormData({ ...formData, profile: { ...formData.profile, display_name: e.target.value } });
-                    if (fieldErrors.display_name) {
-                      const newErrors = {...fieldErrors};
-                      delete newErrors.display_name;
-                      setFieldErrors(newErrors);
-                    }
-                  }}
-                  className="w-full pl-12 pr-4 py-3.5 backdrop-blur-md border-2 rounded-[16px] focus:outline-none focus:ring-2 transition-all duration-300"
-                  style={getInputStyles(theme, !!fieldErrors.display_name)}
-                  placeholder="Nom complet"
-                />
-              </div>
-              {fieldErrors.display_name && (
-                <p className="text-red-300 text-xs mt-1.5 ml-1">{fieldErrors.display_name}</p>
-              )}
-            </div>
-
-            {/* Domaine - Sélection Agriculture/Élevage */}
-            <div className="space-y-3">
-              <label className="block text-xs sm:text-sm font-semibold mb-2" style={{ color: getTextStyles(theme).title }}>Domaine d'activité</label>
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                <div
-                  onClick={() => setFormData({ ...formData, profile: { ...formData.profile, domain: 'agriculture' } })}
-                  className="group cursor-pointer rounded-[12px] sm:rounded-[16px] p-3 sm:p-4 border-2 transition-all duration-300"
-                  style={{
-                    background: theme === 'light' 
-                      ? (formData.profile.domain === 'agriculture' ? '#10B981' : '#FFFFFF')
-                      : (formData.profile.domain === 'agriculture' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 255, 255, 0.05)'),
-                    borderColor: theme === 'light'
-                      ? (formData.profile.domain === 'agriculture' ? '#10B981' : '#D1D5DB')
-                      : (formData.profile.domain === 'agriculture' ? '#4ADE80' : 'rgba(255, 255, 255, 0.2)'),
-                    boxShadow: formData.profile.domain === 'agriculture' 
-                      ? (theme === 'light' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : '0 4px 12px rgba(34, 197, 94, 0.2)')
-                      : 'none'
-                  }}
-                >
-                  <div className="flex flex-col items-center text-center">
-                    <div 
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-1.5 sm:mb-2 transition-all"
-                      style={{
-                        background: theme === 'light'
-                          ? (formData.profile.domain === 'agriculture' ? '#FFFFFF' : '#10B981')
-                          : 'rgba(255, 255, 255, 0.1)'
-                      }}
-                    >
-                      <Sprout 
-                        className="h-5 w-5 sm:h-6 sm:w-6 transition-colors" 
-                        strokeWidth={1.5}
-                        style={{
-                          color: theme === 'light'
-                            ? (formData.profile.domain === 'agriculture' ? '#10B981' : '#FFFFFF')
-                            : (formData.profile.domain === 'agriculture' ? '#86EFAC' : 'rgba(255, 255, 255, 0.7)')
-                        }}
-                      />
-                    </div>
-                    <span 
-                      className="text-[10px] sm:text-xs font-semibold"
-                      style={{
-                        color: theme === 'light'
-                          ? (formData.profile.domain === 'agriculture' ? '#FFFFFF' : '#1A1A1A')
-                          : (formData.profile.domain === 'agriculture' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)')
-                      }}
-                    >Agriculture</span>
-                  </div>
-                </div>
-                
-                <div
-                  onClick={() => setFormData({ ...formData, profile: { ...formData.profile, domain: 'elevage' } })}
-                  className="group cursor-pointer rounded-[12px] sm:rounded-[16px] p-3 sm:p-4 border-2 transition-all duration-300"
-                  style={{
-                    background: theme === 'light' 
-                      ? (formData.profile.domain === 'elevage' ? '#F59E0B' : '#FFFFFF')
-                      : (formData.profile.domain === 'elevage' ? 'rgba(251, 146, 60, 0.3)' : 'rgba(255, 255, 255, 0.05)'),
-                    borderColor: theme === 'light'
-                      ? (formData.profile.domain === 'elevage' ? '#F59E0B' : '#D1D5DB')
-                      : (formData.profile.domain === 'elevage' ? '#FCD34D' : 'rgba(255, 255, 255, 0.2)'),
-                    boxShadow: formData.profile.domain === 'elevage' 
-                      ? (theme === 'light' ? '0 4px 12px rgba(245, 158, 11, 0.3)' : '0 4px 12px rgba(251, 146, 60, 0.2)')
-                      : 'none'
-                  }}
-                >
-                  <div className="flex flex-col items-center text-center">
-                    <div 
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-1.5 sm:mb-2 transition-all"
-                      style={{
-                        background: theme === 'light'
-                          ? (formData.profile.domain === 'elevage' ? '#FFFFFF' : '#F59E0B')
-                          : 'rgba(255, 255, 255, 0.1)'
-                      }}
-                    >
-                      <Beef 
-                        className="h-5 w-5 sm:h-6 sm:w-6 transition-colors" 
-                        strokeWidth={1.5}
-                        style={{
-                          color: theme === 'light'
-                            ? (formData.profile.domain === 'elevage' ? '#F59E0B' : '#FFFFFF')
-                            : (formData.profile.domain === 'elevage' ? '#FCD34D' : 'rgba(255, 255, 255, 0.7)')
-                        }}
-                      />
-                    </div>
-                    <span 
-                      className="text-[10px] sm:text-xs font-semibold"
-                      style={{
-                        color: theme === 'light'
-                          ? (formData.profile.domain === 'elevage' ? '#FFFFFF' : '#1A1A1A')
-                          : (formData.profile.domain === 'elevage' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)')
-                      }}
-                    >Élevage</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Type d'activité - Grille Responsive */}
-            <div className="space-y-3">
-              <label className="block text-xs sm:text-sm font-semibold mb-2" style={{ color: getTextStyles(theme).title }}>Type d'activité</label>
-              <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                <div
-                  onClick={() => setFormData({ ...formData, profile: { ...formData.profile, activity_type: 'seed_provider' } })}
-                  className="group cursor-pointer rounded-[12px] sm:rounded-[16px] p-3 sm:p-4 border-2 transition-all duration-300"
-                  style={{
-                    background: theme === 'light'
-                      ? (formData.profile.activity_type === 'seed_provider' ? '#10B981' : '#FFFFFF')
-                      : (formData.profile.activity_type === 'seed_provider' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 255, 255, 0.05)'),
-                    borderColor: theme === 'light'
-                      ? (formData.profile.activity_type === 'seed_provider' ? '#10B981' : '#D1D5DB')
-                      : (formData.profile.activity_type === 'seed_provider' ? '#4ADE80' : 'rgba(255, 255, 255, 0.2)'),
-                    boxShadow: formData.profile.activity_type === 'seed_provider'
-                      ? (theme === 'light' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : '0 4px 12px rgba(34, 197, 94, 0.2)')
-                      : 'none'
-                  }}
-                >
-                  <div className="flex flex-col items-center text-center">
-                    <div 
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-1.5 sm:mb-2 transition-all"
-                      style={{
-                        background: theme === 'light'
-                          ? (formData.profile.activity_type === 'seed_provider' ? '#FFFFFF' : '#10B981')
-                          : 'rgba(255, 255, 255, 0.1)'
-                      }}
-                    >
-                      <PackageSearch 
-                        className="h-5 w-5 sm:h-6 sm:w-6 transition-colors" 
-                        strokeWidth={1.5}
-                        style={{
-                          color: theme === 'light'
-                            ? (formData.profile.activity_type === 'seed_provider' ? '#10B981' : '#FFFFFF')
-                            : (formData.profile.activity_type === 'seed_provider' ? '#86EFAC' : 'rgba(255, 255, 255, 0.7)')
-                        }}
-                      />
-                    </div>
-                    <span 
-                      className="text-[10px] sm:text-xs font-semibold"
-                      style={{
-                        color: theme === 'light'
-                          ? (formData.profile.activity_type === 'seed_provider' ? '#FFFFFF' : '#1A1A1A')
-                          : (formData.profile.activity_type === 'seed_provider' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)')
-                      }}
-                    >Fournisseur</span>
-                  </div>
-                </div>
-                
-                <div
-                  onClick={() => setFormData({ ...formData, profile: { ...formData.profile, activity_type: 'producer' } })}
-                  className="group cursor-pointer rounded-[12px] sm:rounded-[16px] p-3 sm:p-4 border-2 transition-all duration-300"
-                  style={{
-                    background: theme === 'light'
-                      ? (formData.profile.activity_type === 'producer' ? '#10B981' : '#FFFFFF')
-                      : (formData.profile.activity_type === 'producer' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 255, 255, 0.05)'),
-                    borderColor: theme === 'light'
-                      ? (formData.profile.activity_type === 'producer' ? '#10B981' : '#D1D5DB')
-                      : (formData.profile.activity_type === 'producer' ? '#4ADE80' : 'rgba(255, 255, 255, 0.2)'),
-                    boxShadow: formData.profile.activity_type === 'producer'
-                      ? (theme === 'light' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : '0 4px 12px rgba(34, 197, 94, 0.2)')
-                      : 'none'
-                  }}
-                >
-                  <div className="flex flex-col items-center text-center">
-                    <div 
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-1.5 sm:mb-2 transition-all"
-                      style={{
-                        background: theme === 'light'
-                          ? (formData.profile.activity_type === 'producer' ? '#FFFFFF' : '#10B981')
-                          : 'rgba(255, 255, 255, 0.1)'
-                      }}
-                    >
-                      <Sprout 
-                        className="h-5 w-5 sm:h-6 sm:w-6 transition-colors" 
-                        strokeWidth={1.5}
-                        style={{
-                          color: theme === 'light'
-                            ? (formData.profile.activity_type === 'producer' ? '#10B981' : '#FFFFFF')
-                            : (formData.profile.activity_type === 'producer' ? '#86EFAC' : 'rgba(255, 255, 255, 0.7)')
-                        }}
-                      />
-                    </div>
-                    <span 
-                      className="text-[10px] sm:text-xs font-semibold"
-                      style={{
-                        color: theme === 'light'
-                          ? (formData.profile.activity_type === 'producer' ? '#FFFFFF' : '#1A1A1A')
-                          : (formData.profile.activity_type === 'producer' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)')
-                      }}
-                    >Producteur</span>
-                  </div>
-                </div>
-                
-                <div
-                  onClick={() => setFormData({ ...formData, profile: { ...formData.profile, activity_type: 'buyer' } })}
-                  className="group cursor-pointer rounded-[12px] sm:rounded-[16px] p-3 sm:p-4 border-2 transition-all duration-300"
-                  style={{
-                    background: theme === 'light'
-                      ? (formData.profile.activity_type === 'buyer' ? '#10B981' : '#FFFFFF')
-                      : (formData.profile.activity_type === 'buyer' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(255, 255, 255, 0.05)'),
-                    borderColor: theme === 'light'
-                      ? (formData.profile.activity_type === 'buyer' ? '#10B981' : '#D1D5DB')
-                      : (formData.profile.activity_type === 'buyer' ? '#4ADE80' : 'rgba(255, 255, 255, 0.2)'),
-                    boxShadow: formData.profile.activity_type === 'buyer'
-                      ? (theme === 'light' ? '0 4px 12px rgba(16, 185, 129, 0.3)' : '0 4px 12px rgba(34, 197, 94, 0.2)')
-                      : 'none'
-                  }}
-                >
-                  <div className="flex flex-col items-center text-center">
-                    <div 
-                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-1.5 sm:mb-2 transition-all"
-                      style={{
-                        background: theme === 'light'
-                          ? (formData.profile.activity_type === 'buyer' ? '#FFFFFF' : '#10B981')
-                          : 'rgba(255, 255, 255, 0.1)'
-                      }}
-                    >
-                      <ShoppingCart 
-                        className="h-5 w-5 sm:h-6 sm:w-6 transition-colors" 
-                        strokeWidth={1.5}
-                        style={{
-                          color: theme === 'light'
-                            ? (formData.profile.activity_type === 'buyer' ? '#10B981' : '#FFFFFF')
-                            : (formData.profile.activity_type === 'buyer' ? '#86EFAC' : 'rgba(255, 255, 255, 0.7)')
-                        }}
-                      />
-                    </div>
-                    <span 
-                      className="text-[10px] sm:text-xs font-semibold"
-                      style={{
-                        color: theme === 'light'
-                          ? (formData.profile.activity_type === 'buyer' ? '#FFFFFF' : '#1A1A1A')
-                          : (formData.profile.activity_type === 'buyer' ? '#FFFFFF' : 'rgba(255, 255, 255, 0.7)')
-                      }}
-                    >Acheteur</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Input avec Icône - Région */}
-            <div>
-              <div className="relative">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2" style={{ opacity: 0.6 }}>
-                  <MapPin className="h-5 w-5" strokeWidth={1.5} style={{ color: getInputStyles(theme).color }} />
-                </div>
-                <input
-                  type="text"
-                  placeholder="Région"
-                  value={formData.profile.region}
-                  onChange={(e) => {
-                    setFormData({ ...formData, profile: { ...formData.profile, region: e.target.value } });
-                    if (fieldErrors.region) {
-                      const newErrors = {...fieldErrors};
-                      delete newErrors.region;
-                      setFieldErrors(newErrors);
-                    }
-                  }}
-                  className="w-full pl-12 pr-4 py-3.5 backdrop-blur-md border-2 rounded-[16px] focus:outline-none focus:ring-2 transition-all duration-300"
-                  style={getInputStyles(theme, !!fieldErrors.region)}
-                  required
-                />
-              </div>
-              {fieldErrors.region && (
-                <p className="text-red-300 text-xs mt-1.5 ml-1">{fieldErrors.region}</p>
-              )}
-            </div>
-
-            {/* Input avec Icône - Localité */}
-            <div className="relative">
-              <div className="absolute left-4 top-1/2 -translate-y-1/2" style={{ opacity: 0.6 }}>
-                <MapPin className="h-5 w-5" strokeWidth={1.5} style={{ color: getInputStyles(theme).color }} />
-              </div>
-              <input
-                type="text"
-                placeholder="Localité"
-                value={formData.profile.locality}
-                onChange={(e) => setFormData({ ...formData, profile: { ...formData.profile, locality: e.target.value } })}
-                className="w-full pl-12 pr-4 py-3.5 backdrop-blur-md border-2 rounded-[16px] focus:outline-none focus:ring-2 transition-all duration-300"
-                style={getInputStyles(theme)}
-              />
-            </div>
-
-            {/* Bouton Principal Responsive */}
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-3 sm:py-4 rounded-[16px] font-bold text-base sm:text-lg transition-all transform hover:scale-[1.02] active:scale-95 disabled:opacity-50 mt-4 sm:mt-6"
-              style={getButtonStyles(theme, 'primary', 'emerald')}
-            >
-              {loading ? 'Inscription...' : "S'inscrire"}
-            </button>
-          </form>
-
-          {/* Lien de Connexion Bien Visible */}
-          <div className="mt-6 text-center">
-            <p className="text-sm" style={{ color: getTextStyles(theme).body }}>
+            {/* Login Link */}
+            <p className="text-center text-sm text-white/90 mt-5 font-medium drop-shadow-md">
               Déjà inscrit?{' '}
-              <Link to="/login" className="font-bold transition-colors underline" style={{ color: theme === 'light' ? '#10B981' : '#6EE7B7' }}>
+              <Link to="/login" className="text-white font-bold hover:text-green-200 transition-colors underline decoration-2 decoration-green-400 underline-offset-4">
                 Se connecter
               </Link>
             </p>
           </div>
         </div>
-      </motion.div>
+      </div>
     </div>
-    </>
   );
 }
