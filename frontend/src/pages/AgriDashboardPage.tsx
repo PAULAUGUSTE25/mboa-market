@@ -54,30 +54,7 @@ export default function AgriDashboardPage() {
     ]
   };
 
-  // AI Recommendations
-  const aiRecommendations = [
-    {
-      type: 'warning',
-      title: 'Humidité Élevée Détectée',
-      message: 'Réduire l\'irrigation de 20% pour éviter la moisissure',
-      action: 'Ajuster',
-      priority: 'high'
-    },
-    {
-      type: 'success',
-      title: 'Conditions Optimales',
-      message: 'Température et lumière parfaites pour la croissance des tomates',
-      action: 'Voir détails',
-      priority: 'low'
-    },
-    {
-      type: 'info',
-      title: 'Prévision Pluie',
-      message: 'Pluie prévue mercredi - reporter la fertilisation',
-      action: 'Planifier',
-      priority: 'medium'
-    }
-  ];
+  // Recommendations removed - cleaner interface
 
   // Simulate real-time updates
   useEffect(() => {
@@ -413,50 +390,6 @@ export default function AgriDashboardPage() {
                 </div>
               </div>
 
-              {/* AI Recommendations */}
-              <div className={`rounded-2xl p-6 ${isDark ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10 border border-purple-500/20' : 'bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200'}`}>
-                <div className="flex items-center gap-2 mb-4">
-                  <Brain className="w-6 h-6 text-purple-500" />
-                  <h3 className={`text-lg font-bold ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                    Recommandations IA
-                  </h3>
-                </div>
-                <div className="space-y-3">
-                  {aiRecommendations.map((rec, idx) => (
-                    <div 
-                      key={idx}
-                      className={`p-4 rounded-xl border ${
-                        rec.priority === 'high'
-                          ? isDark ? 'bg-red-500/10 border-red-500/30' : 'bg-red-50 border-red-200'
-                          : rec.priority === 'medium'
-                          ? isDark ? 'bg-yellow-500/10 border-yellow-500/30' : 'bg-yellow-50 border-yellow-200'
-                          : isDark ? 'bg-green-500/10 border-green-500/30' : 'bg-green-50 border-green-200'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            {rec.type === 'warning' && <AlertTriangle className="w-4 h-4 text-orange-500" />}
-                            {rec.type === 'success' && <CheckCircle className="w-4 h-4 text-green-500" />}
-                            {rec.type === 'info' && <Activity className="w-4 h-4 text-blue-500" />}
-                            <h4 className={`font-semibold text-sm ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                              {rec.title}
-                            </h4>
-                          </div>
-                          <p className={`text-xs ${isDark ? 'text-gray-400' : 'text-gray-600'}`}>
-                            {rec.message}
-                          </p>
-                        </div>
-                        <button className={`ml-2 px-3 py-1 rounded-lg text-xs font-medium ${
-                          isDark ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-white text-gray-700 hover:bg-gray-100'
-                        }`}>
-                          {rec.action}
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           </>
         )}
@@ -491,10 +424,10 @@ export default function AgriDashboardPage() {
 
         {activeTab === 'analytics' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* AI Chat Assistant */}
+            {/* Bigiss Assistant */}
             <div>
               <h3 className={`text-lg font-bold mb-4 ${isDark ? 'text-white' : 'text-gray-900'}`}>
-                🤖 Assistant IA Agricole
+                💬 Bigiss - Votre Assistant
               </h3>
               <AIChat />
             </div>

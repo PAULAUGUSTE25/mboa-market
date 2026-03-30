@@ -5,6 +5,7 @@ import { multiAI } from '@/services/multiAI';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useDomain } from '@/contexts/DomainContext';
 import { getDomainColors } from '@/utils/colors';
+import { useAuthStore } from '@/store/authStore';
 
 interface Message {
   id: string;
@@ -16,12 +17,19 @@ interface Message {
 export default function AIAssistant() {
   const { theme } = useTheme();
   const { selectedDomain } = useDomain();
+  const { user } = useAuthStore();
   const domainColors = getDomainColors(selectedDomain);
   const [isOpen, setIsOpen] = useState(false);
+  
+  const getWelcomeMessage = () => {
+    const userName = (user?.profile as any)?.display_name || 'cher utilisateur';
+    return `Bonjour ${userName}! Je suis Bigiss, votre assistant personnel MBOA Market. Comment puis-je vous aider aujourd'hui?`;
+  };
+  
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
-      text: "Bonjour! Je suis Bigiss, votre assistant IA de MBOA Market. Comment puis-je vous aider aujourd'hui dans vos activités agricoles ou d'élevage?",
+      text: getWelcomeMessage(),
       sender: 'ai',
       timestamp: new Date()
     }
@@ -40,7 +48,7 @@ export default function AIAssistant() {
     setMessages([
       {
         id: 'welcome',
-        text: "Bonjour! Je suis Bigiss, votre assistant IA de MBOA Market. Comment puis-je vous aider aujourd'hui dans vos activités agricoles ou d'élevage?",
+        text: getWelcomeMessage(),
         sender: 'ai',
         timestamp: new Date()
       }
@@ -70,7 +78,11 @@ export default function AIAssistant() {
     setIsLoading(true);
 
     try {
-      const response = await multiAI.generateResponse(userMessage.text, 'Tu es Bigiss, un assistant IA agricole pour MBOA Market au Cameroun.');
+      const userName = (user?.profile as any)?.display_name || 'l\'utilisateur';
+      const response = await multiAI.generateResponse(
+        userMessage.text, 
+        `Tu es Bigiss, l'assistant personnel de ${userName} sur MBOA Market au Cameroun. Tu aides avec l'agriculture et l'élevage. Réponds de manière amicale et professionnelle.`
+      );
       
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),

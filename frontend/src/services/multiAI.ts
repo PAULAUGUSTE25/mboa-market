@@ -20,16 +20,16 @@ interface AIResponse {
 class MultiAIService {
   private providers: AIProvider[] = [
     {
-      name: 'HuggingFace Chat',
-      endpoint: 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-large',
-      apiKey: '', // Pas de clé nécessaire pour les modèles publics
-      model: 'microsoft/DialoGPT-large',
+      name: 'Groq',
+      endpoint: 'https://api.groq.com/openai/v1/chat/completions',
+      apiKey: 'gsk_8xQZJ3WqYKLmN4pRvT5sWGdyb3FYcH9jKlMnOpQrStUvWxYz',
+      model: 'mixtral-8x7b-32768',
       enabled: true
     },
     {
       name: 'HuggingFace Mistral',
       endpoint: 'https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2',
-      apiKey: '', // API publique
+      apiKey: 'hf_kRdvEamhaxrARWdeiSXFfZJGEzXxtKGV',
       model: 'mistralai/Mistral-7B-Instruct-v0.2',
       enabled: true
     },
@@ -37,7 +37,7 @@ class MultiAIService {
       name: 'Local AI Fallback',
       endpoint: 'local',
       model: 'advanced',
-      enabled: true // Fallback si les API échouent
+      enabled: false // Désactivé - utiliser seulement les vraies API
     }
   ];
 
