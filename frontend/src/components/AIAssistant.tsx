@@ -95,14 +95,14 @@ export default function AIAssistant() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 font-['Inter','Plus_Jakarta_Sans',sans-serif]">
+    <div className="fixed bottom-20 right-4 z-40 font-['Inter','Plus_Jakarta_Sans',sans-serif] lg:bottom-6 lg:right-6">
       <AnimatePresence>
         {isOpen && (
           <motion.div
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="absolute bottom-16 right-0 w-[350px] sm:w-[400px] h-[500px] rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl border border-white/20 flex flex-col"
+            className="absolute bottom-16 right-0 w-[320px] sm:w-[400px] h-[480px] rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl border border-white/20 flex flex-col"
             style={{
               background: theme === 'dark' ? 'rgba(0, 0, 0, 0.8)' : 'rgba(255, 255, 255, 0.8)',
             }}

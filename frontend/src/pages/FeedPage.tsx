@@ -1103,7 +1103,7 @@ export default function FeedPage() {
                   
                   <button
                     onClick={() => navigate('/profile')}
-                    className="group relative"
+                    className="group relative flex-shrink-0"
                   >
                     <div 
                       className="w-9 h-9 rounded-full flex items-center justify-center font-bold shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-105 active:scale-95"
