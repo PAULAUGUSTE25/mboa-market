@@ -2,7 +2,7 @@ import axios, { AxiosInstance } from 'axios';
 import { localAuth } from './localAuth';
 
 const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
-const USE_LOCAL_AUTH = !import.meta.env.VITE_API_URL; // Utiliser auth locale si pas de backend configuré
+const USE_LOCAL_AUTH = true; // Forcer l'auth locale car le backend n'a pas les routes d'auth
 
 interface RegisterRequest {
   phone: string;
