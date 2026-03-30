@@ -49,6 +49,7 @@ class MultiAIService {
         console.log(`🔄 Trying provider: ${provider.name}`);
         console.log(`🔗 Endpoint: ${provider.endpoint}`);
         console.log(`🔑 API Key present: ${provider.apiKey ? 'YES' : 'NO'}`);
+        console.log(`🔑 API Key preview: ${provider.apiKey ? provider.apiKey.substring(0, 10) + '...' : 'EMPTY'}`);
         
         const response = await this.callProvider(provider, prompt, context);
         
