@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics
 
 app = FastAPI(
     title="MBOA Market API",
@@ -23,6 +24,17 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+# Include API routers
+app.include_router(auth.router, prefix="/api")
+app.include_router(users.router, prefix="/api")
+app.include_router(listings.router, prefix="/api")
+app.include_router(messaging.router, prefix="/api")
+app.include_router(orders.router, prefix="/api")
+app.include_router(security.router, prefix="/api")
+app.include_router(b2b.router, prefix="/api")
+app.include_router(livestock.router, prefix="/api")
+app.include_router(logistics.router, prefix="/api")
 
 @app.get("/")
 async def root():

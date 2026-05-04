@@ -162,7 +162,7 @@ export default function ChatComponent({ listingId: _listingId, sellerId: _seller
                   key={conv.id}
                   onClick={() => setActiveConversation(conv.id)}
                   className={`p-3 sm:p-4 cursor-pointer hover:bg-gray-50 ${
-                    activeConversation === conv.id ? 'bg-green-50' : ''
+                    activeConversation === conv.id ? 'bg-[#F5F5F0]' : ''
                   }`}
                 >
                   <div className="flex justify-between items-start">
@@ -175,7 +175,7 @@ export default function ChatComponent({ listingId: _listingId, sellerId: _seller
                       </p>
                     </div>
                     {conv.unread_count > 0 && (
-                      <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-green-600 rounded-full">
+                      <span className="ml-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-white bg-[#3F441C] rounded-full">
                         {conv.unread_count}
                       </span>
                     )}
@@ -209,7 +209,7 @@ export default function ChatComponent({ listingId: _listingId, sellerId: _seller
                       <div
                         className={`max-w-[80%] sm:max-w-xs lg:max-w-md px-3 sm:px-4 py-2 rounded-lg ${
                           message.sender_id === user?.id
-                            ? 'bg-green-600 text-white'
+                            ? 'bg-[#3F441C] text-white'
                             : 'bg-gray-200 text-gray-900'
                         }`}
                       >
@@ -217,7 +217,7 @@ export default function ChatComponent({ listingId: _listingId, sellerId: _seller
                         <p
                           className={`text-xs mt-1 ${
                             message.sender_id === user?.id
-                              ? 'text-green-100'
+                              ? 'text-[#EEEEE5]'
                               : 'text-gray-500'
                           }`}
                         >
@@ -243,12 +243,12 @@ export default function ChatComponent({ listingId: _listingId, sellerId: _seller
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
                   placeholder="Tapez votre message..."
-                  className="flex-1 border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="flex-1 border border-gray-300 rounded-lg px-3 sm:px-4 py-2 text-sm sm:text-base focus:outline-none focus:ring-2 focus:ring-[#F5F5F0]0"
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!newMessage.trim()}
-                  className="bg-green-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="bg-[#3F441C] text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-[#353916] disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ backgroundColor: '#2E7D32' }}
                 >
                   <Send className="h-4 w-4 sm:h-5 sm:w-5" />

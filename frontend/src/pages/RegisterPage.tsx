@@ -2,13 +2,18 @@ import { useState, useEffect, useRef } from 'react';
 import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
-import { Phone, Lock, User, MapPin, PackageSearch, ShoppingCart, Sprout, Beef, ArrowLeft, CheckCircle } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { Phone, Lock, User, MapPin, ShoppingCart, CheckCircle, Truck } from 'lucide-react';
+import { SproutIcon, CowIcon } from '@/components/icons/UnifiedIcons';
+import BackButton from '@/components/BackButton';
 import gsap from 'gsap';
+import BackgroundSlideshow from '@/components/BackgroundSlideshow';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { register, loading, error } = useAuthStore();
+  const { t } = useLanguage();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
   
@@ -63,21 +68,30 @@ export default function RegisterPage() {
     const errors: {[key: string]: string} = {};
     
     if (!formData.phone.startsWith('+')) {
-      errors.phone = 'Le numéro doit commencer par + (ex: +237...)';
+      errors.phone = t('Le numéro doit commencer par + (ex: +237...)', 'Number must start with + (e.g. +237...)');
     } else if (formData.phone.length < 10) {
-      errors.phone = 'Le numéro de téléphone est trop court';
+      errors.phone = t('Le numéro de téléphone est trop court', 'Phone number is too short');
     }
     
-    if (formData.password.length < 6) {
-      errors.password = 'Minimum 6 caractères requis';
+    // Validation du mot de passe forte (backend exige)
+    if (formData.password.length < 8) {
+      errors.password = t('Minimum 8 caractères requis', 'Minimum 8 characters required');
+    } else if (!/[A-Z]/.test(formData.password)) {
+      errors.password = t('Doit contenir au moins une majuscule', 'Must contain at least one uppercase letter');
+    } else if (!/[a-z]/.test(formData.password)) {
+      errors.password = t('Doit contenir au moins une minuscule', 'Must contain at least one lowercase letter');
+    } else if (!/\d/.test(formData.password)) {
+      errors.password = t('Doit contenir au moins un chiffre', 'Must contain at least one number');
+    } else if (!/[!@#$%^&*(),.?":{}|<>]/.test(formData.password)) {
+      errors.password = t('Doit contenir au moins un caractère spécial (!@#$%...)', 'Must contain at least one special character (!@#$%...)');
     }
     
     if (!formData.profile.display_name.trim()) {
-      errors.display_name = 'Le nom complet est obligatoire';
+      errors.display_name = t('Le nom complet est obligatoire', 'Full name is required');
     }
     
     if (!formData.profile.region.trim()) {
-      errors.region = 'La région est obligatoire';
+      errors.region = t('La région est obligatoire', 'Region is required');
     }
     
     if (Object.keys(errors).length > 0) {
@@ -94,31 +108,47 @@ export default function RegisterPage() {
         navigate('/feed');
       }, 3000);
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || 'Inscription échouée. Vérifiez vos informations.';
-      setFieldErrors({ general: errorMsg });
       console.error('Registration failed:', err);
+      
+      // Gérer les erreurs de validation du backend (422)
+      if (err.response?.status === 422 && err.response?.data?.detail) {
+        const validationErrors: {[key: string]: string} = {};
+        const details = err.response.data.detail;
+        
+        if (Array.isArray(details)) {
+          details.forEach((error: any) => {
+            const field = error.loc?.[error.loc.length - 1] || 'general';
+            validationErrors[field] = error.msg || t('Erreur de validation', 'Validation error');
+          });
+        } else if (typeof details === 'string') {
+          validationErrors.general = details;
+        }
+        
+        setFieldErrors(validationErrors);
+      } else {
+        const errorMsg = err.response?.data?.detail || t('Inscription échouée. Vérifiez vos informations.', 'Registration failed. Check your information.');
+        setFieldErrors({ general: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg) });
+      }
     }
   };
 
   const activityTypes = [
-    { value: 'seed_provider', label: 'Fournisseur', icon: PackageSearch },
-    { value: 'producer', label: 'Producteur', icon: Sprout },
-    { value: 'buyer', label: 'Acheteur', icon: ShoppingCart },
+    { value: 'seed_provider', label: t('Fournisseur', 'Supplier'), icon: Truck },
+    { value: 'producer', label: t('Producteur', 'Producer'), icon: SproutIcon },
+    { value: 'buyer', label: t('Acheteur', 'Buyer'), icon: ShoppingCart },
   ];
 
   return (
     <div ref={containerRef} className="min-h-screen w-full overflow-hidden relative flex items-center justify-center lg:justify-end">
-      {/* Background Image */}
-      <div 
-        className="absolute inset-0 z-0"
-        style={{
-          backgroundImage: `url('/background pic.png')`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-        }}
-      >
-        <div className="absolute inset-0 bg-black/20" />
-      </div>
+      {/* Background Slideshow */}
+      <BackgroundSlideshow 
+        images={[
+          '/images/backgrounds/back gount',
+          '/images/backgrounds/pexels-szafran-34125512.jpg'
+        ]}
+        interval={5000}
+        overlay={true}
+      />
 
       {/* Success Modal */}
       {showSuccessModal && (
@@ -128,14 +158,14 @@ export default function RegisterPage() {
             animate={{ scale: 1, opacity: 1 }}
             className="bg-white rounded-3xl p-8 mx-4 max-w-sm border border-gray-200 shadow-2xl text-center"
           >
-            <div className="w-16 h-16 rounded-full bg-gradient-to-r from-green-500 to-amber-500 flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 rounded-full bg-[#3F441C] flex items-center justify-center mx-auto mb-4">
               <CheckCircle className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Bienvenue!</h2>
-            <p className="text-gray-500 mb-4">Votre compte a été créé avec succès</p>
-            <div className="flex items-center justify-center gap-2 text-green-600">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span className="text-sm">Redirection...</span>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('Bienvenue!', 'Welcome!')}</h2>
+            <p className="text-gray-500 mb-4">{t('Votre compte a été créé avec succès', 'Your account was created successfully')}</p>
+            <div className="flex items-center justify-center gap-2 text-[#3F441C]">
+              <div className="w-2 h-2 bg-[#F5F5F0]0 rounded-full animate-pulse" />
+              <span className="text-sm">{t('Redirection...', 'Redirecting...')}</span>
             </div>
           </motion.div>
         </div>
@@ -143,15 +173,7 @@ export default function RegisterPage() {
 
       {/* Back Button */}
       <div className="absolute top-8 left-6 z-20">
-        <motion.button
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-white hover:text-white/80 transition-colors drop-shadow-md"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm font-medium">Retour</span>
-        </motion.button>
+        <BackButton to="/" />
       </div>
 
       {/* Register Card */}
@@ -172,8 +194,8 @@ export default function RegisterPage() {
               alt="MBOA Market"
               className="h-16 sm:h-20 w-auto object-contain mb-4 drop-shadow-lg"
             />
-            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 drop-shadow-md">Inscription</h1>
-            <p className="text-white/90 text-sm font-medium">Rejoignez MBOA Market</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2 drop-shadow-md">{t('Inscription', 'Register')}</h1>
+            <p className="text-white/90 text-sm font-medium">{t('Rejoignez MBOA Market', 'Join MBOA Market')}</p>
           </div>
 
           <div className="relative z-10">
@@ -197,7 +219,7 @@ export default function RegisterPage() {
                   <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
                     type="tel"
-                    placeholder="Téléphone (+237...)"
+                    placeholder={t('Téléphone (+237...)', 'Phone (+237...)')}
                     value={formData.phone}
                     onChange={(e) => {
                       setFormData({ ...formData, phone: e.target.value });
@@ -209,7 +231,7 @@ export default function RegisterPage() {
                     }}
                     className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
                       fieldErrors.phone ? 'border-red-500' : 'border-white/50'
-                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all shadow-inner`}
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner`}
                     required
                   />
                 </div>
@@ -222,7 +244,7 @@ export default function RegisterPage() {
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
                     type="password"
-                    placeholder="Mot de passe (min 6 car.)"
+                    placeholder={t('Mot de passe (min 8 car.)', 'Password (min 8 char.)')}
                     value={formData.password}
                     onChange={(e) => {
                       setFormData({ ...formData, password: e.target.value });
@@ -234,7 +256,7 @@ export default function RegisterPage() {
                     }}
                     className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
                       fieldErrors.password ? 'border-red-500' : 'border-white/50'
-                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all shadow-inner`}
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner`}
                     required
                   />
                 </div>
@@ -247,7 +269,7 @@ export default function RegisterPage() {
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
                     type="text"
-                    placeholder="Nom complet"
+                    placeholder={t('Nom complet', 'Full name')}
                     value={formData.profile.display_name}
                     onChange={(e) => {
                       setFormData({ ...formData, profile: { ...formData.profile, display_name: e.target.value } });
@@ -259,7 +281,7 @@ export default function RegisterPage() {
                     }}
                     className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
                       fieldErrors.display_name ? 'border-red-500' : 'border-white/50'
-                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all shadow-inner`}
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner`}
                     required
                   />
                 </div>
@@ -268,42 +290,43 @@ export default function RegisterPage() {
 
               {/* Domain Selection */}
               <div>
-                <label className="block text-xs font-medium text-white/90 mb-2 drop-shadow-md">Domaine</label>
+                <label className="block text-xs font-medium text-white/90 mb-2 drop-shadow-md">{t('Domaine', 'Domain')}</label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, profile: { ...formData.profile, domain: 'agriculture' } })}
                     className={`p-3 rounded-xl border transition-all flex items-center justify-center gap-2 shadow-sm ${
                       formData.profile.domain === 'agriculture'
-                        ? 'bg-green-500 text-white border-green-400'
+                        ? 'bg-gradient-to-br from-[#A0B96B] to-[#829952] text-white border-[#7A7D5C]'
                         : 'bg-white/50 text-gray-700 border-white/50 hover:bg-white/70'
                     }`}
                   >
-                    <Sprout className="w-5 h-5" />
-                    <span className="text-sm font-medium">Agriculture</span>
+                    <SproutIcon size={20} />
+                    <span className="text-sm font-medium">{t('Agriculture', 'Agriculture')}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => setFormData({ ...formData, profile: { ...formData.profile, domain: 'elevage' } })}
                     className={`p-3 rounded-xl border transition-all flex items-center justify-center gap-2 shadow-sm ${
                       formData.profile.domain === 'elevage'
-                        ? 'bg-amber-500 text-white border-amber-400'
+                        ? 'bg-gradient-to-br from-[#A0B96B] to-[#829952] text-white border-[#7A7D5C]'
                         : 'bg-white/50 text-gray-700 border-white/50 hover:bg-white/70'
                     }`}
                   >
-                    <Beef className="w-5 h-5" />
-                    <span className="text-sm font-medium">Élevage</span>
+                    <CowIcon size={20} />
+                    <span className="text-sm font-medium">{t('Élevage', 'Livestock')}</span>
                   </button>
                 </div>
               </div>
 
               {/* Activity Type */}
               <div>
-                <label className="block text-xs font-medium text-white/90 mb-2 drop-shadow-md">Type d'activité</label>
+                <label className="block text-xs font-medium text-white/90 mb-2 drop-shadow-md">{t("Type d'activité", 'Activity type')}</label>
                 <div className="grid grid-cols-3 gap-2">
                   {activityTypes.map((type) => {
                     const Icon = type.icon;
                     const isSelected = formData.profile.activity_type === type.value;
+                    const isReactIcon = type.value === 'producer'; // Seul Producteur est React Icon
                     return (
                       <button
                         key={type.value}
@@ -311,13 +334,15 @@ export default function RegisterPage() {
                         onClick={() => setFormData({ ...formData, profile: { ...formData.profile, activity_type: type.value } })}
                         className={`p-3 rounded-xl border transition-all flex flex-col items-center gap-1.5 shadow-sm ${
                           isSelected
-                            ? isElevage 
-                              ? 'bg-amber-500 text-white border-amber-400'
-                              : 'bg-green-500 text-white border-green-400'
+                            ? 'bg-gradient-to-br from-[#A0B96B] to-[#829952] text-white border-[#7A7D5C]'
                             : 'bg-white/50 text-gray-700 border-white/50 hover:bg-white/70'
                         }`}
                       >
-                        <Icon className="w-5 h-5" />
+                        {isReactIcon ? (
+                          <Icon size={20} />
+                        ) : (
+                          <Icon className="w-5 h-5" />
+                        )}
                         <span className="text-xs font-medium">{type.label}</span>
                       </button>
                     );
@@ -331,7 +356,7 @@ export default function RegisterPage() {
                   <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
                     type="text"
-                    placeholder="Région"
+                    placeholder={t('Région', 'Region')}
                     value={formData.profile.region}
                     onChange={(e) => {
                       setFormData({ ...formData, profile: { ...formData.profile, region: e.target.value } });
@@ -343,7 +368,7 @@ export default function RegisterPage() {
                     }}
                     className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
                       fieldErrors.region ? 'border-red-500' : 'border-white/50'
-                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all shadow-inner`}
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner`}
                     required
                   />
                 </div>
@@ -355,10 +380,10 @@ export default function RegisterPage() {
                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                 <input
                   type="text"
-                  placeholder="Localité (optionnel)"
+                  placeholder={t('Localité (optionnel)', 'Locality (optional)')}
                   value={formData.profile.locality}
                   onChange={(e) => setFormData({ ...formData, profile: { ...formData.profile, locality: e.target.value } })}
-                  className="w-full pl-12 pr-4 py-3.5 bg-white/90 border border-white/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-green-500 focus:ring-2 focus:ring-green-500/20 transition-all shadow-inner"
+                  className="w-full pl-12 pr-4 py-3.5 bg-white/90 border border-white/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner"
                 />
               </div>
 
@@ -368,17 +393,17 @@ export default function RegisterPage() {
                 whileTap={{ scale: 0.98 }}
                 type="submit"
                 disabled={loading}
-                className="w-full py-4 text-white font-bold rounded-xl shadow-lg disabled:opacity-50 transition-all bg-gradient-to-r from-green-600 via-green-500 to-amber-500 shadow-green-500/30"
+                className="w-full py-4 text-white font-bold rounded-xl shadow-lg disabled:opacity-50 transition-all bg-[#3F441C] hover:bg-[#353916] shadow-[#F5F5F0]0/30"
               >
-                {loading ? 'Inscription...' : "S'inscrire"}
+                {loading ? t('Inscription...', 'Signing up...') : t("S'inscrire", 'Sign Up')}
               </motion.button>
             </form>
 
             {/* Login Link */}
             <p className="text-center text-sm text-white/90 mt-5 font-medium drop-shadow-md">
-              Déjà inscrit?{' '}
-              <Link to="/login" className="text-white font-bold hover:text-green-200 transition-colors underline decoration-2 decoration-green-400 underline-offset-4">
-                Se connecter
+              {t('Déjà inscrit?', 'Already registered?')}
+              <Link to="/login" className="text-white font-bold hover:text-[#D9DAC8] transition-colors underline decoration-2 decoration-[#7A7D5C] underline-offset-4 ml-1">
+                {t('Se connecter', 'Log in')}
               </Link>
             </p>
           </div>

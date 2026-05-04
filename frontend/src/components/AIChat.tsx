@@ -76,9 +76,9 @@ export default function AIChat() {
   return (
     <div className={`flex flex-col h-[600px] rounded-2xl overflow-hidden ${isDark ? 'bg-white/5 border border-white/10' : 'bg-white border border-gray-200'}`}>
       {/* Header */}
-      <div className={`p-4 border-b ${isDark ? 'border-white/10 bg-gradient-to-r from-green-500/20 to-emerald-500/20' : 'border-gray-200 bg-gradient-to-r from-green-50 to-emerald-50'}`}>
+      <div className={`p-4 border-b ${isDark ? 'border-white/10 bg-gradient-to-r from-[#F5F5F0]0/20 to-[#F5F5F0]0/20' : 'border-gray-200 bg-gradient-to-r from-[#F5F5F0] to-[#F5F5F0]'}`}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#F5F5F0]0 to-[#F5F5F0]0 flex items-center justify-center">
             <Bot className="w-6 h-6 text-white" />
           </div>
           <div>
@@ -102,7 +102,7 @@ export default function AIChat() {
             <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
               message.role === 'user'
                 ? 'bg-blue-500'
-                : 'bg-gradient-to-br from-green-500 to-emerald-500'
+                : 'bg-gradient-to-br from-[#F5F5F0]0 to-[#F5F5F0]0'
             }`}>
               {message.role === 'user' ? (
                 <User className="w-5 h-5 text-white" />
@@ -131,11 +131,11 @@ export default function AIChat() {
 
         {loading && (
           <div className="flex gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#F5F5F0]0 to-[#F5F5F0]0 flex items-center justify-center">
               <Bot className="w-5 h-5 text-white" />
             </div>
             <div className={`p-3 rounded-2xl ${isDark ? 'bg-white/10' : 'bg-gray-100'}`}>
-              <Loader className="w-5 h-5 animate-spin text-green-500" />
+              <Loader className="w-5 h-5 animate-spin text-[#F5F5F0]0" />
             </div>
           </div>
         )}
@@ -175,7 +175,7 @@ export default function AIChat() {
             onKeyPress={handleKeyPress}
             placeholder="Posez votre question agricole..."
             disabled={loading}
-            className={`flex-1 px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-green-500 ${
+            className={`flex-1 px-4 py-2 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-[#F5F5F0]0 ${
               isDark
                 ? 'bg-white/10 text-white placeholder-gray-400'
                 : 'bg-gray-100 text-gray-900 placeholder-gray-500'
@@ -186,7 +186,7 @@ export default function AIChat() {
             disabled={!input.trim() || loading}
             className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
               input.trim() && !loading
-                ? 'bg-gradient-to-r from-green-500 to-emerald-500 hover:shadow-lg'
+                ? 'bg-gradient-to-r from-[#F5F5F0]0 to-[#F5F5F0]0 hover:shadow-lg'
                 : isDark
                 ? 'bg-white/10 opacity-50'
                 : 'bg-gray-200 opacity-50'

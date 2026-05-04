@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from typing import Optional, List
 from datetime import datetime, date
 from uuid import UUID
@@ -77,6 +77,12 @@ class ListingResponse(ListingBase):
     created_at: datetime
     updated_at: datetime
     photos: List[ListingPhotoResponse] = []
+    
+    @computed_field
+    @property
+    def images(self) -> List[str]:
+        """Computed field: array of image URLs for frontend compatibility"""
+        return [photo.storage_key for photo in sorted(self.photos, key=lambda p: p.position)]
     
     class Config:
         from_attributes = True

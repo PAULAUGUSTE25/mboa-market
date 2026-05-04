@@ -1,0 +1,21 @@
+[Servers\MBOA Market]
+Host=localhost
+User=mboa_user
+Password=mboa_password
+Port=5432
+Database=mboa_market
+NetType=9
+Comment=Base de données MBOA Market - Plateforme Agro-Pastorale
+WindowsAuth=0
+CleartextPluginEnabled=0
+SSL=0
+SSLPrivateKey=
+SSLCACertificate=
+SSLCertificate=
+Compressed=0
+LocalTimeZone=0
+QueryTimeout=0
+KeepAlive=0
+FullTableStatus=1
+Databases=mboa_market
+TreeBackground=536870911

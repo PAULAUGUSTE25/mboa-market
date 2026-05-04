@@ -1,25 +1,25 @@
 /**
  * Couleurs officielles de MBOA Market
- * Utiliser ces constantes pour garantir la cohérence des couleurs dans toute l'application
+ * Palette Olive Premium (#3F441C) - Naturelle, élégante et sophistiquée
  */
 
 export const COLORS = {
-  // Vert agricole principal
+  // Olive Premium - Couleur signature MBOA
   agriculture: {
-    primary: '#2E7D32',
-    dark: '#1B5E20',
-    light: '#4CAF50',
-    gradient: 'linear-gradient(to right, #2E7D32, #1B5E20)',
-    gradientDiagonal: 'linear-gradient(to bottom right, #2E7D32, #1B5E20)',
+    primary: '#3F441C',      // Olive principal
+    dark: '#353916',         // Olive foncé
+    light: '#4A4F23',        // Olive clair
+    gradient: 'linear-gradient(to right, #3F441C, #353916)',
+    gradientDiagonal: 'linear-gradient(to bottom right, #3F441C, #353916)',
   },
   
-  // Amber pour élevage
+  // Olive Premium - Uniformité totale pour élevage
   elevage: {
-    primary: '#F59E0B',
-    dark: '#D97706',
-    light: '#FBBF24',
-    gradient: 'linear-gradient(to right, #F59E0B, #D97706)',
-    gradientDiagonal: 'linear-gradient(to bottom right, #F59E0B, #D97706)',
+    primary: '#3F441C',      // Olive principal
+    dark: '#353916',         // Olive foncé
+    light: '#4A4F23',        // Olive clair
+    gradient: 'linear-gradient(to right, #3F441C, #353916)',
+    gradientDiagonal: 'linear-gradient(to bottom right, #3F441C, #353916)',
   },
   
   // Rouge pour alertes/erreurs

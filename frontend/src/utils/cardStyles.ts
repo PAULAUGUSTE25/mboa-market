@@ -1,16 +1,17 @@
 // Utility pour les styles de cartes visibles en light/dark mode
 // Inspiré des styles de HomePage
 
-export const getCardStyles = (theme: 'light' | 'dark', color: 'emerald' | 'amber' | 'red' = 'emerald') => {
+export const getCardStyles = (theme: 'light' | 'dark', color: 'olive' | 'amber' | 'red' | 'emerald' = 'olive') => {
   if (theme === 'light') {
     const colorMap: Record<string, string> = {
-      emerald: '#2E7D32',
+      olive: '#3F441C',
       amber: '#F59E0B',
-      red: '#B71C1C'
+      red: '#B71C1C',
+      emerald: '#059669'
     };
     return {
       background: '#FFFFFF',
-      borderColor: colorMap[color] || '#2E7D32',
+      borderColor: colorMap[color] || '#3F441C',
       borderWidth: '3px',
     };
   }
@@ -47,7 +48,7 @@ export const getInputStyles = (theme: 'light' | 'dark', hasError: boolean = fals
       borderColor: hasError ? '#EF4444' : '#94A3B8',
       color: '#0F172A',
       placeholderColor: '#64748B',
-      focusBorderColor: hasError ? '#DC2626' : '#2E7D32',
+      focusBorderColor: hasError ? '#DC2626' : '#3F441C',
     };
   }
   
@@ -56,19 +57,20 @@ export const getInputStyles = (theme: 'light' | 'dark', hasError: boolean = fals
     borderColor: hasError ? 'rgba(239, 68, 68, 0.5)' : 'rgba(255, 255, 255, 0.2)',
     color: '#FFFFFF',
     placeholderColor: 'rgba(255, 255, 255, 0.6)',
-    focusBorderColor: hasError ? '#EF4444' : '#2E7D32',
+    focusBorderColor: hasError ? '#EF4444' : '#3F441C',
   };
 };
 
-export const getButtonStyles = (theme: 'light' | 'dark', variant: 'primary' | 'secondary' = 'primary', color: 'emerald' | 'amber' | 'red' = 'emerald') => {
+export const getButtonStyles = (theme: 'light' | 'dark', variant: 'primary' | 'secondary' = 'primary', color: 'olive' | 'amber' | 'red' | 'emerald' = 'olive') => {
   if (theme === 'light') {
     if (variant === 'primary') {
       const colorMap: Record<string, { bg: string; shadow: string }> = {
-        emerald: { bg: '#2E7D32', shadow: 'rgba(46, 125, 50, 0.5)' },
+        olive: { bg: '#3F441C', shadow: 'rgba(63, 68, 28, 0.5)' },
         amber: { bg: '#F59E0B', shadow: 'rgba(245, 158, 11, 0.5)' },
-        red: { bg: '#B71C1C', shadow: 'rgba(183, 28, 28, 0.5)' }
+        red: { bg: '#B71C1C', shadow: 'rgba(183, 28, 28, 0.5)' },
+        emerald: { bg: '#059669', shadow: 'rgba(5, 150, 105, 0.5)' }
       };
-      const colorStyle = colorMap[color] || colorMap.emerald;
+      const colorStyle = colorMap[color] || colorMap.olive;
       return {
         background: colorStyle.bg,
         borderColor: colorStyle.bg,
@@ -87,11 +89,11 @@ export const getButtonStyles = (theme: 'light' | 'dark', variant: 'primary' | 's
   
   if (variant === 'primary') {
     const darkColorMap: Record<string, { bg: string; border: string; text: string }> = {
-      emerald: { bg: 'rgba(16, 185, 129, 0.2)', border: 'rgba(16, 185, 129, 0.3)', text: '#34D399' },
+      olive: { bg: 'rgba(63, 68, 28, 0.2)', border: 'rgba(63, 68, 28, 0.3)', text: '#7A7D5C' },
       amber: { bg: 'rgba(251, 191, 36, 0.2)', border: 'rgba(251, 191, 36, 0.3)', text: '#FCD34D' },
       red: { bg: 'rgba(183, 28, 28, 0.2)', border: 'rgba(183, 28, 28, 0.3)', text: '#EF5350' }
     };
-    const colorStyle = darkColorMap[color] || darkColorMap.emerald;
+    const colorStyle = darkColorMap[color] || darkColorMap.olive;
     return {
       background: colorStyle.bg,
       borderColor: colorStyle.border,

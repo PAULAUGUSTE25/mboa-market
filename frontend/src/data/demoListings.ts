@@ -48,30 +48,84 @@ export const generateDemoListings = () => {
     listings.push(listing);
   };
 
-  // === ANCIENNES PUBLICATIONS (images locales) ===
-  createListing('Cacao - Fèves séchées', '/images/products/01-cacao.png', [800, 1500]);
-  createListing('Café Arabica', '/images/products/02-cafe-arabica.png', [2000, 4000]);
-  createListing('Café Robusta', '/images/products/03-cafe-robusta.png', [1500, 3000]);
-  createListing('Coton - Balles', '/images/products/04-coton.png', [300, 800]);
-  createListing('Canne à sucre', '/images/products/05-canne-sucre.png', [150, 400]);
-  createListing('Thé - Feuilles', '/images/products/06-the.png', [800, 1500]);
-  createListing('Hévéa - Latex', '/images/products/07-hevea.png', [400, 900]);
-  createListing('Macabo frais - Récolte du jour', '/macabo-fresh.png', [500, 1200]);
-  createListing('Plantain vert - Régime complet', '/plantain-fresh.png', [300, 800], 'régime');
-  createListing('Manioc frais - Tubercules de qualité', '/manioc-fresh.png', [200, 600]);
-  createListing('Houe traditionnelle (Daba) - Qualité artisanale', '/houe.png', [3000, 8000], 'pièce');
-  createListing('Arrosoir traditionnel - Capacité 10L', '/arosoire.png', [2000, 5000], 'pièce');
-  createListing('Tracteur agricole moderne - Avec charrue', '/tacteur.png', [15000000, 35000000], 'unité');
-  createListing('Porcelets de qualité - Race améliorée', '/porc.png', [25000, 80000], 'tête', 'elevage');
-  createListing('Porcs adultes - Prêts pour la vente', '/pig-farm.png', [80000, 150000], 'tête', 'elevage');
-  createListing('Porcs de race - Élevage commercial', '/porc-race.png', [90000, 180000], 'tête', 'elevage');
-  createListing('Poulets de chair - Prêts pour la vente', '/poulet-chair.png', [2500, 5000], 'tête', 'elevage');
-  createListing('Chèvres adultes - Bonne santé', '/chevre.png', [30000, 75000], 'tête', 'elevage');
-  createListing('Chèvres de race - Cornes recourbées', '/chevre-race.png', [40000, 90000], 'tête', 'elevage');
-  createListing('Alevins de poisson-chat - Qualité supérieure', '/poisson-chat.png', [50, 200], 'unité', 'elevage');
-  createListing('Aliment pour poissons Bluecrown - Sac 25kg', '/aliment-poisson.png', [15000, 35000], 'sac', 'elevage');
-  createListing('Bac pisciculture en bâche - 2m x 1m', '/bac-pisciculture.png', [80000, 200000], 'unité', 'elevage');
-  createListing('Bac pisciculture circulaire - Diamètre 2m', '/bac-rond-pisciculture.png', [100000, 250000], 'unité', 'elevage');
+  // Helper function for institutional listings (MINRESI, IRAD, MINADER)
+  const createInstitutionalListing = (institution: string, product: string, image: string, priceRange: [number, number], unit: string = 'kg', domain: 'agriculture' | 'elevage' = 'agriculture') => {
+    const listing = {
+      id: `demo-${id++}`,
+      seller_id: `institution-${id}`,
+      category_id: domain,
+      title: `${institution}: ${product}`,
+      variety: 'Programme institutionnel',
+      quantity: Math.floor(Math.random() * 1000) + 100,
+      unit: unit,
+      price_per_unit: Math.floor(Math.random() * (priceRange[1] - priceRange[0])) + priceRange[0],
+      currency: 'XAF',
+      region: 'Centre',
+      locality: 'Yaoundé',
+      status: 'PUBLISHED',
+      created_at: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString(),
+      seller: {
+        profile: {
+          display_name: institution,
+          activity_type: 'seed_provider',
+          domain: domain
+        }
+      },
+      images: [image]
+    };
+    listings.push(listing);
+  };
+
+  // === PUBLICATIONS AGRICULTURE ===
+  createListing('Cacao - Fèves séchées', '/images/agriculture/01-cacao.png', [800, 1500]);
+  createListing('Café Arabica de qualité', '/images/agriculture/02-cafe-arabica.png', [2000, 4000]);
+  createListing('Café Robusta sélectionné', '/images/agriculture/03-cafe-robusta.png', [1500, 3000]);
+  createListing('Cacao de Mr Etoga - 750kg disponible', '/images/agriculture/cacao_de_mr_etoga_750kg_dispo.jpg', [1000, 1500]);
+  createListing('Café sélectionné - Qualité premium', '/images/agriculture/cafe_selectioné.jpg', [2500, 4500]);
+  createListing('Café de Tolé - Production locale', '/images/agriculture/cafe_de_tolé.jpg', [2000, 4000]);
+  createListing('Arrivage de 4 tonnes de Macabo', '/images/agriculture/arivage_de_4_tone_de_macabo.jpg', [600, 1200]);
+  createListing('Bonne qualité de Macabo', '/images/agriculture/bonne_qualite_de_macabo.jpg', [500, 1000]);
+  createListing('Macabo frais - Récolte du jour', '/images/agriculture/macabo-fresh.png', [500, 1200]);
+  createListing('Bon Manioc - Tubercules frais', '/images/agriculture/bonmanioc.jpg', [250, 600]);
+  createListing('Manioc frais - Qualité supérieure', '/images/agriculture/manioc-fresh.png', [200, 600]);
+  createListing('Arrivage Patate - Fraîche', '/images/agriculture/ariivage_patate.jpg', [300, 700]);
+  createListing('Pomme de Tonga - Fraîche', '/images/agriculture/pomme_de_tonga.jpg', [200, 500]);
+  createListing('Arrivage Plantain', '/images/agriculture/arivage_plat.jpg', [400, 900], 'régime');
+  createListing('Plantain mûr - Prêt à consommer', '/images/agriculture/plantain_mur.jpg', [450, 950], 'régime');
+  createListing('Plantain vert - Régime complet', '/images/agriculture/plantain-fresh.png', [300, 800], 'régime');
+  createListing('Banane plantain - Qualité export', '/images/agriculture/banane_cochon.jpg', [400, 850], 'régime');
+  createListing('Tomate de haute qualité', '/images/agriculture/tomate_de_haute_qualite.jpg', [400, 900]);
+  createListing('Laitue sélectionnée - Bio', '/images/agriculture/letu_selectioné.jpg', [300, 700]);
+  createListing('Igname de Batibo - Grande taille', '/images/agriculture/yam_for_batibo.jpg', [500, 1200]);
+  createListing('Cotton de la SODECOTON', '/images/agriculture/cotton_de_la_sodecoton.jpg', [350, 800]);
+  createListing('Champ de Maïs - Récolte abondante', '/images/backgrounds/champs_de_maise.jpg', [200, 450]);
+
+  // === PUBLICATIONS ÉLEVAGE ===
+  createListing('Porc femelle sans graisse', '/images/livestock/porc_female_sans_graisse.jpg', [85000, 170000], 'tête', 'elevage');
+  createListing('Porc long châssis', '/images/livestock/pourc_long_chassi.jpg', [95000, 190000], 'tête', 'elevage');
+  createListing('Porcelet race sélectionnée', '/images/livestock/porcelet_race_selectioné.jpg', [30000, 70000], 'tête', 'elevage');
+  createListing('Porcelet à vendre', '/images/livestock/porcellet_a_vendre.jpg', [25000, 65000], 'tête', 'elevage');
+  createListing('Porcs adultes - Prêts pour la vente', '/images/livestock/porc.jpg', [80000, 150000], 'tête', 'elevage');
+  createListing('Poulet de chair 35 jours - Ferme Ndefo', '/images/livestock/poulet_35_jour_ferme_ndefo.jpg', [3000, 6000], 'tête', 'elevage');
+  createListing('Poulet de chair 35 jours', '/images/livestock/poulet_de_chaire_35_jour.jpg', [2800, 5500], 'tête', 'elevage');
+  createListing('Poulets - Prêts à vendre', '/images/livestock/poulet-chair.png', [2500, 5000], 'tête', 'elevage');
+  createListing('Poussin 21 jours - Vente', '/images/livestock/vente_pousin_21_jour.jpg', [1500, 3000], 'tête', 'elevage');
+  createListing('Coq de ferme - Reproducteur', '/images/livestock/coq_de_ferme.jpg', [5000, 10000], 'tête', 'elevage');
+  createListing('Chèvre de Bazou', '/images/livestock/chevre_de_bazou.jpg', [35000, 80000], 'tête', 'elevage');
+  createListing('Chèvre de l\'Ouest - Race locale', '/images/livestock/chevre_de_louest.jpg', [40000, 85000], 'tête', 'elevage');
+  createListing('Chèvres adultes - Bonne santé', '/images/livestock/chevre.png', [30000, 75000], 'tête', 'elevage');
+  createListing('Lapin de chair à vendre', '/images/livestock/lapin_de_chaire_a_vendre.jpg', [8000, 16000], 'tête', 'elevage');
+  createListing('Lapin de race Albinos', '/images/livestock/lapin_de_race_albinous.jpg', [10000, 20000], 'tête', 'elevage');
+  createListing('Carpe grise de la Bénoué', '/images/livestock/carpe_grise_de_la_benue.jpg', [2500, 5000], 'kg', 'elevage');
+  createListing('Carpe rouge du lac', '/images/livestock/carpe_rouge_du_lack.jpg', [3000, 6000], 'kg', 'elevage');
+  createListing('Bars frais Kribi', '/images/livestock/bars_frais_kribi.jpg', [3500, 7000], 'kg', 'elevage');
+  createListing('Bars bossu Kribi', '/images/livestock/bars_bossu_kribi.jpg', [3200, 6500], 'kg', 'elevage');
+  createListing('Poisson frais - Pêche du jour', '/images/livestock/pioson_frais.jpg', [2000, 4500], 'kg', 'elevage');
+  createListing('Alevins - Poisson-chat', '/images/livestock/alevin_status_pous_lutilisatueur_quand_cest_elevage.jpg', [50, 250], 'unité', 'elevage');
+
+  // === PUBLICATIONS INSTITUTIONNELLES ===
+  createInstitutionalListing('NDAWARA TEA', 'Champ de thé Ndawara - Production locale', '/images/backgrounds/champ_de_ndawara_tea.jpg', [1500, 3000], 'kg');
+  createInstitutionalListing('SODECOTON', 'Cotton de la SODECOTON - Production certifiée', '/images/agriculture/cotton_de_la_sodecoton.jpg', [350, 800], 'kg');
 
   // === NOUVELLES PUBLICATIONS (images Unsplash) ===
   // Légumes frais

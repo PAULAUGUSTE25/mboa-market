@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="chickenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FEF3C7;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#FDE047;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  <ellipse cx="32" cy="38" rx="16" ry="12" fill="url(#chickenGrad)" stroke="#92400E" stroke-width="2"/>
+  <circle cx="32" cy="22" r="10" fill="url(#chickenGrad)" stroke="#92400E" stroke-width="2"/>
+  <path d="M 26 18 Q 22 16 20 18 Q 18 20 20 22 Q 22 24 26 22 Z" fill="#DC2626" stroke="#7F1D1D" stroke-width="1.5"/>
+  <circle cx="28" cy="22" r="1.5" fill="#1F2937"/>
+  <circle cx="36" cy="22" r="1.5" fill="#1F2937"/>
+  <path d="M 32 26 L 34 28 L 30 28 Z" fill="#F59E0B" stroke="#92400E" stroke-width="1"/>
+  <ellipse cx="24" cy="48" rx="3" ry="6" fill="#F59E0B" stroke="#92400E" stroke-width="1.5"/>
+  <ellipse cx="40" cy="48" rx="3" ry="6" fill="#F59E0B" stroke="#92400E" stroke-width="1.5"/>
+  <path d="M 24 54 L 22 56 L 26 56 L 24 54" fill="#F59E0B" stroke="#92400E" stroke-width="1"/>
+  <path d="M 40 54 L 38 56 L 42 56 L 40 54" fill="#F59E0B" stroke="#92400E" stroke-width="1"/>
+  <path d="M 44 36 Q 48 34 50 36 Q 52 38 50 40 Q 48 42 44 40 Z" fill="#FDE047" stroke="#92400E" stroke-width="1.5"/>
+</svg>

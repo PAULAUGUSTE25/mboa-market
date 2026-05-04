@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { api } from '@/services/api';
 
 interface User {
@@ -25,7 +26,9 @@ interface AuthState {
   clearError: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
   user: null,
   loading: false,
   error: null,
@@ -66,4 +69,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   setUser: (user) => set({ user }),
   
   clearError: () => set({ error: null }),
-}));
+    }),
+    { name: 'mboa-auth-storage' }
+  )
+);

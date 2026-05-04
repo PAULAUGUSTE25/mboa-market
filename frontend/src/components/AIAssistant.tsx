@@ -6,6 +6,7 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { useDomain } from '@/contexts/DomainContext';
 import { getDomainColors } from '@/utils/colors';
 import { useAuthStore } from '@/store/authStore';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Message {
   id: string;
@@ -18,12 +19,13 @@ export default function AIAssistant() {
   const { theme } = useTheme();
   const { selectedDomain } = useDomain();
   const { user } = useAuthStore();
+  const { t } = useLanguage();
   const domainColors = getDomainColors(selectedDomain);
   const [isOpen, setIsOpen] = useState(false);
   
   const getWelcomeMessage = () => {
-    const userName = (user?.profile as any)?.display_name || 'cher utilisateur';
-    return `Bonjour ${userName}! Je suis Bigiss, votre assistant personnel MBOA Market. Comment puis-je vous aider aujourd'hui?`;
+    const userName = (user?.profile as any)?.display_name || t('cher utilisateur', 'dear user');
+    return t(`Bonjour ${userName}! Je suis Bigiss, votre assistant personnel MBOA Market. Comment puis-je vous aider aujourd'hui?`, `Hello ${userName}! I am Bigiss, your personal MBOA Market assistant. How can I help you today?`);
   };
   
   const [messages, setMessages] = useState<Message[]>([
@@ -78,7 +80,7 @@ export default function AIAssistant() {
     setIsLoading(true);
 
     try {
-      const userName = (user?.profile as any)?.display_name || 'l\'utilisateur';
+      const userName = (user?.profile as any)?.display_name || t('l\'utilisateur', 'the user');
       const response = await multiAI.generateResponse(
         userMessage.text, 
         `Tu es Bigiss, l'assistant personnel de ${userName} sur MBOA Market au Cameroun. Tu aides avec l'agriculture et l'élevage. Réponds de manière amicale et professionnelle.`
@@ -96,7 +98,7 @@ export default function AIAssistant() {
       console.error('Error getting AI response:', error);
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        text: "Désolé, j'ai rencontré une erreur. Veuillez réessayer plus tard.",
+        text: t("Désolé, j'ai rencontré une erreur. Veuillez réessayer plus tard.", "Sorry, I encountered an error. Please try again later."),
         sender: 'ai',
         timestamp: new Date()
       };
@@ -128,8 +130,8 @@ export default function AIAssistant() {
                 <div>
                   <h3 className="font-bold text-white text-sm">Bigiss</h3>
                   <p className="text-xs text-white/80 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
-                    En ligne
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#7A7D5C] animate-pulse" />
+                    {t('En ligne', 'Online')}
                   </p>
                 </div>
               </div>
@@ -159,7 +161,7 @@ export default function AIAssistant() {
                     style={msg.sender === 'user' ? { backgroundColor: domainColors.primary } : undefined}
                   >
                     {msg.text}
-                    <div className={`text-[10px] mt-1 ${msg.sender === 'user' ? 'text-emerald-200' : 'opacity-60'}`}>
+                    <div className={`text-[10px] mt-1 ${msg.sender === 'user' ? 'text-[#D9DAC8]' : 'opacity-60'}`}>
                       {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
@@ -184,8 +186,8 @@ export default function AIAssistant() {
                   type="text"
                   value={inputText}
                   onChange={(e) => setInputText(e.target.value)}
-                  placeholder="Posez votre question..."
-                  className={`flex-1 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all ${
+                  placeholder={t('Posez votre question...', 'Ask your question...')}
+                  className={`flex-1 px-4 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3F441C] transition-all ${
                     theme === 'dark' 
                       ? 'bg-white/10 text-white placeholder-white/40 border border-white/10' 
                       : 'bg-white text-gray-900 border border-gray-200'

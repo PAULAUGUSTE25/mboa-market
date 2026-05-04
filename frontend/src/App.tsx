@@ -2,10 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
 import SelectSectorPage from './pages/SelectSectorPage'
 import LoginPage from './pages/LoginPage'
-import LoginAgriculturePage from './pages/LoginAgriculturePage'
-import LoginElevagePage from './pages/LoginElevagePage'
 import RegisterPage from './pages/RegisterPage'
-import HomePage from './pages/HomePage'
 import FeedPage from './pages/FeedPage'
 import ChatPage from './pages/ChatPage'
 import AdvicePage from './pages/AdvicePage'
@@ -23,19 +20,23 @@ import AgriDashboardPage from './pages/AgriDashboardPage'
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage'
 import AIAssistant from './components/AIAssistant'
 import { DomainProvider } from './contexts/DomainContext'
+import { UserFarmProvider } from './contexts/UserFarmContext'
+import { LanguageProvider } from './contexts/LanguageContext'
 
 function App() {
   const { user } = useAuthStore()
 
   return (
+    <LanguageProvider>
     <DomainProvider>
+    <UserFarmProvider>
     <div className="min-h-screen relative">
       <AIAssistant />
       {/* Background Light Mode */}
       <div 
         className="fixed inset-0 bg-cover bg-center"
         style={{
-          backgroundImage: `url('/light%20mode%20.png')`,
+          backgroundImage: `url('/images/backgrounds/light_mode.png')`,
           zIndex: -2,
         }}
       />
@@ -49,14 +50,12 @@ function App() {
       />
       
       <Routes>
-      <Route path="/" element={<HomePage />} />
+      <Route path="/" element={<LoginPage />} />
       <Route path="/feed" element={<FeedPage />} />
       <Route path="/chat" element={<ChatPage />} />
       <Route path="/advice" element={<AdvicePage />} />
       <Route path="/select-sector" element={<SelectSectorPage />} />
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/login/agriculture" element={<LoginAgriculturePage />} />
-      <Route path="/login/elevage" element={<LoginElevagePage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/listings" element={<ListingsPage />} />
       <Route path="/listings/:id" element={<ListingDetailPage />} />
@@ -102,7 +101,9 @@ function App() {
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
     </div>
+    </UserFarmProvider>
     </DomainProvider>
+    </LanguageProvider>
   )
 }
 

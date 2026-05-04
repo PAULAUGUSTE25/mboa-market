@@ -3,8 +3,8 @@
 export const getThemeStyles = (theme: 'light' | 'dark') => ({
   // Background gradients
   background: theme === 'light'
-    ? 'from-emerald-100/90 via-teal-100/85 to-amber-100/90'
-    : 'from-green-950/85 via-teal-950/80 to-amber-950/85',
+    ? 'from-[#EEEEE5]/90 via-blue-100/85 to-[#EEEEE5]/90'
+    : 'from-indigo-950/85 via-blue-950/80 to-purple-950/85',
   
   // Animated background blobs
   blobs: theme === 'light'
@@ -12,8 +12,8 @@ export const getThemeStyles = (theme: 'light' | 'dark') => ({
     : 'opacity-20',
   
   blobColors: theme === 'light'
-    ? ['bg-emerald-200', 'bg-amber-200', 'bg-teal-200']
-    : ['bg-green-400', 'bg-amber-400', 'bg-teal-400'],
+    ? ['bg-[#D9DAC8]', 'bg-blue-200', 'bg-[#D9DAC8]']
+    : ['bg-[#7A7D5C]', 'bg-blue-400', 'bg-[#7A7D5C]'],
   
   // Header/Navigation
   header: theme === 'light'
@@ -30,7 +30,7 @@ export const getThemeStyles = (theme: 'light' | 'dark') => ({
   
   // Cards
   card: theme === 'light'
-    ? 'backdrop-blur-md bg-white/95 border-2 border-emerald-300 shadow-xl'
+    ? 'backdrop-blur-md bg-white/95 border-2 border-[#B8BAAA] shadow-xl'
     : 'bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-lg',
   
   // Modals
@@ -48,12 +48,12 @@ export const getThemeStyles = (theme: 'light' | 'dark') => ({
   
   // Inputs
   input: theme === 'light'
-    ? 'bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-emerald-500'
-    : 'backdrop-blur-md bg-white/10 border border-white/20 text-white placeholder-white/50 focus:border-emerald-500/50',
+    ? 'bg-gray-50 border border-gray-300 text-gray-900 placeholder-gray-500 focus:border-[#F5F5F0]0'
+    : 'backdrop-blur-md bg-white/10 border border-white/20 text-white placeholder-white/50 focus:border-[#F5F5F0]0/50',
   
   // Buttons
   button: {
-    primary: 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white hover:from-emerald-600 hover:to-emerald-700',
+    primary: 'bg-gradient-to-br from-[#F5F5F0]0 to-[#3F441C] text-white hover:from-[#3F441C] hover:to-[#353916]',
     secondary: theme === 'light'
       ? 'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300'
       : 'backdrop-blur-md bg-white/10 hover:bg-white/20 text-white border border-white/20',
@@ -64,9 +64,9 @@ export const getThemeStyles = (theme: 'light' | 'dark') => ({
   
   // Badges/Pills
   badge: {
-    emerald: theme === 'light'
-      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-      : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30',
+    indigo: theme === 'light'
+      ? 'bg-[#F5F5F0] text-[#353916] border border-[#D9DAC8]'
+      : 'bg-[#F5F5F0]0/20 text-[#7A7D5C] border border-[#F5F5F0]0/30',
     amber: theme === 'light'
       ? 'bg-amber-50 text-amber-700 border border-amber-200'
       : 'bg-amber-500/20 text-amber-400 border border-amber-500/30',
@@ -78,8 +78,8 @@ export const getThemeStyles = (theme: 'light' | 'dark') => ({
   // Message bubbles (chat)
   message: {
     sent: theme === 'light'
-      ? 'bg-gradient-to-br from-emerald-500 to-emerald-600 text-white'
-      : 'bg-gradient-to-br from-emerald-500/90 to-emerald-600/80 text-white border border-emerald-400/30',
+      ? 'bg-gradient-to-br from-[#F5F5F0]0 to-[#3F441C] text-white'
+      : 'bg-gradient-to-br from-[#3F441C]/90 to-[#3F441C]/80 text-white border border-[#7A7D5C]/30',
     received: theme === 'light'
       ? 'bg-white text-gray-900 border border-gray-200'
       : 'backdrop-blur-md bg-white/20 text-white border border-white/30',
@@ -90,7 +90,7 @@ export const getThemeStyles = (theme: 'light' | 'dark') => ({
   
   // Icons
   icon: {
-    primary: theme === 'light' ? 'text-emerald-600' : 'text-emerald-400',
+    primary: theme === 'light' ? 'text-[#3F441C]' : 'text-[#7A7D5C]',
     secondary: theme === 'light' ? 'text-gray-600' : 'text-white/70',
   },
 });

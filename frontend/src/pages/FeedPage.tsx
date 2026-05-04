@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
-import { MessageCircle, Heart, MapPin, Package, Plus, X, ShoppingCart, Globe, Wheat, Beef, PackageSearch, Sprout, User, Send, Search, Clock, TrendingUp, TrendingDown, Minus, Sparkles, Star, Home, Activity, ShoppingBag, Leaf, Truck, BarChart3 } from 'lucide-react';
+import { MessageCircle, Heart, MapPin, Package, Plus, X, ShoppingCart, Globe, Wheat, Beef, PackageSearch, Sprout, User, Send, Search, Clock, TrendingUp, TrendingDown, Minus, Sparkles, Star, Home, Activity, ShoppingBag, Leaf, Truck, BarChart3, Users } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getCardStyles, getTextStyles, getInputStyles, getButtonStyles } from '@/utils/cardStyles';
@@ -10,6 +10,7 @@ import { getDomainColors } from '@/utils/colors';
 import { useDomain } from '@/contexts/DomainContext';
 import { voiceAssistant } from '@/services/voiceAssistant';
 import { Mic, MicOff, Volume2 } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Listing {
   id: string;
@@ -50,6 +51,7 @@ export default function FeedPage() {
   const [loading, setLoading] = useState(true);
   const [showCreatePost, setShowCreatePost] = useState(false);
   const { selectedDomain: selectedSector, setSelectedDomain: setSelectedSector } = useDomain();
+  const { t, lang } = useLanguage();
   const [selectedFilter, setSelectedFilter] = useState<'domain' | 'specialization'>('domain');
   const [searchQuery, setSearchQuery] = useState('');
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
@@ -81,10 +83,10 @@ export default function FeedPage() {
     
     if (wasAdded) {
       newFavorites.add(listingId);
-      setToastMessage({ text: `❤️ "${listingTitle || 'Article'}" ajouté aux favoris`, type: 'success' });
+      setToastMessage({ text: `"${listingTitle || t('Article', 'Item')}" ${t('ajouté aux favoris', 'added to favorites')}`, type: 'success' });
     } else {
       newFavorites.delete(listingId);
-      setToastMessage({ text: `💔 Retiré des favoris`, type: 'info' });
+      setToastMessage({ text: t('Retiré des favoris', 'Removed from favorites'), type: 'info' });
     }
     
     setFavorites(newFavorites);
@@ -399,7 +401,7 @@ export default function FeedPage() {
           realListings = allResponse.items || [];
         }
       } catch (apiError) {
-        console.warn('Could not load real listings from API:', apiError);
+        // Chargement des annonces réelles échoué, affichage des données de démonstration
       }
       
       // Combine real listings with demo listings (always show both)
@@ -410,7 +412,6 @@ export default function FeedPage() {
       
       setListings(allListings);
     } catch (error) {
-      console.error('Failed to load feed:', error);
     } finally {
       setLoading(false);
     }
@@ -431,7 +432,6 @@ export default function FeedPage() {
         setCategories(data);
       }
     } catch (error) {
-      console.error('Failed to load categories:', error);
       // Fallback to demo categories on error
       const demoCategories = [
         { id: 'agriculture', name_fr: 'Agriculture', name_en: 'Agriculture' },
@@ -623,10 +623,9 @@ export default function FeedPage() {
             existingConversations.unshift(newConversation);
             localStorage.setItem('demo_conversations', JSON.stringify(existingConversations));
             
-            alert('✅ Conversation sauvegardée! Vous pouvez la retrouver dans l\'onglet Messages.');
+            alert('Conversation sauvegardée! Vous pouvez la retrouver dans l\'onglet Messages.');
           } catch (error) {
-            console.error('Failed to save demo conversation:', error);
-            alert('⚠️ Erreur lors de la sauvegarde locale.');
+            alert('Erreur lors de la sauvegarde locale.');
           }
         } else {
           // Real listing - save to backend
@@ -637,11 +636,9 @@ export default function FeedPage() {
               initial_message: myMessages
             });
             
-            console.log('Conversation saved:', result);
-            alert('✅ Conversation sauvegardée! Vous pouvez la retrouver dans l\'onglet Messages.');
+            alert('Conversation sauvegardée! Vous pouvez la retrouver dans l\'onglet Messages.');
           } catch (error: any) {
-            console.error('Failed to save conversation:', error);
-            alert(`⚠️ Erreur lors de la sauvegarde: ${error?.response?.data?.message || error?.message || 'Erreur inconnue'}\n\nLa conversation n'a pas été sauvegardée.`);
+            alert(`Erreur lors de la sauvegarde: ${error?.response?.data?.message || error?.message || 'Erreur inconnue'}`);
           }
         }
       }
@@ -696,8 +693,7 @@ export default function FeedPage() {
         // Try to create via API
         await api.createListing(listingData);
       } catch (apiError) {
-        console.warn('API creation failed, storing locally:', apiError);
-        
+          
         // Fallback: Store locally and add to current listings
         const newListing = {
           id: `local-${Date.now()}`,
@@ -734,11 +730,10 @@ export default function FeedPage() {
       setPreviewUrls([]);
       setShowCreatePost(false);
       
-      alert('✅ Publication créée avec succès!');
+      alert('Publication créée avec succès!');
     } catch (error: any) {
-      console.error('Failed to create post:', error);
       const errorMessage = error?.response?.data?.message || error?.message || 'Erreur inconnue';
-      alert(`❌ Erreur lors de la création de la publication:\n${errorMessage}\n\nVeuillez vérifier tous les champs requis.`);
+      alert(`Erreur lors de la création de la publication: ${errorMessage}`);
     }
   };
 
@@ -788,6 +783,26 @@ export default function FeedPage() {
     return true;
   });
 
+  const translateName = (name: string) => {
+    if (lang === 'en') {
+      return name
+        .replace(/\bProducteur\b/g, 'Producer')
+        .replace(/\bAcheteur\b/g, 'Buyer')
+        .replace(/\bFournisseur\b/g, 'Supplier');
+    }
+    return name;
+  };
+
+  const translateTitle = (title: string) => {
+    if (lang === 'en') {
+      return title
+        .replace(/^VENTE:\s*/i, 'SALE: ')
+        .replace(/^ACHAT:\s*/i, 'BUY: ')
+        .replace(/^FOURNITURE:\s*/i, 'SUPPLY: ');
+    }
+    return title;
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -796,6 +811,13 @@ export default function FeedPage() {
     const diffHours = Math.floor(diffMs / 3600000);
     const diffDays = Math.floor(diffMs / 86400000);
 
+    if (lang === 'en') {
+      if (diffMins < 1) return 'Just now';
+      if (diffMins < 60) return `${diffMins} min ago`;
+      if (diffHours < 24) return `${diffHours}h ago`;
+      if (diffDays < 7) return `${diffDays}d ago`;
+      return date.toLocaleDateString('en-GB');
+    }
     if (diffMins < 1) return 'À l\'instant';
     if (diffMins < 60) return `Il y a ${diffMins} min`;
     if (diffHours < 24) return `Il y a ${diffHours}h`;
@@ -839,7 +861,7 @@ export default function FeedPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
                 <input
                   type="text"
-                  placeholder="Rechercher produits, vendeurs..."
+                  placeholder={t('Rechercher produits, vendeurs...', 'Search products, sellers...')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onFocus={() => setSearchFocused(true)}
@@ -1094,11 +1116,7 @@ export default function FeedPage() {
                   >
                     <MessageCircle className="h-5 w-5" strokeWidth={2} />
                     {/* Notification Badge - Dynamic */}
-                    {unreadMessages > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 min-w-[20px] h-[20px] flex items-center justify-center bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold rounded-full px-1 shadow-lg animate-bounce">
-                        {unreadMessages > 9 ? '9+' : unreadMessages}
-                      </span>
-                    )}
+                    {/* Badge désactivé - pas de messages réels */}
                   </button>
                   
                   <button
@@ -1127,8 +1145,8 @@ export default function FeedPage() {
                   className="px-4 py-2 rounded-full font-semibold shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-105 active:scale-95 text-sm whitespace-nowrap text-white"
                   style={{ backgroundColor: getDomainColors(selectedSector).primary }}
                 >
-                  <span className="hidden sm:inline">Se connecter</span>
-                  <span className="sm:hidden">Connexion</span>
+                  <span className="hidden sm:inline">{t('Se connecter', 'Log in')}</span>
+                  <span className="sm:hidden">{t('Connexion', 'Login')}</span>
                 </button>
               )}
             </div>
@@ -1146,7 +1164,7 @@ export default function FeedPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
             <input
               type="text"
-              placeholder="Rechercher produits, vendeurs..."
+              placeholder={t('Rechercher produits, vendeurs...', 'Search products, sellers...')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onBlur={() => setTimeout(() => setSearchFocused(false), 200)}
@@ -1182,19 +1200,20 @@ export default function FeedPage() {
               style={getButtonStyles(theme, 'secondary', 'emerald')}
             >
               <Plus className="h-5 w-5" />
-              <span>Créer une publication</span>
+              <span>{t('Créer une publication', 'Create a post')}</span>
             </button>
           </div>
 
           {/* Navigation Links */}
           <div className={`rounded-2xl p-2 ${theme === 'dark' ? 'bg-white/[0.03] border border-white/10' : 'bg-white shadow-sm'}`}>
             {[
-              { icon: BarChart3, label: 'Tableau de Bord', path: '/dashboard' },
-              { icon: User, label: 'Mon Compte', path: '/profile' },
-              { icon: Home, label: 'Fil d\'actualité', path: '/feed', active: true },
-              { icon: MessageCircle, label: 'Messages', path: '/chat', badge: unreadMessages },
-              { icon: Activity, label: 'Mon Activité', path: '/my-activity' },
+              { icon: Home, label: t('Fil d\'actualité', 'Home'), path: '/feed', active: true },
+              { icon: BarChart3, label: t('Tableau de Bord', 'Dashboard'), path: '/dashboard' },
+              { icon: Users, label: t('Communauté', 'Community'), path: selectedSector === 'elevage' ? '/community/elevage' : '/community/agriculture' },
+              { icon: MessageCircle, label: t('Messages', 'Messages'), path: '/chat', badge: 0 },
               { icon: ShoppingBag, label: 'Marketplace', path: '/listings' },
+              { icon: User, label: t('Mon Compte', 'My Account'), path: '/profile' },
+              { icon: Activity, label: t('Mon Activité', 'My Activity'), path: '/my-activity' },
             ].map((item, idx) => (
               <button
                 key={idx}
@@ -1218,7 +1237,7 @@ export default function FeedPage() {
           {/* Quick Access */}
           <div className={`rounded-2xl p-4 ${theme === 'dark' ? 'bg-white/[0.03] border border-white/10' : 'bg-white shadow-sm'}`}>
             <h3 className="text-xs font-bold uppercase tracking-wider mb-3 px-2" style={{ color: getTextStyles(theme).muted }}>
-              Raccourcis
+              {t('Raccourcis', 'Shortcuts')}
             </h3>
             <div className="space-y-1">
               <button 
@@ -1237,7 +1256,7 @@ export default function FeedPage() {
                 <div className="w-8 h-8 rounded-lg bg-amber-100 flex items-center justify-center">
                   <Truck className="w-4 h-4 text-amber-600" />
                 </div>
-                <span className="text-sm font-medium" style={{ color: getTextStyles(theme).title }}>Élevage</span>
+                <span className="text-sm font-medium" style={{ color: getTextStyles(theme).title }}>{t('Élevage', 'Livestock')}</span>
               </button>
             </div>
           </div>
@@ -1245,61 +1264,7 @@ export default function FeedPage() {
 
         {/* Middle Column - Feed - Centered like Facebook */}
         <div className="w-full xl:ml-[280px] xl:mr-[360px] px-4 xl:px-8 space-y-6 pb-20">
-            {/* Stories/Status Section */}
-            <div className="flex gap-2 sm:gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2 sm:mx-0 sm:px-0">
-              {/* Add Story Button */}
-              <button className="flex-shrink-0 w-24 h-40 sm:w-28 sm:h-48 rounded-2xl relative overflow-hidden group shadow-md hover:shadow-lg transition-all duration-300">
-                <div className={`absolute inset-0 ${theme === 'dark' ? 'bg-[#1a1a1a]' : 'bg-gray-100'} transition-transform duration-500 group-hover:scale-110`}>
-                  {(user?.profile as any)?.avatar_url && (
-                    <img src={(user.profile as any).avatar_url} alt="" className="w-full h-full object-cover opacity-60" />
-                  )}
-                </div>
-                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
-                <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 w-full">
-                  <div className="w-8 h-8 rounded-full border-2 border-[#060D0A] flex items-center justify-center text-white shadow-lg group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: getDomainColors(selectedSector).primary }}>
-                    <Plus className="w-5 h-5" />
-                  </div>
-                  <span className="text-xs font-semibold text-white text-center w-full px-1 truncate">Créer une story</span>
-                </div>
-              </button>
-
-              {/* Demo Stories */}
-              {[
-                { id: 1, name: 'Marie Agricultrice', image: 'https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=400&h=600&fit=crop', time: 'Il y a 2h' },
-                { id: 2, name: 'Jean Éleveur', image: 'https://images.unsplash.com/photo-1500595046743-cd271d694d30?w=400&h=600&fit=crop', time: 'Il y a 3h' },
-                { id: 3, name: 'Fatou Maraîchère', image: 'https://images.unsplash.com/photo-1574943320219-553eb213f72d?w=400&h=600&fit=crop', time: 'Il y a 4h' },
-                { id: 4, name: 'Amadou Producteur', image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?w=400&h=600&fit=crop', time: 'Il y a 5h' },
-                { id: 5, name: 'Aïcha Semencière', image: 'https://images.unsplash.com/photo-1592982537447-6f2a6a0c8b8b?w=400&h=600&fit=crop', time: 'Il y a 6h' },
-              ].map((story) => (
-                <button 
-                  key={story.id} 
-                  onClick={() => {
-                    setActiveStory(story);
-                    setStoryProgress(0);
-                  }}
-                  className="flex-shrink-0 w-24 h-40 sm:w-28 sm:h-48 rounded-2xl relative overflow-hidden group shadow-md hover:shadow-lg transition-all duration-300"
-                >
-                  <div className="absolute inset-0 bg-gray-800 transition-transform duration-500 group-hover:scale-110">
-                    <img 
-                      src={story.image} 
-                      alt={story.name} 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black/60" />
-                  <div className="absolute top-3 left-3 w-8 h-8 rounded-full border-2 p-0.5 bg-black/20 backdrop-blur-sm" style={{ borderColor: getDomainColors(selectedSector).primary }}>
-                    <img 
-                      src={`https://i.pravatar.cc/100?img=${story.id + 10}`} 
-                      alt="" 
-                      className="w-full h-full rounded-full object-cover" 
-                    />
-                  </div>
-                  <div className="absolute bottom-3 left-3 right-3">
-                    <span className="text-xs font-semibold text-white truncate block">{story.name}</span>
-                  </div>
-                </button>
-              ))}
-            </div>
+            {/* Stories/Status Section - SUPPRIMÉ POUR LA PRÉSENTATION */}
 
             {/* Create Post Input (Mobile/Tablet) */}
             <div className={`lg:hidden rounded-2xl p-4 shadow-sm border ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}>
@@ -1317,7 +1282,7 @@ export default function FeedPage() {
                   onClick={() => alert('Fonction de création en cours de développement')}
                   className={`flex-1 text-left px-4 py-2.5 rounded-full text-sm transition-colors ${theme === 'dark' ? 'bg-white/5 text-gray-400 hover:bg-white/10' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                 >
-                  Quoi de neuf, {user?.profile?.display_name?.split(' ')[0] || 'Agriculteur'} ?
+                  {t('Quoi de neuf', "What's new")}, {user?.profile?.display_name?.split(' ')[0] || t('Agriculteur', 'Farmer')} ?
                 </button>
               </div>
             </div>
@@ -1345,14 +1310,14 @@ export default function FeedPage() {
                   <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${theme === 'dark' ? 'bg-white/5 text-gray-600' : 'bg-gray-100 text-gray-400'}`}>
                     <PackageSearch className="w-8 h-8" />
                   </div>
-                  <h3 className="text-lg font-medium mb-2" style={{ color: getTextStyles(theme).title }}>Aucune publication trouvée</h3>
-                  <p style={{ color: getTextStyles(theme).muted }}>Essayez de modifier vos filtres ou effectuez une nouvelle recherche.</p>
+                  <h3 className="text-lg font-medium mb-2" style={{ color: getTextStyles(theme).title }}>{t('Aucune publication trouvée', 'No listings found')}</h3>
+                  <p style={{ color: getTextStyles(theme).muted }}>{t('Essayez de modifier vos filtres ou effectuez une nouvelle recherche.', 'Try changing your filters or search again.')}</p>
                 </div>
               ) : (
                 filteredListings.map((listing) => (
                   <div 
                     key={listing.id}
-                    className={`rounded-2xl shadow-sm border overflow-hidden transition-all hover:shadow-md ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}
+                    className={`rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}
                   >
                     {/* Post Header */}
                     <div className="p-4 flex items-center justify-between">
@@ -1389,15 +1354,15 @@ export default function FeedPage() {
                     {/* Post Content */}
                     <div className="px-4 pb-3">
                       <h4 className="font-bold text-lg mb-1" style={{ color: getTextStyles(theme).title }}>
-                        {listing.title} {listing.variety && <span className="font-normal text-base opacity-80">- {listing.variety}</span>}
+                        {translateTitle(listing.title)} {listing.variety && <span className="font-normal text-base opacity-80">- {listing.variety}</span>}
                       </h4>
                       <div className="flex items-center gap-2 mb-3">
                         <span className="px-2 py-0.5 rounded text-xs font-medium border" style={{ backgroundColor: `${getDomainColors(selectedSector).primary}15`, color: getDomainColors(selectedSector).primary, borderColor: `${getDomainColors(selectedSector).primary}30` }}>
-                          {listing.category_id === 'agriculture' ? 'Agriculture' : 'Élevage'}
+                          {listing.category_id === 'agriculture' ? 'Agriculture' : t('Élevage', 'Livestock')}
                         </span>
                         {listing.quantity > 0 && (
                           <span className={`px-2 py-0.5 rounded text-xs font-medium border ${theme === 'dark' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
-                            Stock: {listing.quantity} {listing.unit}
+                            {t('Stock', 'Stock')}: {listing.quantity} {listing.unit}
                           </span>
                         )}
                       </div>
@@ -1411,11 +1376,15 @@ export default function FeedPage() {
                       <div className="relative cursor-pointer group" onClick={() => { setSelectedListing(listing); setShowChatModal(true); }}>
                         <div className={`grid ${listing.images.length > 1 ? 'grid-cols-2 sm:grid-cols-2' : 'grid-cols-1'} gap-0.5 bg-gray-100 dark:bg-gray-800`}>
                           {listing.images.slice(0, 4).map((img, idx) => (
-                            <div key={idx} className={`relative ${listing.images && listing.images.length === 3 && idx === 0 ? 'row-span-2' : ''} h-48 sm:h-64 lg:h-72 overflow-hidden`}>
+                            <div key={idx} className={`relative ${listing.images && listing.images.length === 3 && idx === 0 ? 'row-span-2' : ''} h-48 sm:h-64 lg:h-72 overflow-hidden bg-gray-200 dark:bg-gray-700`}>
                               <img 
                                 src={img} 
                                 alt={`${listing.title} - ${idx + 1}`} 
                                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                onError={(e) => {
+                                  e.currentTarget.src = '/images/agriculture/bonmanioc.jpg';
+                                }}
+                                loading="lazy"
                               />
                               {listing.images && listing.images.length > 4 && idx === 3 && (
                                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -1434,8 +1403,8 @@ export default function FeedPage() {
                         onClick={() => toggleFavorite(listing.id, listing.title)}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors ${favorites.has(listing.id) ? 'text-red-500' : (theme === 'dark' ? 'text-gray-400 hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50')}`}
                       >
-                        <Heart className={`w-5 h-5 ${favorites.has(listing.id) ? 'fill-current' : ''}`} />
-                        <span className="text-sm font-medium hidden sm:inline">{favorites.has(listing.id) ? 'Favori' : 'J\'aime'}</span>
+                        <Heart className={`w-5 h-5 transition-transform duration-300 ${favorites.has(listing.id) ? 'fill-current animate-heartbeat' : 'hover:scale-110'}`} />
+                        <span className="text-sm font-medium hidden sm:inline">{favorites.has(listing.id) ? t('Favori', 'Liked') : t('J\'aime', 'Like')}</span>
                       </button>
                       
                       <button 
@@ -1443,14 +1412,14 @@ export default function FeedPage() {
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-gray-400 hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
                       >
                         <MessageCircle className="w-5 h-5" />
-                        <span className="text-sm font-medium hidden sm:inline">Commenter</span>
+                        <span className="text-sm font-medium hidden sm:inline">{t('Commenter', 'Comment')}</span>
                       </button>
 
                       <button 
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-gray-400 hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
                       >
                         <Send className="w-5 h-5" />
-                        <span className="text-sm font-medium hidden sm:inline">Partager</span>
+                        <span className="text-sm font-medium hidden sm:inline">{t('Partager', 'Share')}</span>
                       </button>
                       
                       <button 
@@ -1468,7 +1437,7 @@ export default function FeedPage() {
                         className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors" style={{ color: getDomainColors(selectedSector).primary }}
                       >
                         <MessageCircle className="w-5 h-5" />
-                        <span className="text-sm font-medium">Contacter</span>
+                        <span className="text-sm font-medium">{t('Contacter', 'Contact')}</span>
                       </button>
                     </div>
                   </div>
@@ -1483,23 +1452,45 @@ export default function FeedPage() {
               {/* Sponsored */}
               <div className={`p-4 rounded-3xl shadow-sm border ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}>
                 <h3 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: getTextStyles(theme).muted }}>
-                  Sponsorisé
+                  {t('Sponsorisé', 'Sponsored')}
                 </h3>
                 <div className="space-y-4">
-                  <a href="#" className="flex items-center gap-3 group">
-                    <div className="w-24 h-24 rounded-xl overflow-hidden flex-shrink-0">
-                      <img src="https://source.unsplash.com/random/200x200?seeds" alt="" className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-sm mb-1 transition-colors" style={{ color: getTextStyles(theme).title }}>
-                        Semences Premium
-                      </h4>
-                      <p className="text-xs line-clamp-2 mb-2" style={{ color: getTextStyles(theme).muted }}>
-                        Découvrez nos semences certifiées pour un rendement optimal.
-                      </p>
-                      <span className="text-xs font-medium" style={{ color: getDomainColors(selectedSector).primary }}>agrisemen.cm</span>
-                    </div>
-                  </a>
+                  {[
+                    {
+                      img: '/images/agriculture/bonne_qualite_de_macabo.jpg',
+                      title: t('Semences Premium', 'Premium Seeds'),
+                      desc: t('Semences certifiées pour un rendement optimal au Cameroun.', 'Certified seeds for optimal yield in Cameroon.'),
+                      site: 'agrisemen.cm'
+                    },
+                    {
+                      img: '/images/livestock/poulet_de_chaire_35_jour.jpg',
+                      title: t('Ferme Ndefo - Élevage', 'Ndefo Farm - Livestock'),
+                      desc: t('Poulets de chair et poussins disponibles toute l\'année.', 'Broiler chickens and chicks available year-round.'),
+                      site: 'ferme-ndefo.cm'
+                    },
+                    {
+                      img: '/images/agriculture/cacao_de_mr_etoga_750kg_dispo.jpg',
+                      title: t('Exportation Cacao', 'Cacao Export'),
+                      desc: t('Acheteurs internationaux recherchent cacao qualité supérieure.', 'International buyers seeking premium quality cacao.'),
+                      site: 'camercacao.cm'
+                    },
+                  ].map((ad, i) => (
+                    <a key={i} href="#" className="flex items-center gap-3 group">
+                      <div className="w-20 h-20 rounded-xl overflow-hidden flex-shrink-0 border border-gray-100 dark:border-white/10">
+                        <img
+                          src={ad.img}
+                          alt={ad.title}
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                          onError={(e) => { e.currentTarget.src = '/images/agriculture/bonmanioc.jpg'; }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-bold text-sm mb-1" style={{ color: getTextStyles(theme).title }}>{ad.title}</h4>
+                        <p className="text-xs line-clamp-2 mb-1" style={{ color: getTextStyles(theme).muted }}>{ad.desc}</p>
+                        <span className="text-xs font-medium" style={{ color: getDomainColors(selectedSector).primary }}>{ad.site}</span>
+                      </div>
+                    </a>
+                  ))}
                 </div>
               </div>
 
@@ -1507,18 +1498,18 @@ export default function FeedPage() {
               <div className={`p-4 rounded-3xl shadow-sm border ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}>
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="text-xs font-bold uppercase tracking-wider" style={{ color: getTextStyles(theme).muted }}>
-                    Vendeurs Actifs
+                    {t('Vendeurs Actifs', 'Active Sellers')}
                   </h3>
                   <span className="text-white text-[10px] px-1.5 py-0.5 rounded-full font-bold" style={{ backgroundColor: getDomainColors(selectedSector).primary }}>46</span>
                 </div>
                 
                 <div className="space-y-1">
                   {[
-                    { name: 'Hassan Producteur', role: 'producteur', item: 'Veaux', status: 'online' },
-                    { name: 'Lamine Acheteur', role: 'acheteur', item: 'Poivrons', status: 'online' },
-                    { name: 'Aissatou Fournisseur', role: 'seed_provider', item: 'Canne à sucre', status: 'offline' },
-                    { name: 'Ibrahim Fournisseur', role: 'seed_provider', item: 'Porcelets', status: 'online' },
-                    { name: 'Aminata Acheteur', role: 'acheteur', item: 'Tracteur', status: 'online' },
+                    { name: translateName('Hassan Producteur'), role: 'producteur', item: t('Veaux', 'Calves'), status: 'online' },
+                    { name: translateName('Lamine Acheteur'), role: 'acheteur', item: t('Poivrons', 'Peppers'), status: 'online' },
+                    { name: translateName('Aissatou Fournisseur'), role: 'seed_provider', item: t('Canne à sucre', 'Sugarcane'), status: 'offline' },
+                    { name: translateName('Ibrahim Fournisseur'), role: 'seed_provider', item: t('Porcelets', 'Piglets'), status: 'online' },
+                    { name: translateName('Aminata Acheteur'), role: 'acheteur', item: t('Tracteur', 'Tractor'), status: 'online' },
                   ].map((contact, i) => (
                     <button
                       key={i}
@@ -1541,7 +1532,7 @@ export default function FeedPage() {
                           {contact.name}
                         </h4>
                         <p className="text-xs truncate" style={{ color: getTextStyles(theme).muted }}>
-                          {contact.role === 'producteur' ? 'VENTE: ' : contact.role === 'acheteur' ? 'ACHAT: ' : 'FOURNITURE: '}{contact.item}
+                          {contact.role === 'producteur' ? t('VENTE: ', 'SALE: ') : contact.role === 'acheteur' ? t('ACHAT: ', 'BUY: ') : t('FOURNITURE: ', 'SUPPLY: ')}{contact.item}
                         </p>
                       </div>
                     </button>
@@ -1552,22 +1543,29 @@ export default function FeedPage() {
               {/* Suggestions Groups */}
               <div className={`p-4 rounded-3xl shadow-sm border ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}>
                 <h3 className="text-xs font-bold uppercase tracking-wider mb-4" style={{ color: getTextStyles(theme).muted }}>
-                  Groupes suggérés
+                  {t('Groupes suggérés', 'Suggested groups')}
                 </h3>
                 <div className="space-y-4">
                   {[
-                    { name: 'Agri-Tech Cameroun', members: '12k', image: 'https://source.unsplash.com/random/100x100?tech,farm' },
-                    { name: 'Élevage Moderne', members: '8.5k', image: 'https://source.unsplash.com/random/100x100?animal,farm' },
+                    { name: 'Agri-Tech Cameroun', members: '12k', image: '/images/agriculture/cacao_de_mr_etoga_750kg_dispo.jpg' },
+                    { name: 'Élevage Moderne', members: '8.5k', image: '/images/livestock/chevre_de_bazou.jpg' },
+                    { name: 'Producteurs de Cacao', members: '5.2k', image: '/images/agriculture/cafe_selectioné.jpg' },
+                    { name: 'Pisciculteurs Cameroun', members: '3.1k', image: '/images/livestock/bars_frais_kribi.jpg' },
                   ].map((group, i) => (
                     <div key={i} className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-10 h-10 rounded-lg overflow-hidden bg-gray-200">
-                          <img src={group.image} alt="" className="w-full h-full object-cover" />
+                          <img
+                            src={group.image}
+                            alt={group.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => { e.currentTarget.src = '/images/agriculture/bonmanioc.jpg'; }}
+                          />
                         </div>
                         <div>
                           <h4 className="font-bold text-sm" style={{ color: getTextStyles(theme).title }}>{group.name}</h4>
                           <p className="text-xs" style={{ color: getTextStyles(theme).muted }}>
-                            {group.members} membres
+                            {group.members} {t('membres', 'members')}
                           </p>
                         </div>
                       </div>
@@ -1575,7 +1573,7 @@ export default function FeedPage() {
                         className="px-3 py-1.5 rounded-lg text-xs font-medium transition-all hover:scale-[1.02]"
                         style={getButtonStyles(theme, 'secondary', 'emerald')}
                       >
-                        Rejoindre
+                        {t('Rejoindre', 'Join')}
                       </button>
                     </div>
                   ))}
@@ -1585,11 +1583,11 @@ export default function FeedPage() {
               {/* Footer Links */}
               <div className="px-2 pt-4 border-t" style={{ borderColor: theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#E5E7EB' }}>
                 <div className="flex flex-wrap gap-2 text-xs" style={{ color: getTextStyles(theme).muted }}>
-                  <button onClick={() => navigate('/privacy')} className="hover:underline transition-colors" style={{ color: 'inherit' }}>Confidentialité</button>
+                  <button onClick={() => navigate('/privacy')} className="hover:underline transition-colors" style={{ color: 'inherit' }}>{t('Confidentialité', 'Privacy')}</button>
                   <span>·</span>
-                  <a href="#" className="hover:underline">Conditions</a>
+                  <a href="#" className="hover:underline">{t('Conditions', 'Terms')}</a>
                   <span>·</span>
-                  <a href="#" className="hover:underline">Aide</a>
+                  <a href="#" className="hover:underline">{t('Aide', 'Help')}</a>
                 </div>
                 <p className="text-xs mt-2" style={{ color: getTextStyles(theme).muted }}>
                   MBOA Market &copy; 2026
@@ -1623,9 +1621,9 @@ export default function FeedPage() {
                 }} 
               />
               <span className="text-sm font-medium" style={{ color: getTextStyles(theme).title }}>
-                {voiceStatus === 'listening' ? 'Bigiss écoute...' : 
-                 voiceStatus === 'processing' ? 'Bigiss traite...' : 
-                 'Bigiss prêt'}
+                {voiceStatus === 'listening' ? t('Bigiss écoute...', 'Bigiss listening...') : 
+                 voiceStatus === 'processing' ? t('Bigiss traite...', 'Bigiss processing...') : 
+                 t('Bigiss prêt', 'Bigiss ready')}
               </span>
             </div>
             
@@ -1656,10 +1654,10 @@ export default function FeedPage() {
             {/* Help Text */}
             <div className="mt-3 text-xs" style={{ color: getTextStyles(theme).muted }}>
               {voiceStatus === 'listening' 
-                ? 'Dites "Bigiss" suivi de votre commande...' 
+                ? t('Dites "Bigiss" suivi de votre commande...', 'Say "Bigiss" followed by your command...') 
                 : voiceStatus === 'processing'
-                ? 'Analyse de votre demande...'
-                : 'Cliquez sur le micro pour recommencer'
+                ? t('Analyse de votre demande...', 'Analyzing your request...')
+                : t('Cliquez sur le micro pour recommencer', 'Click the mic to start again')
               }
             </div>
           </div>
@@ -1673,7 +1671,7 @@ export default function FeedPage() {
             }}
           >
             <p className="text-xs font-medium mb-2" style={{ color: getTextStyles(theme).title }}>
-              Commandes rapides:
+              {t('Commandes rapides:', 'Quick commands:')}
             </p>
             <div className="space-y-1">
               <div className="text-xs" style={{ color: getTextStyles(theme).muted }}>
@@ -1708,7 +1706,7 @@ export default function FeedPage() {
                 </div>
                 <div>
                   <h3 className="font-semibold" style={{ color: getTextStyles(theme).title }}>{selectedListing.seller?.profile?.display_name || 'Vendeur'}</h3>
-                  <p className="text-xs text-emerald-400">● En ligne</p>
+                  <p className="text-xs text-emerald-400">● {t('En ligne', 'Online')}</p>
                 </div>
               </div>
               <button
@@ -1767,7 +1765,7 @@ export default function FeedPage() {
               {chatMessages.length > 1 && (
                 <div className="mt-3 text-center">
                   <p className="text-xs text-white/60">
-                    💬 Cette conversation sera sauvegardée dans l'onglet Messages
+                    {t('Cette conversation sera sauvegardée dans l\'onglet Messages', 'This conversation will be saved in the Messages tab')}
                   </p>
                 </div>
               )}
@@ -1917,7 +1915,7 @@ export default function FeedPage() {
 
           {/* Navigation hints */}
           <div className="absolute bottom-8 left-0 right-0 text-center">
-            <p className="text-white/60 text-sm">Cliquez n'importe où pour fermer</p>
+            <p className="text-white/60 text-sm">{t('Cliquez n\'importe où pour fermer', 'Click anywhere to close')}</p>
           </div>
         </div>
       )}
@@ -1941,7 +1939,7 @@ export default function FeedPage() {
             <div className="p-6 border-b" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB' }}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-bold" style={{ color: getTextStyles(theme).title }}>
-                  Menu
+                  {t('Menu', 'Menu')}
                 </h2>
                 <button
                   onClick={() => setMobileMenuOpen(false)}
@@ -1971,12 +1969,13 @@ export default function FeedPage() {
             {/* Navigation Links */}
             <div className="p-4 space-y-2">
               {[
-                { icon: Home, label: 'Fil d\'actualité', path: '/feed' },
-                { icon: BarChart3, label: 'Tableau de Bord', path: '/dashboard' },
-                { icon: MessageCircle, label: 'Messages', path: '/chat', badge: unreadMessages },
-                { icon: User, label: 'Mon Compte', path: '/profile' },
-                { icon: Activity, label: 'Mon Activité', path: '/my-activity' },
+                { icon: Home, label: t('Fil d\'actualité', 'Home'), path: '/feed' },
+                { icon: BarChart3, label: t('Tableau de Bord', 'Dashboard'), path: '/dashboard' },
+                { icon: Users, label: t('Communauté', 'Community'), path: selectedSector === 'elevage' ? '/community/elevage' : '/community/agriculture' },
+                { icon: MessageCircle, label: t('Messages', 'Messages'), path: '/chat', badge: 0 },
                 { icon: ShoppingBag, label: 'Marketplace', path: '/listings' },
+                { icon: User, label: t('Mon Compte', 'My Account'), path: '/profile' },
+                { icon: Activity, label: t('Mon Activité', 'My Activity'), path: '/my-activity' },
               ].map((item, idx) => (
                 <button
                   key={idx}
@@ -2004,7 +2003,7 @@ export default function FeedPage() {
             {/* Sectors */}
             <div className="p-4 border-t" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB' }}>
               <h3 className="text-xs font-bold uppercase tracking-wider mb-3 px-2" style={{ color: getTextStyles(theme).muted }}>
-                Secteurs
+                {t('Secteurs', 'Sectors')}
               </h3>
               <div className="space-y-1">
                 <button 
@@ -2036,7 +2035,7 @@ export default function FeedPage() {
                     <Truck className="w-4 h-4 text-amber-600" />
                   </div>
                   <span className="text-sm font-medium" style={{ color: getTextStyles(theme).title }}>
-                    Élevage
+                    {t('Élevage', 'Livestock')}
                   </span>
                 </button>
               </div>
@@ -2056,7 +2055,7 @@ export default function FeedPage() {
                     color: '#EF4444'
                   }}
                 >
-                  Déconnexion
+                  {t('Déconnexion', 'Sign out')}
                 </button>
               </div>
             )}
@@ -2070,11 +2069,11 @@ export default function FeedPage() {
       } backdrop-blur-xl safe-area-inset-bottom`}>
         <div className="flex items-center justify-around px-1 py-2.5">
           {[
-            { icon: Home, label: 'Accueil', path: '/feed' },
-            { icon: BarChart3, label: 'Dashboard', path: '/dashboard' },
-            { icon: MessageCircle, label: 'Messages', path: '/chat', badge: unreadMessages },
-            { icon: ShoppingBag, label: 'Market', path: '/listings' },
-            { icon: User, label: 'Profil', path: '/profile' },
+            { icon: Home, label: t('Accueil', 'Home'), path: '/feed' },
+            { icon: BarChart3, label: t('Tableau de bord', 'Dashboard'), path: '/dashboard' },
+            { icon: Users, label: t('Communauté', 'Community'), path: selectedSector === 'elevage' ? '/community/elevage' : '/community/agriculture' },
+            { icon: MessageCircle, label: t('Messages', 'Messages'), path: '/chat', badge: 0 },
+            { icon: User, label: t('Profil', 'Profile'), path: '/profile' },
           ].map((item, idx) => (
             <button
               key={idx}

@@ -1,0 +1,109 @@
+═══════════════════════════════════════════════════════════
+🎯 COMPTE DE DÉMONSTRATION - MBOA MARKET
+═══════════════════════════════════════════════════════════
+
+📱 TÉLÉPHONE: +237123456789
+🔑 MOT DE PASSE: Demo@2026
+
+👤 PROFIL:
+   Nom: Démo Présentation
+   Domaine: Agriculture
+   Type: Producteur
+   Région: Centre (Yaoundé)
+
+═══════════════════════════════════════════════════════════
+🌐 URLS IMPORTANTES
+═══════════════════════════════════════════════════════════
+
+Frontend: http://localhost:5173
+Backend API: http://localhost:8000
+Documentation API: http://localhost:8000/docs
+
+Pages:
+- Accueil: http://localhost:5173/
+- Connexion: http://localhost:5173/login
+- Inscription: http://localhost:5173/register
+- Feed: http://localhost:5173/feed
+- Profil: http://localhost:5173/profile
+- Messages: http://localhost:5173/messages
+
+═══════════════════════════════════════════════════════════
+📊 STATISTIQUES DE LA BASE DE DONNÉES
+═══════════════════════════════════════════════════════════
+
+✅ 3 Utilisateurs
+✅ 20 Annonces
+✅ 35 Photos
+✅ 6 Catégories
+✅ 5 Produits de référence
+
+Régions: Centre, Ouest, Littoral, Nord-Ouest, Sud, Sud-Ouest, Nord
+
+═══════════════════════════════════════════════════════════
+🎬 SCÉNARIO DE DÉMONSTRATION
+═══════════════════════════════════════════════════════════
+
+1. CONNEXION (1 min)
+   - Montrer la page de connexion
+   - Se connecter avec le compte démo
+   - Expliquer la sécurité (JWT, bcrypt)
+
+2. FEED (2 min)
+   - Parcourir les 20 annonces
+   - Montrer les filtres (Agriculture/Élevage)
+   - Tester la recherche
+   - Cliquer sur "J'aime"
+
+3. CRÉATION D'ANNONCE (2 min)
+   - Cliquer sur le bouton "+"
+   - Remplir le formulaire
+   - Ajouter une image
+   - Publier
+
+4. MESSAGERIE (1 min)
+   - Cliquer sur "Contacter le vendeur"
+   - Envoyer un message
+   - Montrer la réponse automatique
+
+5. PROFIL (30s)
+   - Afficher les informations
+   - Montrer le bouton déconnexion
+
+═══════════════════════════════════════════════════════════
+💡 POINTS FORTS À MENTIONNER
+═══════════════════════════════════════════════════════════
+
+✅ Architecture moderne (React + FastAPI + PostgreSQL)
+✅ Sécurité renforcée (JWT, bcrypt, validation)
+✅ Interface intuitive et responsive
+✅ Données réelles camerounaises
+✅ 20+ annonces avec images locales
+✅ 7 régions couvertes
+✅ Messagerie en temps réel
+✅ Filtres et recherche avancés
+
+═══════════════════════════════════════════════════════════
+🔧 COMMANDES UTILES
+═══════════════════════════════════════════════════════════
+
+Démarrer le backend:
+cd C:\Users\HP\Desktop\mboa-market\backend
+python -m uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+
+Démarrer le frontend:
+cd C:\Users\HP\Desktop\mboa-market\frontend
+npm run dev
+
+Vérifier la base de données:
+cd C:\Users\HP\Desktop\mboa-market\backend
+python check_database_full.py
+
+Afficher tous les utilisateurs:
+python show_all_users.py
+
+Créer un nouveau compte démo:
+python create_demo_user.py
+
+═══════════════════════════════════════════════════════════
+🎉 BONNE PRÉSENTATION!
+═══════════════════════════════════════════════════════════

@@ -138,9 +138,9 @@ export const darkTheme: Theme = {
   mode: 'dark',
   palette: {
     primary: {
-      main: '#10B981',
+      main: '#3F441C',
       light: '#34D399',
-      dark: '#059669',
+      dark: '#353916',
       contrastText: '#FFFFFF',
     },
     surface: {
