@@ -1,23 +1,41 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics
+import logging
+
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Crée les tables DB au démarrage si elles n'existent pas"""
+    try:
+        from app.core.database import engine, Base
+        import app.models  # noqa: F401 – enregistre tous les modèles dans Base.metadata
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+        logger.info("✅ Tables DB vérifiées/créées au démarrage")
+    except Exception as e:
+        logger.error(f"❌ Erreur init DB: {e}")
+    yield
 
 app = FastAPI(
     title="MBOA Market API",
     description="Agricultural Marketplace Platform API",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
-# CORS middleware
+# CORS middleware — NE PAS mélanger allow_credentials=True avec allow_origins=["*"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "http://localhost:3000",
+        "http://localhost:5174",
         "https://mboa-market.netlify.app",
-        "https://*.netlify.app",
-        "*"
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -52,3 +70,17 @@ async def health_check():
 @app.get("/api/health")
 async def api_health_check():
     return {"status": "healthy", "api": "online"}
+
+
+@app.get("/api/db-status")
+async def db_status():
+    """Diagnostic: teste la connexion DB"""
+    try:
+        from app.core.database import engine
+        from sqlalchemy import text
+        async with engine.connect() as conn:
+            result = await conn.execute(text("SELECT 1"))
+            row = result.scalar()
+        return {"db": "connected", "test": row, "url_prefix": str(engine.url)[:30]}
+    except Exception as e:
+        return {"db": "error", "detail": str(e)[:200]}
