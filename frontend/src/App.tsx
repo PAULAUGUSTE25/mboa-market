@@ -1,5 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom'
 import { useAuthStore } from './store/authStore'
+import { useVisitTracking } from './hooks/useVisitTracking'
+import LandingPage from './pages/LandingPage'
 import SelectSectorPage from './pages/SelectSectorPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
@@ -25,6 +27,7 @@ import { LanguageProvider } from './contexts/LanguageContext'
 
 function App() {
   const { user } = useAuthStore()
+  useVisitTracking(user?.id)
 
   return (
     <LanguageProvider>
@@ -50,7 +53,7 @@ function App() {
       />
       
       <Routes>
-      <Route path="/" element={<LoginPage />} />
+      <Route path="/" element={<LandingPage />} />
       <Route path="/feed" element={<FeedPage />} />
       <Route path="/chat" element={<ChatPage />} />
       <Route path="/advice" element={<AdvicePage />} />

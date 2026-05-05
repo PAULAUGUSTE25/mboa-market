@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics, admin
+from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics, admin, analytics
 import logging
 
 logger = logging.getLogger(__name__)
@@ -56,6 +56,7 @@ app.include_router(b2b.router, prefix="/api")
 app.include_router(livestock.router, prefix="/api")
 app.include_router(logistics.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
+app.include_router(analytics.router, prefix="/api")
 
 @app.get("/")
 async def root():

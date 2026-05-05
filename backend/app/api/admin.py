@@ -15,7 +15,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, Profile
 from app.models.marketplace import Listing
-from app.models.system import LoginHistory, AuditLog
+from app.models.system import LoginHistory, AuditLog, SiteVisit
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
@@ -71,9 +71,13 @@ class AdminStatsResponse(BaseModel):
     total_users: int
     total_listings: int
     total_logins: int
+    total_visits: int
     new_users_24h: int
     new_listings_24h: int
     new_logins_24h: int
+    new_visits_24h: int
+    visits_by_device: dict
+    visits_by_action: dict
     users_by_region: dict
     users_by_activity: dict
 
@@ -229,7 +233,39 @@ async def get_activity_feed(
             }
         ))
 
-    # ③ Nouvelles annonces
+    # ③ Visites de la plateforme
+    visits_stmt = (
+        select(SiteVisit)
+        .order_by(desc(SiteVisit.created_at))
+        .limit(limit)
+    )
+    visits_result = await db.execute(visits_stmt)
+    visits = visits_result.scalars().all()
+
+    for v in visits:
+        action_labels = {
+            "visit":    "Visite anonyme",
+            "register": "Inscription",
+            "login":    "Connexion utilisateur",
+        }
+        device_icons = {"mobile": "📱", "desktop": "🖥️", "tablet": "📲"}
+        icon = device_icons.get(v.device_type or "desktop", "🖥️")
+        events.append(ActivityEventResponse(
+            id=f"visit-{v.id}",
+            kind="visit",
+            title=f"{icon} {action_labels.get(v.action, v.action)}",
+            subtitle=f"{v.device_type or 'desktop'} · {v.page or '/'} · {v.ip_address or '—'}",
+            timestamp=v.created_at,
+            extra={
+                "session_id": v.session_id,
+                "action": v.action,
+                "device": v.device_type,
+                "referrer": v.referrer,
+                "user_id": str(v.user_id) if v.user_id else None,
+            }
+        ))
+
+    # ④ Nouvelles annonces
     listings_stmt = (
         select(Listing)
         .options(selectinload(Listing.seller).selectinload(User.profile))
@@ -272,32 +308,38 @@ async def get_stats(
     h24 = now - timedelta(hours=24)
 
     # Totaux
-    total_users = (await db.execute(select(func.count(User.id)))).scalar_one()
+    total_users    = (await db.execute(select(func.count(User.id)))).scalar_one()
     total_listings = (await db.execute(select(func.count(Listing.id)))).scalar_one()
-    total_logins = (await db.execute(select(func.count(LoginHistory.id)))).scalar_one()
+    total_logins   = (await db.execute(select(func.count(LoginHistory.id)))).scalar_one()
+    total_visits   = (await db.execute(select(func.count(SiteVisit.id)))).scalar_one()
 
     # 24h
-    new_users_24h = (await db.execute(
-        select(func.count(User.id)).where(User.created_at >= h24)
-    )).scalar_one()
-    new_listings_24h = (await db.execute(
-        select(func.count(Listing.id)).where(Listing.created_at >= h24)
-    )).scalar_one()
-    new_logins_24h = (await db.execute(
-        select(func.count(LoginHistory.id)).where(LoginHistory.created_at >= h24)
-    )).scalar_one()
+    new_users_24h    = (await db.execute(select(func.count(User.id)).where(User.created_at >= h24))).scalar_one()
+    new_listings_24h = (await db.execute(select(func.count(Listing.id)).where(Listing.created_at >= h24))).scalar_one()
+    new_logins_24h   = (await db.execute(select(func.count(LoginHistory.id)).where(LoginHistory.created_at >= h24))).scalar_one()
+    new_visits_24h   = (await db.execute(select(func.count(SiteVisit.id)).where(SiteVisit.created_at >= h24))).scalar_one()
+
+    # Visites par appareil
+    device_result = await db.execute(
+        select(SiteVisit.device_type, func.count(SiteVisit.id)).group_by(SiteVisit.device_type)
+    )
+    visits_by_device = {d or "unknown": c for d, c in device_result.all()}
+
+    # Visites par action
+    action_result = await db.execute(
+        select(SiteVisit.action, func.count(SiteVisit.id)).group_by(SiteVisit.action)
+    )
+    visits_by_action = {a or "visit": c for a, c in action_result.all()}
 
     # Par région
     regions_result = await db.execute(
-        select(Profile.region, func.count(Profile.id))
-        .group_by(Profile.region)
+        select(Profile.region, func.count(Profile.id)).group_by(Profile.region)
     )
     users_by_region = {r: c for r, c in regions_result.all() if r}
 
     # Par type d'activité
     activity_result = await db.execute(
-        select(Profile.activity_type, func.count(Profile.id))
-        .group_by(Profile.activity_type)
+        select(Profile.activity_type, func.count(Profile.id)).group_by(Profile.activity_type)
     )
     users_by_activity = {a: c for a, c in activity_result.all() if a}
 
@@ -305,9 +347,13 @@ async def get_stats(
         total_users=total_users,
         total_listings=total_listings,
         total_logins=total_logins,
+        total_visits=total_visits,
         new_users_24h=new_users_24h,
         new_listings_24h=new_listings_24h,
         new_logins_24h=new_logins_24h,
+        new_visits_24h=new_visits_24h,
+        visits_by_device=visits_by_device,
+        visits_by_action=visits_by_action,
         users_by_region=users_by_region,
         users_by_activity=users_by_activity,
     )

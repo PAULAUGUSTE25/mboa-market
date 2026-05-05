@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Enum as SQLEnum
+from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Enum as SQLEnum, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import uuid
@@ -52,6 +52,24 @@ class LoginHistory(Base):
     success = Column(String, nullable=False, default="true")  # true/false
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     
+    user = relationship("User", foreign_keys=[user_id])
+
+
+class SiteVisit(Base):
+    """Chaque visite de la plateforme — anonyme ou identifiée"""
+    __tablename__ = "site_visits"
+
+    id          = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    session_id  = Column(String, nullable=False, index=True)   # UUID côté navigateur
+    ip_address  = Column(String, nullable=True)
+    user_agent  = Column(String, nullable=True)
+    device_type = Column(String, nullable=True)                # mobile / desktop / tablet
+    referrer    = Column(String, nullable=True)                # d'où vient la visite
+    page        = Column(String, nullable=True)                # URL de la page visitée
+    action      = Column(String, nullable=False, default="visit")  # visit / register / login
+    user_id     = Column(GUID(), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at  = Column(DateTime, nullable=False, default=datetime.utcnow)
+
     user = relationship("User", foreign_keys=[user_id])
 
 
