@@ -14,7 +14,7 @@ from datetime import datetime
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, Profile
-from app.models.listing import Listing
+from app.models.marketplace import Listing
 from app.models.system import LoginHistory, AuditLog
 
 router = APIRouter(prefix="/admin", tags=["Admin"])
