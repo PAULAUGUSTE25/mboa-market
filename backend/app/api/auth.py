@@ -6,6 +6,7 @@ from app.core.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token
 # from app.core.rate_limiter import limiter
 from app.models.user import User, Profile, UserStatus
+from app.models.system import LoginHistory
 from app.schemas.user import UserWithProfile, LoginRequest, LoginResponse, ProfileCreate
 from app.schemas.auth import PhoneVerificationRequest, PhoneVerificationResponse, PasswordValidation
 from uuid import uuid4
@@ -14,6 +15,15 @@ import re
 import logging
 
 logger = logging.getLogger(__name__)
+
+
+def _detect_device(user_agent: str) -> str:
+    ua = (user_agent or '').lower()
+    if any(k in ua for k in ('mobile', 'android', 'iphone', 'ipad')):
+        return 'mobile'
+    if 'tablet' in ua:
+        return 'tablet'
+    return 'desktop'
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 
@@ -115,9 +125,8 @@ async def register(
 
 
 @router.post("/login", response_model=LoginResponse)
-# @limiter.limit("10/minute")  # Temporarily disabled - install slowapi to enable
 async def login(
-    # request: Request,
+    request: Request,
     credentials: LoginRequest,
     db: AsyncSession = Depends(get_db)
 ):
@@ -163,6 +172,27 @@ async def login(
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
     
+    # ── Enregistrer la connexion dans login_history ────────────────────
+    try:
+        ua = request.headers.get("user-agent", "")
+        ip = request.headers.get("x-forwarded-for", request.client.host if request.client else None)
+        if ip and "," in ip:
+            ip = ip.split(",")[0].strip()
+        history = LoginHistory(
+            user_id=user.id,
+            ip_address=ip,
+            user_agent=ua[:500] if ua else None,
+            device_type=_detect_device(ua),
+            location="Cameroun",
+            success="true",
+        )
+        db.add(history)
+        await db.commit()
+        logger.info(f"Login history saved for user: {user.id}")
+    except Exception as e:
+        logger.warning(f"Could not save login history: {e}")
+    # ────────────────────────────────────────────────────────────────────
+
     logger.info(f"User logged in successfully: {user.id}")
     return LoginResponse(
         access_token=access_token,
