@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics
+from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics, admin
 import logging
 
 logger = logging.getLogger(__name__)
@@ -36,6 +36,8 @@ app.add_middleware(
         "http://localhost:3000",
         "http://localhost:5174",
         "https://mboa-market.netlify.app",
+        "https://mboa-backoffice-admin.netlify.app",
+        "http://localhost:5174",
     ],
     allow_credentials=True,
     allow_methods=["*"],
@@ -53,6 +55,7 @@ app.include_router(security.router, prefix="/api")
 app.include_router(b2b.router, prefix="/api")
 app.include_router(livestock.router, prefix="/api")
 app.include_router(logistics.router, prefix="/api")
+app.include_router(admin.router, prefix="/api")
 
 @app.get("/")
 async def root():
