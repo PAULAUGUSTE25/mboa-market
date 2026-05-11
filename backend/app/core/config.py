@@ -29,7 +29,7 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # CORS
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:5174,http://localhost:3000"
+    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:5174,http://localhost:3000,https://mboa-market.netlify.app"
     
     # SMS Configuration
     SMS_PROVIDER: str = "twilio"
@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     
     # Environment
     ENVIRONMENT: str = "development"
+
+    # AI / Gemini
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
     
     # PostgreSQL specific settings
     DB_POOL_SIZE: int = 20
