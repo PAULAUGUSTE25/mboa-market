@@ -89,10 +89,10 @@ export default function FeedPage() {
     
     if (wasAdded) {
       newFavorites.add(listingId);
-      setToastMessage({ text: `"${listingTitle || t('Article', 'Item')}" ${t('ajouté aux favoris', 'added to favorites')}`, type: 'success' });
+      setToastMessage({ text: `"${listingTitle || t('Article', 'Item')}" ${t('aimé', 'liked')}`, type: 'success' });
     } else {
       newFavorites.delete(listingId);
-      setToastMessage({ text: t('Retiré des favoris', 'Removed from favorites'), type: 'info' });
+      setToastMessage({ text: t('J\'aime retiré', 'Like removed'), type: 'info' });
     }
     
     setFavorites(newFavorites);
@@ -894,7 +894,7 @@ export default function FeedPage() {
             style={{ boxShadow: '0 10px 40px rgba(0,0,0,0.3)' }}
           >
             <span className="text-sm font-medium">{toastMessage.text}</span>
-            <span className="text-xs opacity-75">({favorites.size} favoris)</span>
+            <span className="text-xs opacity-75">({favorites.size} {t('j\'aime', 'likes')})</span>
           </div>
         </div>
       )}
@@ -1021,14 +1021,14 @@ export default function FeedPage() {
                   {favorites.size > 0 && !searchQuery && (
                     <div className={`p-2 border-t ${theme === 'dark' ? 'border-white/10' : 'border-gray-100'}`}>
                       <p className="px-3 py-1 text-xs font-semibold flex items-center gap-1.5" style={{ color: getTextStyles(theme).muted }}>
-                        <Star className="h-3 w-3 text-amber-500" /> Mes favoris ({favorites.size})
+                        <Star className="h-3 w-3 text-amber-500" /> {t('Mes j\'aime', 'My likes')} ({favorites.size})
                       </p>
                       <button
                         onClick={() => navigate('/listings?favorites=true')}
                         className={`w-full text-left px-3 py-2 rounded-lg text-sm flex items-center gap-2 transition-all ${theme === 'dark' ? 'hover:bg-white/10 text-amber-400' : 'hover:bg-amber-50 text-amber-600'}`}
                       >
                         <Heart className="h-3.5 w-3.5 fill-current" />
-                        Voir mes {favorites.size} favoris
+                        {t('Voir mes', 'View my')} {favorites.size} {t('j\'aime', 'likes')}
                       </button>
                     </div>
                   )}
@@ -1498,7 +1498,7 @@ export default function FeedPage() {
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors ${favorites.has(listing.id) ? 'text-red-500' : (theme === 'dark' ? 'text-gray-400 hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50')}`}
                       >
                         <Heart className={`w-5 h-5 transition-transform duration-300 ${favorites.has(listing.id) ? 'fill-current animate-heartbeat' : 'hover:scale-110'}`} />
-                        <span className="text-sm font-medium hidden sm:inline">{favorites.has(listing.id) ? t('Favori', 'Liked') : t('J\'aime', 'Like')}</span>
+                        <span className="text-sm font-medium hidden sm:inline">{favorites.has(listing.id) ? t('Aimé', 'Liked') : t('J\'aime', 'Like')}</span>
                       </button>
                       
                       <button 
@@ -1858,12 +1858,19 @@ export default function FeedPage() {
                 </button>
               </div>
               
-              {/* Footer hint */}
-              {chatMessages.length > 1 && (
-                <div className="mt-3 text-center">
-                  <p className="text-xs text-white/60">
+              {/* Footer hint and close button */}
+              {chatMessages.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs text-white/60 text-center">
                     {t('Cette conversation sera sauvegardée dans l\'onglet Messages', 'This conversation will be saved in the Messages tab')}
                   </p>
+                  <button
+                    onClick={handleCloseChatModal}
+                    className="w-full px-4 py-2 rounded-xl font-medium transition-all hover:scale-105"
+                    style={getButtonStyles(theme, 'secondary', 'emerald')}
+                  >
+                    {t('Fermer', 'Close')}
+                  </button>
                 </div>
               )}
             </div>

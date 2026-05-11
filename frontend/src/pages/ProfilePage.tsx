@@ -20,6 +20,7 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     display_name: user?.profile?.display_name || '',
+    email: user?.email || '',
     region: user?.profile?.region || '',
     locality: user?.profile?.locality || '',
     activity_type: user?.profile?.activity_type || '',
@@ -139,6 +140,17 @@ export default function ProfilePage() {
                 onChange={e => setForm(f => ({ ...f, display_name: e.target.value }))}
                 className="mt-1 w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3F441C]/20"
                 placeholder={t('Ex: Jean Kaptue', 'Ex: Jean Kaptue')}
+              />
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-500 font-medium">{t('Email', 'Email')}</label>
+              <input
+                type="email"
+                value={form.email}
+                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
+                className="mt-1 w-full px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-[#3F441C]/20"
+                placeholder={t('Ex: jean@example.com', 'Ex: jean@example.com')}
               />
             </div>
 
