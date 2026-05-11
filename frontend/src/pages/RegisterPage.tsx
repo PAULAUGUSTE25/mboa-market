@@ -161,7 +161,7 @@ export default function RegisterPage() {
       {/* Video Background */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'brightness(0.65)' }}>
-          <source src="/images/backgrounds/video background.mp4" type="video/mp4" />
+          <source src="https://res.cloudinary.com/dvfmmovlw/video/upload/video_background_pw0i8m.mp4" type="video/mp4" />
         </video>
         <div className="absolute inset-0 bg-gradient-to-l from-black/70 via-black/40 to-black/20" />
       </div>

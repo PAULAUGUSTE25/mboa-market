@@ -5,7 +5,7 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { TrendingUp, TrendingDown, Minus, MapPin, Users, Package, ShieldCheck, X, ArrowRight, Lock } from 'lucide-react';
 
 // ── Vidéo de fond ────────────────────────────────────────
-const VIDEO_SRC = '/images/backgrounds/video background.mp4';
+const VIDEO_SRC = 'https://res.cloudinary.com/dvfmmovlw/video/upload/video_background_pw0i8m.mp4';
 
 // ── Palette MBOA ──────────────────────────────────────────
 const OLIVE = '#3F441C';
