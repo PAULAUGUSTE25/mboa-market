@@ -25,6 +25,7 @@ export default function RegisterPage() {
   
   const [formData, setFormData] = useState({
     phone: '+237',
+    email: '',
     password: '',
     profile: {
       display_name: '',
@@ -252,6 +253,32 @@ export default function RegisterPage() {
                   />
                 </div>
                 {fieldErrors.phone && <p className="text-red-200 text-xs mt-1 ml-1 font-medium drop-shadow-md">{fieldErrors.phone}</p>}
+              </div>
+
+              {/* Email */}
+              <div>
+                <div className="relative">
+                  <svg className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  </svg>
+                  <input
+                    type="email"
+                    placeholder={t('Email (optionnel)', 'Email (optional)')}
+                    value={formData.email}
+                    onChange={(e) => {
+                      setFormData({ ...formData, email: e.target.value });
+                      if (fieldErrors.email) {
+                        const newErrors = {...fieldErrors};
+                        delete newErrors.email;
+                        setFieldErrors(newErrors);
+                      }
+                    }}
+                    className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
+                      fieldErrors.email ? 'border-red-500' : 'border-white/50'
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner`}
+                  />
+                </div>
+                {fieldErrors.email && <p className="text-red-200 text-xs mt-1 ml-1 font-medium drop-shadow-md">{fieldErrors.email}</p>}
               </div>
 
               {/* Password */}

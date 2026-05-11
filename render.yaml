@@ -28,3 +28,5 @@ services:
         value: production
       - key: CORS_ORIGINS
         value: "https://mboa-market.netlify.app,http://localhost:5173"
+      - key: GEMINI_API_KEY
+        value: AIzaSyDMveMdsMx0sCjOF6sdPNYuxzNe5r7ExYc
