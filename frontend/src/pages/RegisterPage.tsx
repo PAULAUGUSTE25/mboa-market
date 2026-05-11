@@ -3,11 +3,10 @@ import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Phone, Lock, User, MapPin, ShoppingCart, CheckCircle, Truck } from 'lucide-react';
+import { Phone, Lock, User, MapPin, ShoppingCart, CheckCircle, Truck, Eye, EyeOff } from 'lucide-react';
 import { SproutIcon, CowIcon } from '@/components/icons/UnifiedIcons';
 import BackButton from '@/components/BackButton';
 import gsap from 'gsap';
-import BackgroundSlideshow from '@/components/BackgroundSlideshow';
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -16,6 +15,7 @@ export default function RegisterPage() {
   const { t } = useLanguage();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
+  const [showPassword, setShowPassword] = useState(false);
   
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -24,7 +24,7 @@ export default function RegisterPage() {
   const initialDomain = sectorFromUrl === 'elevage' ? 'elevage' : 'agriculture';
   
   const [formData, setFormData] = useState({
-    phone: '',
+    phone: '+237',
     password: '',
     profile: {
       display_name: '',
@@ -61,6 +61,24 @@ export default function RegisterPage() {
   }, []);
 
   const isElevage = formData.profile.domain === 'elevage';
+
+  const passwordStrength = (() => {
+    const p = formData.password;
+    let score = 0;
+    if (p.length >= 8) score += 1;
+    if (/[a-z]/.test(p)) score += 1;
+    if (/[A-Z]/.test(p)) score += 1;
+    if (/\d/.test(p)) score += 1;
+    if (/[!@#$%^&*(),.?":{}|<>]/.test(p)) score += 1;
+    return score; // 0..5
+  })();
+
+  const strengthUi = (() => {
+    if (!formData.password) return { label: t('Saisissez un mot de passe', 'Enter a password'), color: 'bg-white/30', pct: 0 };
+    if (passwordStrength <= 2) return { label: t('Faible', 'Weak'), color: 'bg-red-500', pct: 35 };
+    if (passwordStrength === 3) return { label: t('Moyen', 'Medium'), color: 'bg-amber-400', pct: 65 };
+    return { label: t('Fort', 'Strong'), color: 'bg-green-500', pct: 100 };
+  })();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -140,15 +158,13 @@ export default function RegisterPage() {
 
   return (
     <div ref={containerRef} className="min-h-screen w-full overflow-hidden relative flex items-center justify-center lg:justify-end">
-      {/* Background Slideshow */}
-      <BackgroundSlideshow 
-        images={[
-          '/images/backgrounds/back gount',
-          '/images/backgrounds/pexels-szafran-34125512.jpg'
-        ]}
-        interval={5000}
-        overlay={true}
-      />
+      {/* Video Background */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'brightness(0.65)' }}>
+          <source src="/images/backgrounds/video background.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-l from-black/70 via-black/40 to-black/20" />
+      </div>
 
       {/* Success Modal */}
       {showSuccessModal && (
@@ -243,7 +259,7 @@ export default function RegisterPage() {
                 <div className="relative">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     placeholder={t('Mot de passe (min 8 car.)', 'Password (min 8 char.)')}
                     value={formData.password}
                     onChange={(e) => {
@@ -254,11 +270,36 @@ export default function RegisterPage() {
                         setFieldErrors(newErrors);
                       }
                     }}
-                    className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
+                    className={`w-full pl-12 pr-12 py-3.5 bg-white/90 border ${
                       fieldErrors.password ? 'border-red-500' : 'border-white/50'
                     } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner`}
                     required
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg hover:bg-black/5 transition-colors"
+                    aria-label={showPassword ? t('Masquer le mot de passe', 'Hide password') : t('Voir le mot de passe', 'Show password')}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-4.5 h-4.5 text-gray-600" />
+                    ) : (
+                      <Eye className="w-4.5 h-4.5 text-gray-600" />
+                    )}
+                  </button>
+                </div>
+                {/* Strength bar */}
+                <div className="mt-2">
+                  <div className="h-2 w-full rounded-full bg-white/30 overflow-hidden">
+                    <div
+                      className={`h-full ${strengthUi.color} rounded-full transition-all`}
+                      style={{ width: `${strengthUi.pct}%` }}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between mt-1">
+                    <span className="text-xs text-white/90 font-medium drop-shadow-md">{t('Sécurité', 'Security')}</span>
+                    <span className="text-xs text-white font-bold drop-shadow-md">{strengthUi.label}</span>
+                  </div>
                 </div>
                 {fieldErrors.password && <p className="text-red-200 text-xs mt-1 ml-1 font-medium drop-shadow-md">{fieldErrors.password}</p>}
               </div>

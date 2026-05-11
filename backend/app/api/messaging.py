@@ -307,3 +307,48 @@ async def send_message(
     await db.refresh(message)
     
     return message
+
+
+@router.delete("/{conversation_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_conversation(
+    conversation_id: UUID,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """Delete a conversation (only for participants)"""
+    logger.info(f"User {current_user.id} attempting to delete conversation {conversation_id}")
+    # Verify user is participant
+    participant_result = await db.execute(
+        select(ConversationParticipant)
+        .where(
+            and_(
+                ConversationParticipant.conversation_id == conversation_id,
+                ConversationParticipant.user_id == current_user.id
+            )
+        )
+    )
+    participant = participant_result.scalar_one_or_none()
+    
+    if not participant:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not a participant in this conversation"
+        )
+    
+    # Delete conversation (cascade will delete participants and messages)
+    result = await db.execute(
+        select(Conversation).where(Conversation.id == conversation_id)
+    )
+    conversation = result.scalar_one_or_none()
+    
+    if not conversation:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Conversation not found"
+        )
+    
+    await db.delete(conversation)
+    await db.commit()
+    
+    logger.info(f"Conversation {conversation_id} deleted by user {current_user.id}")
+    return None

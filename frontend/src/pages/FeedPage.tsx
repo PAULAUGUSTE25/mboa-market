@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
-import { MessageCircle, Heart, MapPin, Package, Plus, X, ShoppingCart, Globe, Wheat, Beef, PackageSearch, Sprout, User, Send, Search, Clock, TrendingUp, TrendingDown, Minus, Sparkles, Star, Home, Activity, ShoppingBag, Leaf, Truck, BarChart3, Users } from 'lucide-react';
+import { MessageCircle, Heart, MapPin, Package, Plus, X, ShoppingCart, Globe, Wheat, Beef, PackageSearch, Sprout, User, Send, Search, Clock, TrendingUp, TrendingDown, Minus, Sparkles, Star, Home, Activity, ShoppingBag, Leaf, Truck, BarChart3, Users, Phone, MoreVertical } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getCardStyles, getTextStyles, getInputStyles, getButtonStyles } from '@/utils/cardStyles';
@@ -11,6 +11,7 @@ import { useDomain } from '@/contexts/DomainContext';
 import { voiceAssistant } from '@/services/voiceAssistant';
 import { Mic, MicOff, Volume2 } from 'lucide-react';
 import { useLanguage } from '@/contexts/LanguageContext';
+import OrderModal from '@/components/OrderModal';
 
 interface Listing {
   id: string;
@@ -41,6 +42,11 @@ interface Category {
   name_fr: string;
   name_en: string;
 }
+
+const LOCAL_LISTINGS_KEY = 'local_created_listings';
+
+const normalizeValue = (value?: string | number) =>
+  String(value ?? '').trim().toLowerCase();
 
 export default function FeedPage() {
   const { theme } = useTheme();
@@ -156,6 +162,8 @@ export default function FeedPage() {
   const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
   const [chatMessage, setChatMessage] = useState('');
   const [chatMessages, setChatMessages] = useState<Array<{ sender: 'me' | 'seller'; text: string; time: string }>>([]);
+  const [activeListingMenuId, setActiveListingMenuId] = useState<string | null>(null);
+  const [orderListing, setOrderListing] = useState<Listing | null>(null);
   
   // Demo chat state for sidebar contacts
   const [showDemoChat, setShowDemoChat] = useState(false);
@@ -164,6 +172,42 @@ export default function FeedPage() {
   const [demoChatInput, setDemoChatInput] = useState('');
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState('idle'); // idle, listening, processing, speaking
+
+  const getStoredLocalListings = () => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(LOCAL_LISTINGS_KEY) || '[]');
+      return Array.isArray(raw) ? raw : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const saveCreatedListingLocally = (listing: any) => {
+    const current = getStoredLocalListings();
+    const next = [listing, ...current.filter((item: any) => item.id !== listing.id)];
+    localStorage.setItem(LOCAL_LISTINGS_KEY, JSON.stringify(next));
+  };
+
+  const isSameListing = (a: any, b: any) => {
+    return (
+      normalizeValue(a.title) === normalizeValue(b.title) &&
+      Number(a.price_per_unit || 0) === Number(b.price_per_unit || 0) &&
+      Number(a.quantity || 0) === Number(b.quantity || 0) &&
+      normalizeValue(a.unit) === normalizeValue(b.unit) &&
+      normalizeValue(a.region) === normalizeValue(b.region) &&
+      normalizeValue(a.locality) === normalizeValue(b.locality)
+    );
+  };
+
+  const syncLocalListingsWithApi = (localListings: any[], apiListings: any[]) => {
+    const remainingLocal = localListings.filter((local) => {
+      if (!String(local.id || '').startsWith('local-')) return true;
+      return !apiListings.some((apiListing) => isSameListing(local, apiListing));
+    });
+
+    localStorage.setItem(LOCAL_LISTINGS_KEY, JSON.stringify(remainingLocal));
+    return remainingLocal;
+  };
 
   // Intelligent demo response generator - analyzes user message and responds contextually
   const getIntelligentResponse = (userMessage: string, contact: {name: string; activityType: string; lastProduct: string; region: string}, messageCount: number): string => {
@@ -404,13 +448,16 @@ export default function FeedPage() {
         // Chargement des annonces réelles échoué, affichage des données de démonstration
       }
       
-      // Combine real listings with demo listings (always show both)
-      let allListings = [...demoListings, ...realListings];
-      
-      // Filter to show only listings with images
-      allListings = allListings.filter((listing: any) => listing.images && listing.images.length > 0);
-      
-      setListings(allListings);
+      const localListings = getStoredLocalListings();
+      const syncedLocalListings = syncLocalListingsWithApi(localListings, realListings);
+
+      // Combine local + demo + real listings, deduplicated by id
+      const merged = [...syncedLocalListings, ...demoListings, ...realListings];
+      const uniqueById = merged.filter((listing: any, index: number, arr: any[]) =>
+        index === arr.findIndex((item: any) => item.id === listing.id)
+      );
+
+      setListings(uniqueById);
     } catch (error) {
     } finally {
       setLoading(false);
@@ -668,7 +715,7 @@ export default function FeedPage() {
     try {
       // Create listing data
       const listingData: any = {
-        category_id: newPost.category_id,
+        category_id: newPost.category_id || (selectedSector === 'all' ? 'agriculture' : selectedSector),
         title: newPost.title,
         variety: newPost.variety || undefined,
         quantity: parseFloat(newPost.quantity),
@@ -689,33 +736,35 @@ export default function FeedPage() {
         listingData.images = [newPost.image_url];
       }
 
+      let createdListing: any = null;
       try {
         // Try to create via API
-        await api.createListing(listingData);
+        createdListing = await api.createListing(listingData);
       } catch (apiError) {
-          
-        // Fallback: Store locally and add to current listings
-        const newListing = {
-          id: `local-${Date.now()}`,
-          seller_id: user.id,
-          ...listingData,
-          created_at: new Date().toISOString(),
-          seller: {
-            profile: {
-              display_name: user.profile?.display_name || 'Utilisateur',
-              activity_type: user.profile?.activity_type,
-              domain: userDomain
-            }
-          }
-        };
-        
-        // Add to current listings immediately
-        setListings(prev => [newListing, ...prev]);
+        // Fallback: local listing
       }
+
+      const listingToDisplay = createdListing || {
+        id: `local-${Date.now()}`,
+        seller_id: user.id,
+        ...listingData,
+        created_at: new Date().toISOString(),
+        seller: {
+          profile: {
+            display_name: user.profile?.display_name || 'Utilisateur',
+            activity_type: user.profile?.activity_type,
+            domain: userDomain
+          }
+        }
+      };
+
+      // Keep user's newly created listing visible in feed and activity
+      saveCreatedListingLocally(listingToDisplay);
+      setListings(prev => [listingToDisplay, ...prev.filter(item => item.id !== listingToDisplay.id)]);
 
       // Reset form
       setNewPost({
-        category_id: '',
+        category_id: selectedSector === 'all' ? 'agriculture' : selectedSector,
         title: '',
         variety: '',
         quantity: '',
@@ -801,6 +850,12 @@ export default function FeedPage() {
         .replace(/^FOURNITURE:\s*/i, 'SUPPLY: ');
     }
     return title;
+  };
+
+  const isVideoMedia = (mediaUrl: string) => {
+    if (!mediaUrl) return false;
+    const lowered = mediaUrl.toLowerCase();
+    return lowered.startsWith('data:video/') || /\.(mp4|webm|ogg|mov|m4v)(\?|$)/i.test(lowered);
   };
 
   const formatDate = (dateString: string) => {
@@ -1195,7 +1250,10 @@ export default function FeedPage() {
           {/* User Profile Card */}
           <div className={`rounded-2xl p-4 ${theme === 'dark' ? 'bg-white/[0.03] border border-white/10 backdrop-blur-xl' : 'bg-white shadow-sm'}`}>
             <button
-              onClick={() => alert('Fonction de création en cours de développement')}
+              onClick={() => {
+                setNewPost(prev => ({ ...prev, category_id: prev.category_id || (selectedSector === 'all' ? 'agriculture' : selectedSector) }));
+                setShowCreatePost(true);
+              }}
               className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl font-medium transition-all hover:scale-[1.02]"
               style={getButtonStyles(theme, 'secondary', 'emerald')}
             >
@@ -1279,7 +1337,10 @@ export default function FeedPage() {
                   )}
                 </div>
                 <button
-                  onClick={() => alert('Fonction de création en cours de développement')}
+                  onClick={() => {
+                    setNewPost(prev => ({ ...prev, category_id: prev.category_id || (selectedSector === 'all' ? 'agriculture' : selectedSector) }));
+                    setShowCreatePost(true);
+                  }}
                   className={`flex-1 text-left px-4 py-2.5 rounded-full text-sm transition-colors ${theme === 'dark' ? 'bg-white/5 text-gray-400 hover:bg-white/10' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                 >
                   {t('Quoi de neuf', "What's new")}, {user?.profile?.display_name?.split(' ')[0] || t('Agriculteur', 'Farmer')} ?
@@ -1314,42 +1375,64 @@ export default function FeedPage() {
                   <p style={{ color: getTextStyles(theme).muted }}>{t('Essayez de modifier vos filtres ou effectuez une nouvelle recherche.', 'Try changing your filters or search again.')}</p>
                 </div>
               ) : (
-                filteredListings.map((listing) => (
-                  <div 
-                    key={listing.id}
-                    className={`rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}
-                  >
-                    {/* Post Header */}
-                    <div className="p-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="relative">
-                          <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm" style={{ background: getDomainColors(selectedSector).gradientDiagonal }}>
-                            {listing.seller?.profile?.display_name?.charAt(0) || 'U'}
+                filteredListings.map((listing) => {
+                  const isOwner = Boolean(user?.id) && listing.seller_id === user?.id;
+                  return (
+                    <div 
+                      key={listing.id}
+                      className={`rounded-2xl shadow-sm border overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-lg ${theme === 'dark' ? 'bg-[#1a1a1a] border-white/10' : 'bg-white border-gray-100'}`}
+                    >
+                      {/* Post Header */}
+                      <div className="p-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="relative">
+                            <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm" style={{ background: getDomainColors(selectedSector).gradientDiagonal }}>
+                              {(isOwner ? t('Vous', 'You') : (listing.seller?.profile?.display_name || 'U'))?.charAt(0)}
+                            </div>
+                            <div className="absolute -bottom-1 -right-1 bg-white dark:bg-[#1a1a1a] rounded-full p-0.5">
+                              <div className="w-3 h-3 rounded-full border-2 border-white dark:border-[#1a1a1a]" style={{ backgroundColor: getDomainColors(selectedSector).primary }} />
+                            </div>
                           </div>
-                          <div className="absolute -bottom-1 -right-1 bg-white dark:bg-[#1a1a1a] rounded-full p-0.5">
-                            <div className="w-3 h-3 rounded-full border-2 border-white dark:border-[#1a1a1a]" style={{ backgroundColor: getDomainColors(selectedSector).primary }} />
+                          <div>
+                            <h3 className="font-bold text-sm hover:underline cursor-pointer" style={{ color: getTextStyles(theme).title }}>
+                              {isOwner ? t('Vous', 'You') : (listing.seller?.profile?.display_name || 'Utilisateur')}
+                            </h3>
+                            <div className="flex items-center gap-2 text-xs" style={{ color: getTextStyles(theme).muted }}>
+                              <span>{formatDate(listing.created_at)}</span>
+                              <span>•</span>
+                              <span className="flex items-center gap-1">
+                                <Globe className="w-3 h-3" />
+                                {listing.region}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        <div>
-                          <h3 className="font-bold text-sm hover:underline cursor-pointer" style={{ color: getTextStyles(theme).title }}>
-                            {listing.seller?.profile?.display_name || 'Utilisateur'}
-                          </h3>
-                          <div className="flex items-center gap-2 text-xs" style={{ color: getTextStyles(theme).muted }}>
-                            <span>{formatDate(listing.created_at)}</span>
-                            <span>•</span>
-                            <span className="flex items-center gap-1">
-                              <Globe className="w-3 h-3" />
-                              {listing.region}
-                            </span>
+
+                        {!isOwner && (
+                          <div className="relative">
+                            <button
+                              onClick={() => setActiveListingMenuId(prev => prev === listing.id ? null : listing.id)}
+                              className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'hover:bg-white/5 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}
+                            >
+                              <MoreVertical className="w-5 h-5" />
+                            </button>
+                            {activeListingMenuId === listing.id && (
+                              <div className={`absolute right-0 top-11 min-w-[190px] rounded-xl shadow-xl border z-20 py-1 ${theme === 'dark' ? 'bg-[#1f1f1f] border-white/10' : 'bg-white border-gray-100'}`}>
+                                <button
+                                  onClick={() => {
+                                    setOrderListing(listing);
+                                    setActiveListingMenuId(null);
+                                  }}
+                                  className={`w-full px-4 py-2.5 text-left text-sm flex items-center gap-2 ${theme === 'dark' ? 'text-gray-200 hover:bg-white/5' : 'text-gray-700 hover:bg-gray-50'}`}
+                                >
+                                  <ShoppingCart className="w-4 h-4" style={{ color: getDomainColors(selectedSector).primary }} />
+                                  {t('Commander directement', 'Order directly')}
+                                </button>
+                              </div>
+                            )}
                           </div>
-                        </div>
+                        )}
                       </div>
-                      <button className={`p-2 rounded-full transition-colors ${theme === 'dark' ? 'hover:bg-white/5 text-gray-400' : 'hover:bg-gray-100 text-gray-500'}`}>
-                        <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />
-                        </svg>
-                      </button>
-                    </div>
 
                     {/* Post Content */}
                     <div className="px-4 pb-3">
@@ -1377,15 +1460,26 @@ export default function FeedPage() {
                         <div className={`grid ${listing.images.length > 1 ? 'grid-cols-2 sm:grid-cols-2' : 'grid-cols-1'} gap-0.5 bg-gray-100 dark:bg-gray-800`}>
                           {listing.images.slice(0, 4).map((img, idx) => (
                             <div key={idx} className={`relative ${listing.images && listing.images.length === 3 && idx === 0 ? 'row-span-2' : ''} h-48 sm:h-64 lg:h-72 overflow-hidden bg-gray-200 dark:bg-gray-700`}>
-                              <img 
-                                src={img} 
-                                alt={`${listing.title} - ${idx + 1}`} 
-                                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                                onError={(e) => {
-                                  e.currentTarget.src = '/images/agriculture/bonmanioc.jpg';
-                                }}
-                                loading="lazy"
-                              />
+                              {isVideoMedia(img) ? (
+                                <video
+                                  src={img}
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                  controls
+                                  muted
+                                  playsInline
+                                  preload="metadata"
+                                />
+                              ) : (
+                                <img
+                                  src={img}
+                                  alt={`${listing.title} - ${idx + 1}`}
+                                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                                  onError={(e) => {
+                                    e.currentTarget.src = '/images/agriculture/bonmanioc.jpg';
+                                  }}
+                                  loading="lazy"
+                                />
+                              )}
                               {listing.images && listing.images.length > 4 && idx === 3 && (
                                 <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
                                   <span className="text-white text-xl font-bold">+{listing.images.length - 4}</span>
@@ -1397,8 +1491,8 @@ export default function FeedPage() {
                       </div>
                     )}
 
-                    {/* Post Actions */}
-                    <div className={`px-2 py-1 border-t flex items-center justify-between ${theme === 'dark' ? 'border-white/10' : 'border-gray-100'}`}>
+                      {/* Post Actions */}
+                      <div className={`px-2 py-1 border-t flex items-center justify-between ${theme === 'dark' ? 'border-white/10' : 'border-gray-100'}`}>
                       <button 
                         onClick={() => toggleFavorite(listing.id, listing.title)}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors ${favorites.has(listing.id) ? 'text-red-500' : (theme === 'dark' ? 'text-gray-400 hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50')}`}
@@ -1422,26 +1516,29 @@ export default function FeedPage() {
                         <span className="text-sm font-medium hidden sm:inline">{t('Partager', 'Share')}</span>
                       </button>
                       
-                      <button 
-                        onClick={() => {
-                          const contact = {
-                            id: listing.seller_id,
-                            name: listing.seller?.profile?.display_name || 'Vendeur',
-                            domain: listing.category_id,
-                            activityType: listing.seller?.profile?.activity_type || 'producer',
-                            lastProduct: listing.title,
-                            region: listing.region
-                          };
-                          startDemoChat(contact);
-                        }}
-                        className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors" style={{ color: getDomainColors(selectedSector).primary }}
-                      >
-                        <MessageCircle className="w-5 h-5" />
-                        <span className="text-sm font-medium">{t('Contacter', 'Contact')}</span>
-                      </button>
+                      {!isOwner && (
+                        <button 
+                          onClick={() => {
+                            const contact = {
+                              id: listing.seller_id,
+                              name: listing.seller?.profile?.display_name || 'Vendeur',
+                              domain: listing.category_id,
+                              activityType: listing.seller?.profile?.activity_type || 'producer',
+                              lastProduct: listing.title,
+                              region: listing.region
+                            };
+                            startDemoChat(contact);
+                          }}
+                          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors" style={{ color: getDomainColors(selectedSector).primary }}
+                        >
+                          <Phone className="w-5 h-5" />
+                          <span className="text-sm font-medium">{t('Contacter', 'Contact')}</span>
+                        </button>
+                      )}
+                      </div>
                     </div>
-                  </div>
-                ))
+                  );
+                })
               )}
             </div>
           </div>
@@ -2098,6 +2195,193 @@ export default function FeedPage() {
           ))}
         </div>
       </div>
+
+      {/* Create Post Modal */}
+      {showCreatePost && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className={`rounded-2xl w-full max-w-2xl shadow-2xl overflow-hidden ${theme === 'dark' ? 'bg-[#1a1a1a] border border-white/10' : 'bg-white border border-gray-100'}`}>
+            <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB' }}>
+              <h2 className="font-bold text-lg" style={{ color: getTextStyles(theme).title }}>
+                {t('Créer une publication', 'Create a post')}
+              </h2>
+              <button onClick={() => setShowCreatePost(false)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-white/10">
+                <X className="w-5 h-5" style={{ color: getTextStyles(theme).muted }} />
+              </button>
+            </div>
+            <form onSubmit={handleCreatePost} className="p-5 space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).title }}>
+                  {t('Catégorie', 'Category')} *
+                </label>
+                <select
+                  value={newPost.category_id}
+                  onChange={(e) => setNewPost({ ...newPost, category_id: e.target.value })}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2"
+                  style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB', backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F9FAFB' }}
+                >
+                  <option value="">{t('Choisir une catégorie', 'Choose a category')}</option>
+                  <option value="agriculture">{t('Agriculture', 'Agriculture')}</option>
+                  <option value="elevage">{t('Élevage', 'Livestock')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).title }}>
+                  {t('Titre', 'Title')} *
+                </label>
+                <input
+                  type="text"
+                  value={newPost.title}
+                  onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2"
+                  style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB', backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F9FAFB' }}
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).title }}>
+                    {t('Quantité', 'Quantity')} *
+                  </label>
+                  <input
+                    type="number"
+                    value={newPost.quantity}
+                    onChange={(e) => setNewPost({ ...newPost, quantity: e.target.value })}
+                    required
+                    className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2"
+                    style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB', backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F9FAFB' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).title }}>
+                    {t('Unité', 'Unit')}
+                  </label>
+                  <select
+                    value={newPost.unit}
+                    onChange={(e) => setNewPost({ ...newPost, unit: e.target.value })}
+                    className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2"
+                    style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB', backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F9FAFB' }}
+                  >
+                    <option value="kg">kg</option>
+                    <option value="g">g</option>
+                    <option value="L">L</option>
+                    <option value="unité">unité</option>
+                    <option value="sac">sac</option>
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).title }}>
+                  {t('Prix par unité (FCFA)', 'Price per unit (FCFA)')} *
+                </label>
+                <input
+                  type="number"
+                  value={newPost.price_per_unit}
+                  onChange={(e) => setNewPost({ ...newPost, price_per_unit: e.target.value })}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2"
+                  style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB', backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F9FAFB' }}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).title }}>
+                  {t('Région', 'Region')} *
+                </label>
+                <select
+                  value={newPost.region}
+                  onChange={(e) => setNewPost({ ...newPost, region: e.target.value })}
+                  required
+                  className="w-full px-4 py-3 rounded-xl border focus:outline-none focus:ring-2"
+                  style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB', backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F9FAFB' }}
+                >
+                  <option value="">Sélectionner</option>
+                  <option value="Centre">Centre</option>
+                  <option value="Littoral">Littoral</option>
+                  <option value="Ouest">Ouest</option>
+                  <option value="Nord-Ouest">Nord-Ouest</option>
+                  <option value="Sud-Ouest">Sud-Ouest</option>
+                  <option value="Nord">Nord</option>
+                  <option value="Adamaoua">Adamaoua</option>
+                  <option value="Est">Est</option>
+                  <option value="Sud">Sud</option>
+                  <option value="Extrême-Nord">Extrême-Nord</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).title }}>
+                  {t('Photos / Vidéos', 'Photos / Videos')}
+                </label>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*,video/*"
+                  onChange={handleFileSelect}
+                  className="w-full px-4 py-3 rounded-xl border file:mr-3 file:rounded-lg file:border-0 file:px-3 file:py-1.5 file:text-sm file:font-medium"
+                  style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB', backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F9FAFB' }}
+                />
+                <p className="text-xs mt-1" style={{ color: getTextStyles(theme).muted }}>
+                  {t('Formats acceptés: image et vidéo (max 5MB par fichier).', 'Accepted formats: image and video (max 5MB per file).')}
+                </p>
+              </div>
+              {previewUrls.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {previewUrls.map((preview, index) => (
+                    <div key={index} className="relative rounded-xl overflow-hidden border" style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB' }}>
+                      {isVideoMedia(preview) ? (
+                        <video src={preview} className="w-full h-28 object-cover" controls muted playsInline preload="metadata" />
+                      ) : (
+                        <img src={preview} alt={`Preview ${index + 1}`} className="w-full h-28 object-cover" />
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFile(index)}
+                        className="absolute top-1 right-1 p-1 rounded-full bg-black/60 text-white hover:bg-black/80"
+                        aria-label="Supprimer le média"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreatePost(false)}
+                  className="flex-1 px-4 py-3 rounded-xl font-medium transition-colors"
+                  style={{ backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F3F4F6', color: getTextStyles(theme).title }}
+                >
+                  {t('Annuler', 'Cancel')}
+                </button>
+                <button
+                  type="submit"
+                  className="flex-1 px-4 py-3 rounded-xl font-semibold text-white transition-all hover:opacity-90"
+                  style={{ backgroundColor: getDomainColors(selectedSector).primary }}
+                >
+                  {t('Publier', 'Publish')}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {orderListing && (
+        <OrderModal
+          isOpen={Boolean(orderListing)}
+          onClose={() => setOrderListing(null)}
+          listing={{
+            id: orderListing.id,
+            title: orderListing.title,
+            price_per_unit: orderListing.price_per_unit,
+            unit: orderListing.unit,
+            quantity: orderListing.quantity,
+            region: orderListing.region,
+            locality: orderListing.locality,
+            seller_id: orderListing.seller_id,
+          }}
+        />
+      )}
     </div>
   );
 }

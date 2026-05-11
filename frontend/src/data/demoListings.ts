@@ -3,8 +3,8 @@ export const generateDemoListings = () => {
   const names = [
     'Ibrahim', 'Amadou', 'Marie', 'Sophie', 'Hassan', 'Jean', 'Paul', 'André',
     'Fatima', 'Aissatou', 'Mamadou', 'Aminata', 'Ousmane', 'Mariama', 'Abdoulaye',
-    'Fatoumata', 'Moussa', 'Awa', 'Boubacar', 'Hawa', 'Seydou', 'Kadiatou',
-    'Cheikh', 'Mariam', 'Alioune', 'Bintou', 'Modou', 'Coumba', 'Lamine', 'Ndeye'
+    'Fatoumata', 'Moussa', 'Awa', 'Boubacar', 'Hawa', 'Seydou', 'Mbarga',
+    'Fotso', 'Mariam', 'Atangana', 'Nguimo', 'Tchouopo', 'Eloundou', 'Nkemba', 'Tankou'
   ];
   
   const regions = [

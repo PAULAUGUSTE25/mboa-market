@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api } from '@/services/api';
-import { Search, Filter, MapPin, Package, Heart, MessageCircle, ShoppingCart, X, Grid, List } from 'lucide-react';
+import { Search, Filter, MapPin, Package, Heart, MessageCircle, ShoppingCart, X, Grid, List, MoreVertical, Phone } from 'lucide-react';
+import OrderModal from '@/components/OrderModal';
 import { WheatIcon, CowIcon } from '@/components/icons/UnifiedIcons';
 import ScrollToTop from '@/components/ScrollToTop';
 import Logo from '@/components/Logo';
@@ -47,6 +48,9 @@ export default function ListingsPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [orderModalOpen, setOrderModalOpen] = useState(false);
+  const [selectedListing, setSelectedListing] = useState<Listing | null>(null);
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null);
 
   const regions = ['Centre', 'Littoral', 'Ouest', 'Nord-Ouest', 'Sud-Ouest', 'Nord', 'Adamaoua', 'Est', 'Sud', 'Extrême-Nord'];
 
@@ -389,8 +393,47 @@ export default function ListingsPage() {
                   >
                     <Heart className={`h-4 w-4 ${favorites.has(listing.id) ? 'fill-current' : ''}`} />
                   </button>
+                  {/* Three-dot Menu */}
+                  <div className="absolute top-2 left-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMenuOpenId(menuOpenId === listing.id ? null : listing.id);
+                      }}
+                      className="p-2 rounded-full bg-black/30 text-white hover:bg-black/50 transition-all"
+                    >
+                      <MoreVertical className="h-4 w-4" />
+                    </button>
+                    {menuOpenId === listing.id && (
+                      <div className="absolute left-0 top-10 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[160px] z-20">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMenuOpenId(null);
+                            setSelectedListing(listing);
+                            setOrderModalOpen(true);
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <ShoppingCart className="h-4 w-4 text-[#3F441C]" />
+                          {t('Commander directement', 'Order directly')}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setMenuOpenId(null);
+                            navigate(`/chat?listing_id=${listing.id}`);
+                          }}
+                          className="w-full px-4 py-2.5 text-left text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2"
+                        >
+                          <Phone className="h-4 w-4 text-[#3F441C]" />
+                          {t('Contacter', 'Contact')}
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   {/* Domain Badge */}
-                  <div className="absolute top-2 left-2 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 bg-gradient-to-br from-[#A0B96B]/90 to-[#829952]/90 text-white">
+                  <div className="absolute bottom-2 left-2 px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 bg-gradient-to-br from-[#A0B96B]/90 to-[#829952]/90 text-white">
                     {listing.seller?.profile?.domain === 'elevage' ? <CowIcon size={12} /> : <WheatIcon size={12} />}
                     <span className="hidden sm:inline">{listing.seller?.profile?.domain === 'elevage' ? t('Élevage', 'Livestock') : 'Agriculture'}</span>
                   </div>
@@ -467,6 +510,18 @@ export default function ListingsPage() {
       </main>
 
       <ScrollToTop />
+
+      {/* Order Modal */}
+      {selectedListing && (
+        <OrderModal
+          isOpen={orderModalOpen}
+          onClose={() => {
+            setOrderModalOpen(false);
+            setSelectedListing(null);
+          }}
+          listing={selectedListing}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ThumbsUp, MessageSquare, Send, X, MessageCircle, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import { ThumbsUp, MessageSquare, Send, X, Phone, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 
 export interface CommunityPost {
   id: number;
@@ -43,6 +43,33 @@ export default function CommunityPostCard({ post, domainColor, liked, onLike }: 
   const [customInput, setCustomInput] = useState('');
   const [customWarning, setCustomWarning] = useState(false);
 
+  const saveConversation = (messages: { text: string; fromMe: boolean; time: string }[]) => {
+    const conversationId = `conv-community-${post.id}`;
+    const existingConversations = JSON.parse(localStorage.getItem('demo_conversations') || '[]');
+    const conversationData = {
+      id: conversationId,
+      participant_id: `community-${post.id}`,
+      participant_name: post.author,
+      last_message: messages[messages.length - 1]?.text || '',
+      unread_count: 0,
+      updated_at: new Date().toISOString(),
+      listing_id: null,
+      messages: messages.map((msg) => ({
+        sender: msg.fromMe ? 'me' : 'seller',
+        text: msg.text,
+        time: msg.time,
+      })),
+    };
+
+    const existingIndex = existingConversations.findIndex((c: any) => c.id === conversationId);
+    if (existingIndex >= 0) {
+      existingConversations[existingIndex] = conversationData;
+    } else {
+      existingConversations.unshift(conversationData);
+    }
+    localStorage.setItem('demo_conversations', JSON.stringify(existingConversations));
+  };
+
   const handleSubmitComment = () => {
     if (!commentText.trim()) return;
     setComments(prev => [
@@ -53,19 +80,22 @@ export default function CommunityPostCard({ post, domainColor, liked, onLike }: 
   };
 
   const handleQuickMessage = (msg: string) => {
-    setChatMessages(prev => [
-      ...prev,
-      { text: msg, fromMe: true, time: 'À l\'instant' },
-    ]);
+    const firstMessage = { text: msg, fromMe: true, time: 'À l\'instant' };
+    setChatMessages(prev => {
+      const next = [...prev, firstMessage];
+      saveConversation(next);
+      return next;
+    });
     setTimeout(() => {
-      setChatMessages(prev => [
-        ...prev,
-        {
+      setChatMessages(prev => {
+        const next = [...prev, {
           text: `Bonjour ! Merci de me contacter. Je reviendrai vers vous dès que possible.`,
           fromMe: false,
           time: 'À l\'instant',
-        },
-      ]);
+        }];
+        saveConversation(next);
+        return next;
+      });
     }, 800);
   };
 
@@ -140,7 +170,7 @@ export default function CommunityPostCard({ post, domainColor, liked, onLike }: 
             className="ml-auto flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all hover:scale-105"
             style={{ color: domainColor, borderColor: domainColor }}
           >
-            <MessageCircle className="w-3.5 h-3.5" />
+            <Phone className="w-3.5 h-3.5" />
             Contacter
           </button>
         </div>
@@ -183,6 +213,18 @@ export default function CommunityPostCard({ post, domainColor, liked, onLike }: 
                 style={{ backgroundColor: domainColor }}
               >
                 <Send className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={() => {
+                  setCommentOpen(false);
+                  setCommentText('');
+                }}
+                className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
+              >
+                Fermer
               </button>
             </div>
           </div>

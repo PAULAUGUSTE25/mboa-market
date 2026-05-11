@@ -20,10 +20,10 @@ interface AIResponse {
 class MultiAIService {
   private providers: AIProvider[] = [
     {
-      name: 'OpenRouter',
-      endpoint: 'https://openrouter.ai/api/v1/chat/completions',
-      apiKey: import.meta.env.VITE_OPENROUTER_API_KEY || '',
-      model: 'nvidia/nemotron-3-super-120b-a12b:free',
+      name: 'MBOA Backend AI',
+      endpoint: `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/ai/chat`,
+      apiKey: '',
+      model: 'gemini-server',
       enabled: true
     }
   ];
@@ -35,42 +35,26 @@ class MultiAIService {
    * Génère une réponse IA avec fallback automatique
    */
   async generateResponse(prompt: string, context?: string): Promise<AIResponse> {
-    console.log('🤖 Bigiss generating response for:', prompt.substring(0, 50) + '...');
-    console.log('📋 Available providers:', this.providers.map(p => `${p.name} (${p.enabled ? 'enabled' : 'disabled'})`));
-    
     // Essayer chaque provider dans l'ordre
     for (const provider of this.providers) {
       if (!provider.enabled) {
-        console.log(`⏭️ Skipping disabled provider: ${provider.name}`);
         continue;
       }
 
       try {
-        console.log(`🔄 Trying provider: ${provider.name}`);
-        console.log(`🔗 Endpoint: ${provider.endpoint}`);
-        console.log(`🔑 API Key present: ${provider.apiKey ? 'YES' : 'NO'}`);
-        console.log(`🔑 API Key preview: ${provider.apiKey ? provider.apiKey.substring(0, 10) + '...' : 'EMPTY'}`);
-        
         const response = await this.callProvider(provider, prompt, context);
-        
-        console.log(`✅ Success with ${provider.name}!`);
-        console.log(`📝 Response preview: ${response.substring(0, 100)}...`);
-        
         return {
           text: response,
           provider: provider.name,
           cached: false
         };
       } catch (error) {
-        console.error(`❌ ${provider.name} failed:`, error);
-        console.error(`❌ Error details:`, error instanceof Error ? error.message : String(error));
         // Continue avec le prochain provider
         continue;
       }
     }
 
     // Si tous échouent, utiliser le fallback local
-    console.warn('⚠️ All providers failed! Using local fallback...');
     const localResponse = this.localFallback(prompt);
     return {
       text: localResponse,
@@ -83,64 +67,35 @@ class MultiAIService {
    * Appelle un provider spécifique
    */
   private async callProvider(provider: AIProvider, prompt: string, context?: string): Promise<string> {
-    // Gemini AI uniquement
-    return await this.callGemini(provider, prompt, context);
+    return await this.callBackendAI(provider, prompt, context);
   }
 
   /**
-   * Appel à Google Gemini API
+   * Appel au backend MBOA (qui appelle Gemini côté serveur)
    */
-  private async callGemini(provider: AIProvider, prompt: string, context?: string): Promise<string> {
-    const systemContext = context || "Tu es Bigiss, un assistant agricole expert basé au Cameroun. Tu réponds en français de manière naturelle, conversationnelle et utile. Tu donnes des conseils pratiques sur l'agriculture, l'élevage, et le commerce agricole.";
-    
-    console.log('🚀 Calling OpenRouter API...');
-    console.log('📍 Endpoint:', provider.endpoint);
-    console.log('🔑 API Key preview:', provider.apiKey ? provider.apiKey.substring(0, 10) + '...' : 'EMPTY');
-    console.log('💬 Prompt:', prompt.substring(0, 100) + '...');
-    
-    try {
-      const response = await fetch(provider.endpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${provider.apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://mboa-market.vercel.app',
-          'X-Title': 'Bigiss AI - Mboa Market'
-        },
-        body: JSON.stringify({
-          model: provider.model,
-          messages: [
-            { role: 'system', content: systemContext },
-            { role: 'user', content: prompt }
-          ],
-          temperature: 0.7,
-          max_tokens: 1024
-        })
-      });
+  private async callBackendAI(provider: AIProvider, prompt: string, context?: string): Promise<string> {
+    const response = await fetch(provider.endpoint, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        prompt,
+        context
+      })
+    });
 
-      console.log('📡 Response status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('❌ OpenRouter API error:', response.status, errorText);
-        throw new Error(`OpenRouter API error: ${response.status} - ${errorText}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ OpenRouter API response received successfully');
-      
-      const content = data.choices?.[0]?.message?.content;
-      if (!content) {
-        console.error('❌ No content in OpenRouter response:', data);
-        throw new Error('OpenRouter API returned empty response');
-      }
-      
-      console.log('✨ Generated response length:', content.length);
-      return content;
-    } catch (error) {
-      console.error('❌ OpenRouter API call failed:', error);
-      throw error;
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Backend AI error: ${response.status} - ${errorText}`);
     }
+
+    const data = await response.json();
+    if (!data?.text) {
+      throw new Error('Backend AI returned empty response');
+    }
+
+    return data.text;
   }
 
   /**

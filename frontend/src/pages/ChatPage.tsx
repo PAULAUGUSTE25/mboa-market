@@ -1,9 +1,81 @@
 import { useState, useEffect, useRef } from 'react';
-import { MessageCircle, Send, ArrowLeft, User, Clock, Inbox } from 'lucide-react';
+import { MessageCircle, Send, ArrowLeft, User, Clock, Inbox, Trash2, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
 import { messagesApi } from '../api/messages.api';
 import type { Conversation, Message } from '../types/message.types';
+
+type DemoStorageMessage = { sender: 'me' | 'seller'; text: string; time: string };
+type DemoStorageConversation = {
+  id: string;
+  participant_id?: string;
+  participant_name?: string;
+  last_message?: string;
+  unread_count?: number;
+  updated_at?: string;
+  messages?: DemoStorageMessage[];
+};
+
+const loadDemoConversations = (): Conversation[] => {
+  try {
+    const raw = JSON.parse(localStorage.getItem('demo_conversations') || '[]') as DemoStorageConversation[];
+    return raw.map((conv) => ({
+      id: conv.id,
+      listing_id: undefined,
+      participants: [
+        { user_id: 'me', display_name: 'Vous' },
+        {
+          user_id: conv.participant_id || `demo-${conv.id}`,
+          display_name: conv.participant_name || 'Utilisateur',
+        },
+      ],
+      last_message: conv.last_message
+        ? {
+            id: `${conv.id}-last`,
+            conversation_id: conv.id,
+            sender_id: conv.participant_id || 'seller',
+            content: conv.last_message,
+            created_at: conv.updated_at || new Date().toISOString(),
+            read_at: undefined,
+          }
+        : undefined,
+      unread_count: conv.unread_count || 0,
+      created_at: conv.updated_at || new Date().toISOString(),
+      updated_at: conv.updated_at || new Date().toISOString(),
+    }));
+  } catch {
+    return [];
+  }
+};
+
+const loadDemoMessages = (conversationId: string): Message[] => {
+  try {
+    const raw = JSON.parse(localStorage.getItem('demo_conversations') || '[]') as DemoStorageConversation[];
+    const conv = raw.find((item) => item.id === conversationId);
+    if (!conv?.messages?.length) return [];
+
+    return conv.messages.map((msg, index) => ({
+      id: `${conversationId}-${index}-${Date.now()}`,
+      conversation_id: conversationId,
+      sender_id: msg.sender === 'me' ? 'me' : conv.participant_id || 'seller',
+      content: msg.text,
+      created_at: new Date().toISOString(),
+      read_at: undefined,
+    }));
+  } catch {
+    return [];
+  }
+};
+
+const removeDemoConversation = (conversationId: string) => {
+  try {
+    const raw = JSON.parse(localStorage.getItem('demo_conversations') || '[]') as DemoStorageConversation[];
+    const next = raw.filter((item) => item.id !== conversationId);
+    localStorage.setItem('demo_conversations', JSON.stringify(next));
+  } catch {
+    // Ignore local parsing errors
+  }
+};
 
 export default function ChatPage() {
   const navigate = useNavigate();
@@ -14,17 +86,25 @@ export default function ChatPage() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesApi.getConversations()
-      .then(setConversations)
-      .catch(() => setConversations([]))
+      .then((apiConversations) => {
+        const demoConversations = loadDemoConversations();
+        setConversations([...demoConversations, ...apiConversations]);
+      })
+      .catch(() => setConversations(loadDemoConversations()))
       .finally(() => setLoading(false));
   }, []);
 
   useEffect(() => {
     if (!selected) return;
+    if (selected.id.startsWith('conv-')) {
+      setMessages(loadDemoMessages(selected.id));
+      return;
+    }
     messagesApi.getMessages(selected.id)
       .then(setMessages)
       .catch(() => setMessages([]));
@@ -53,6 +133,35 @@ export default function ChatPage() {
       setInput('');
     } finally {
       setSending(false);
+    }
+  };
+
+  const handleDeleteConversation = (convId: string) => {
+    setDeleteConfirmId(convId);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
+    const isDemoConversation = deleteConfirmId.startsWith('conv-');
+    try {
+      if (isDemoConversation) {
+        removeDemoConversation(deleteConfirmId);
+      } else {
+        await messagesApi.deleteConversation(deleteConfirmId);
+      }
+      setConversations(prev => prev.filter(c => c.id !== deleteConfirmId));
+      if (selected?.id === deleteConfirmId) {
+        setSelected(null);
+      }
+      setDeleteConfirmId(null);
+    } catch (error) {
+      console.error('Failed to delete conversation:', error);
+      // Still remove from UI on error for better UX
+      setConversations(prev => prev.filter(c => c.id !== deleteConfirmId));
+      if (selected?.id === deleteConfirmId) {
+        setSelected(null);
+      }
+      setDeleteConfirmId(null);
     }
   };
 
@@ -111,35 +220,42 @@ export default function ChatPage() {
               const other = conv.participants?.find(p => p.user_id !== 'me');
               const isSelected = selected?.id === conv.id;
               return (
-                <button
-                  key={conv.id}
-                  onClick={() => setSelected(conv)}
-                  className={`w-full rounded-2xl border p-4 flex items-center gap-3 transition-all text-left ${
-                    isSelected 
-                      ? 'bg-[#3F441C]/5 border-[#3F441C]/20 shadow-sm' 
-                      : 'bg-white border-gray-100 hover:shadow-md md:hover:bg-gray-50'
-                  }`}
-                >
-                  <div className="w-11 h-11 rounded-full bg-[#3F441C] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
-                    {(other?.display_name || 'U')[0].toUpperCase()}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-sm truncate ${isSelected ? 'font-bold text-[#3F441C]' : 'font-semibold text-gray-900'}`}>
-                      {other?.display_name || t('Utilisateur', 'User')}
-                    </p>
-                    {conv.last_message && (
-                      <p className={`text-xs truncate mt-0.5 ${isSelected ? 'text-[#3F441C]/70' : 'text-gray-400'}`}>
-                        {conv.last_message.content}
-                      </p>
-                    )}
-                  </div>
-                  {conv.updated_at && (
-                    <div className="flex items-center gap-1 text-xs text-gray-400 flex-shrink-0">
-                      <Clock className="w-3 h-3" />
-                      <span>{new Date(conv.updated_at).toLocaleDateString('fr-CM', { day: '2-digit', month: 'short' })}</span>
+                <div key={conv.id} className="relative group">
+                  <button
+                    onClick={() => setSelected(conv)}
+                    className={`w-full rounded-2xl border p-4 flex items-center gap-3 transition-all text-left ${
+                      isSelected
+                        ? 'bg-[#3F441C]/5 border-[#3F441C]/20 shadow-sm'
+                        : 'bg-white border-gray-100 hover:shadow-md md:hover:bg-gray-50'
+                    }`}
+                  >
+                    <div className="w-11 h-11 rounded-full bg-[#3F441C] flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                      {(other?.display_name || 'U')[0].toUpperCase()}
                     </div>
-                  )}
-                </button>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm truncate ${isSelected ? 'font-bold text-[#3F441C]' : 'font-semibold text-gray-900'}`}>
+                        {other?.display_name || t('Utilisateur', 'User')}
+                      </p>
+                      {conv.last_message && (
+                        <p className={`text-xs truncate mt-0.5 ${isSelected ? 'text-[#3F441C]/70' : 'text-gray-400'}`}>
+                          {conv.last_message.content}
+                        </p>
+                      )}
+                    </div>
+                    {conv.updated_at && (
+                      <div className="flex items-center gap-1 text-xs text-gray-400 flex-shrink-0">
+                        <Clock className="w-3 h-3" />
+                        <span>{new Date(conv.updated_at).toLocaleDateString('fr-CM', { day: '2-digit', month: 'short' })}</span>
+                      </div>
+                    )}
+                  </button>
+                  <button
+                    onClick={() => handleDeleteConversation(conv.id)}
+                    className="absolute top-2 right-2 p-2 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 opacity-0 group-hover:opacity-100 transition-all"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
               );
             })}
           </div>
@@ -205,6 +321,39 @@ export default function ChatPage() {
           )}
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {deleteConfirmId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+            <div className="p-6 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-100 flex items-center justify-center">
+                <AlertTriangle className="w-8 h-8 text-red-600" />
+              </div>
+              <h3 className="text-lg font-bold text-gray-900 mb-2">
+                {t('Supprimer la conversation ?', 'Delete conversation?')}
+              </h3>
+              <p className="text-sm text-gray-600 mb-6">
+                {t('Cette action est irréversible. Tous les messages seront supprimés.', 'This action is irreversible. All messages will be deleted.')}
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirmId(null)}
+                  className="flex-1 px-4 py-3 rounded-xl border border-gray-200 text-gray-700 font-semibold hover:bg-gray-50 transition-colors"
+                >
+                  {t('Annuler', 'Cancel')}
+                </button>
+                <button
+                  onClick={confirmDelete}
+                  className="flex-1 px-4 py-3 rounded-xl bg-red-600 text-white font-semibold hover:bg-red-700 transition-colors"
+                >
+                  {t('Supprimer', 'Delete')}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

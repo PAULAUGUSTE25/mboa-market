@@ -61,3 +61,5 @@ list_*.py
 
 # Local Netlify folder
 .netlify
+
+frontend/public/images/backgrounds/*.mp4

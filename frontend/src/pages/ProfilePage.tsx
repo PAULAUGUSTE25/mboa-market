@@ -55,7 +55,16 @@ export default function ProfilePage() {
   const domainColor = user?.profile?.domain === 'elevage' ? '#7C3D12' : '#3F441C';
 
   return (
-    <div className="min-h-screen bg-[#F5F5F0]">
+    <div className="min-h-screen relative" style={{ backgroundColor: '#F5F5F0' }}>
+      {/* Video Background */}
+      <div className="fixed inset-0 z-0 overflow-hidden">
+        <video autoPlay loop muted playsInline className="absolute inset-0 w-full h-full object-cover" style={{ filter: 'brightness(0.35)' }}>
+          <source src="/images/backgrounds/video background.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-black/40" />
+      </div>
+      {/* Contenu au-dessus de la vidéo */}
+      <div className="relative z-10">
       {/* Header */}
       <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
         <button onClick={() => navigate('/feed')} className="p-2 rounded-lg hover:bg-gray-100">
@@ -225,6 +234,7 @@ export default function ProfilePage() {
         >
           {t('Se déconnecter', 'Log out')}
         </button>
+      </div>
       </div>
     </div>
   );

@@ -29,4 +29,8 @@ export const messagesApi = {
     const response = await httpClient.post('/messages/conversations', data);
     return response.data;
   },
+
+  deleteConversation: async (conversationId: string): Promise<void> => {
+    await httpClient.delete(`/messages/conversations/${conversationId}`);
+  },
 };

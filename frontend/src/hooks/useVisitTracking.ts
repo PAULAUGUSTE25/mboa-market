@@ -21,15 +21,13 @@ function recordVisit(page: string, action = 'visit', userId?: string) {
     action,
     user_id: userId || null,
   }
-  // navigator.sendBeacon est non-bloquant et fonctionne même si la page se ferme
-  const blob = new Blob([JSON.stringify(payload)], { type: 'application/json' })
-  const url = `${API_URL}/analytics/visit`
-  if (navigator.sendBeacon) {
-    navigator.sendBeacon(url, blob)
-  } else {
-    fetch(url, { method: 'POST', body: JSON.stringify(payload), headers: { 'Content-Type': 'application/json' } })
-      .catch(() => {/* silent */})
-  }
+  // fetch + keepalive : non-bloquant, survit à la fermeture de page, pas de problème CORS
+  fetch(`${API_URL}/analytics/visit`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+    headers: { 'Content-Type': 'application/json' },
+    keepalive: true,
+  }).catch(() => {/* silent */})
 }
 
 export function useVisitTracking(userId?: string) {

@@ -6,6 +6,11 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { listingsApi } from '../api/listings.api';
 import type { Listing } from '../types/listing.types';
 
+const LOCAL_LISTINGS_KEY = 'local_created_listings';
+
+const normalizeValue = (value?: string | number) =>
+  String(value ?? '').trim().toLowerCase();
+
 const formatFCFA = (n: number) =>
   new Intl.NumberFormat('fr-CM', { style: 'currency', currency: 'XAF', maximumFractionDigits: 0 }).format(n);
 
@@ -18,10 +23,50 @@ export default function MyActivityPage() {
 
   const domainColor = user?.profile?.domain === 'elevage' ? '#7C3D12' : '#3F441C';
 
+  const getStoredLocalListings = (): Listing[] => {
+    try {
+      const raw = JSON.parse(localStorage.getItem(LOCAL_LISTINGS_KEY) || '[]');
+      return Array.isArray(raw) ? raw : [];
+    } catch {
+      return [];
+    }
+  };
+
+  const isSameListing = (a: Listing, b: Listing) => {
+    return (
+      normalizeValue(a.title) === normalizeValue(b.title) &&
+      Number(a.price_per_unit || 0) === Number(b.price_per_unit || 0) &&
+      Number(a.quantity || 0) === Number(b.quantity || 0) &&
+      normalizeValue(a.unit) === normalizeValue(b.unit) &&
+      normalizeValue(a.region) === normalizeValue(b.region) &&
+      normalizeValue(a.locality) === normalizeValue(b.locality)
+    );
+  };
+
+  const syncLocalListingsWithApi = (localListings: Listing[], apiListings: Listing[]) => {
+    const remainingLocal = localListings.filter((local) => {
+      if (!String(local.id || '').startsWith('local-')) return true;
+      return !apiListings.some((apiListing) => isSameListing(local, apiListing));
+    });
+
+    localStorage.setItem(LOCAL_LISTINGS_KEY, JSON.stringify(remainingLocal));
+    return remainingLocal;
+  };
+
   useEffect(() => {
+    const localListings = getStoredLocalListings();
+
     listingsApi.getMyListings()
-      .then(data => setListings(Array.isArray(data) ? data : (data as any).items || []))
-      .catch(() => setListings([]))
+      .then(data => {
+        const apiListings = Array.isArray(data) ? data : (data as any).items || [];
+        const syncedLocalListings = syncLocalListingsWithApi(localListings, apiListings);
+        const merged = [...syncedLocalListings, ...apiListings];
+        const uniqueById = merged.filter((listing, index, arr) =>
+          index === arr.findIndex(item => item.id === listing.id)
+        );
+        setListings(uniqueById);
+      })
+      .catch(() => setListings(localListings))
       .finally(() => setLoading(false));
   }, []);
 

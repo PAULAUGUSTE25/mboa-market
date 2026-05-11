@@ -36,20 +36,28 @@ function useCountUp(target: number, duration = 2000) {
   return { count, ref };
 }
 
-// ─── Price ticker data (FCFA / Cameroon) ───
+// ─── Price ticker data (FCFA / Cameroun 2025) ───
 const TICKER_DATA = [
-  { product_fr: 'Maïs', product_en: 'Corn', price: 285, unit: 'kg', trend: '+2.3%', up: true },
-  { product_fr: 'Cacao', product_en: 'Cocoa', price: 1650, unit: 'kg', trend: '+5.1%', up: true },
-  { product_fr: 'Café Arabica', product_en: 'Arabica Coffee', price: 1200, unit: 'kg', trend: '-1.2%', up: false },
-  { product_fr: 'Banane Plantain', product_en: 'Plantain', price: 180, unit: 'kg', trend: '+3.5%', up: true },
-  { product_fr: 'Manioc', product_en: 'Cassava', price: 95, unit: 'kg', trend: '+0.8%', up: true },
-  { product_fr: 'Tomate', product_en: 'Tomato', price: 420, unit: 'kg', trend: '-4.1%', up: false },
-  { product_fr: 'Poulet de chair', product_en: 'Broiler Chicken', price: 3500, unit: 'head', trend: '+6.2%', up: true },
-  { product_fr: 'Oignon', product_en: 'Onion', price: 550, unit: 'kg', trend: '+1.9%', up: true },
-  { product_fr: 'Haricot', product_en: 'Beans', price: 890, unit: 'kg', trend: '+2.7%', up: true },
-  { product_fr: 'Piment', product_en: 'Chili Pepper', price: 750, unit: 'kg', trend: '-0.5%', up: false },
-  { product_fr: 'Soja', product_en: 'Soy', price: 620, unit: 'kg', trend: '+4.3%', up: true },
-  { product_fr: 'Riz IRAT', product_en: 'IRAT Rice', price: 720, unit: 'kg', trend: '+1.1%', up: true },
+  { product_fr: 'Maïs (Adamaoua)', product_en: 'Corn (Adamaoua)', price: 300, unit: 'kg', trend: '+2.3%', up: true },
+  { product_fr: 'Cacao (Centre)', product_en: 'Cocoa (Centre)', price: 2800, unit: 'kg', trend: '+5.1%', up: true },
+  { product_fr: 'Café Arabica (Ouest)', product_en: 'Arabica Coffee (West)', price: 3500, unit: 'kg', trend: '+3.5%', up: true },
+  { product_fr: 'Café Robusta (Sud-Ouest)', product_en: 'Robusta Coffee (SW)', price: 2500, unit: 'kg', trend: '-1.2%', up: false },
+  { product_fr: 'Plantain (Sud)', product_en: 'Plantain (South)', price: 2000, unit: 'régime', trend: '+3.5%', up: true },
+  { product_fr: 'Manioc (Littoral)', product_en: 'Cassava (Littoral)', price: 200, unit: 'kg', trend: '+0.8%', up: true },
+  { product_fr: 'Tomate (Nord)', product_en: 'Tomato (North)', price: 500, unit: 'kg', trend: '-4.1%', up: false },
+  { product_fr: 'Poulet de chair (Yaoundé)', product_en: 'Broiler Chicken (Yaounde)', price: 3500, unit: 'tête', trend: '+6.2%', up: true },
+  { product_fr: 'Œufs (Douala)', product_en: 'Eggs (Douala)', price: 2800, unit: 'plateau 30', trend: '+1.5%', up: true },
+  { product_fr: 'Oignon (Maroua)', product_en: 'Onion (Maroua)', price: 500, unit: 'kg', trend: '+1.9%', up: true },
+  { product_fr: 'Haricot (Extrême-Nord)', product_en: 'Beans (Far North)', price: 900, unit: 'kg', trend: '+2.7%', up: true },
+  { product_fr: 'Macabo (Ouest)', product_en: 'Macabo (West)', price: 450, unit: 'kg', trend: '+0.5%', up: true },
+  { product_fr: 'Igname de Batibo', product_en: 'Yam (Batibo)', price: 500, unit: 'kg', trend: 'stable', up: true },
+  { product_fr: 'Porc vif (Centre)', product_en: 'Live Pig (Centre)', price: 2200, unit: 'kg', trend: '+2.1%', up: true },
+  { product_fr: 'Chèvre (Adamaoua)', product_en: 'Goat (Adamaoua)', price: 50000, unit: 'tête', trend: '+4.0%', up: true },
+  { product_fr: 'Bœuf vif (Ngaoundéré)', product_en: 'Live Cattle (Ngaoundere)', price: 1800, unit: 'kg', trend: '+3.2%', up: true },
+  { product_fr: 'Cotton SODECOTON', product_en: 'SODECOTON Cotton', price: 350, unit: 'kg', trend: 'stable', up: true },
+  { product_fr: 'Thé Ndawara (Nord-Ouest)', product_en: 'Ndawara Tea (NW)', price: 2000, unit: 'kg', trend: '+2.5%', up: true },
+  { product_fr: 'Riz local IRAD', product_en: 'Local Rice (IRAD)', price: 700, unit: 'kg', trend: '+1.1%', up: true },
+  { product_fr: 'Tilapia (Bénué)', product_en: 'Tilapia (Benoue)', price: 3000, unit: 'kg', trend: 'stable', up: true },
 ];
 
 // ─── Testimonials ───
@@ -187,14 +195,19 @@ export default function LoginPage() {
   return (
     <>
     <div ref={containerRef} className="min-h-screen w-full overflow-hidden relative flex">
-      {/* ─── BACKGROUND SLIDESHOW ─── */}
-      <div className="absolute inset-0 z-0">
-        <img
-          src="/images/backgrounds/pexels-szafran-34125512.jpg"
-          alt=""
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/30" />
+      {/* ─── VIDEO BACKGROUND ─── */}
+      <div className="absolute inset-0 z-0 overflow-hidden">
+        <video
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+          style={{ filter: 'brightness(0.75)' }}
+        >
+          <source src="/images/backgrounds/video background.mp4" type="video/mp4" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/50 to-black/20" />
       </div>
 
       {/* ─── SUCCESS MODAL ─── */}
