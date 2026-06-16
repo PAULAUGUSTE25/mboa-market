@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
 from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics, admin, analytics, ai
 from app.core.config import settings
@@ -37,6 +38,17 @@ app.add_middleware(
     allow_headers=["*"],
     expose_headers=["*"],
 )
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    """Ensure error responses still pass through CORS middleware."""
+    logger.exception("Unhandled error on %s: %s", request.url.path, exc)
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error"},
+    )
+
 
 # Include API routers
 app.include_router(auth.router, prefix="/api")
