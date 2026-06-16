@@ -44,9 +44,17 @@ app.add_middleware(
 async def unhandled_exception_handler(request: Request, exc: Exception):
     """Ensure error responses still pass through CORS middleware."""
     logger.exception("Unhandled error on %s: %s", request.url.path, exc)
+    # Return CORS-enabled error response
+    origin = request.headers.get("origin", "")
+    allowed_origins = settings.cors_origins_list
+    cors_origin = origin if origin in allowed_origins else allowed_origins[0] if allowed_origins else "*"
     return JSONResponse(
         status_code=500,
         content={"detail": "Internal server error"},
+        headers={
+            "Access-Control-Allow-Origin": cors_origin,
+            "Access-Control-Allow-Credentials": "true",
+        },
     )
 
 
