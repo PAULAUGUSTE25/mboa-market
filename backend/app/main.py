@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics, admin, analytics, ai
+from app.core.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
@@ -30,16 +31,7 @@ app = FastAPI(
 # CORS middleware — NE PAS mélanger allow_credentials=True avec allow_origins=["*"]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-        "http://localhost:5174",
-        "http://127.0.0.1:5174",
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-        "https://mboa-market.netlify.app",
-        "https://mboa-backoffice-admin.netlify.app",
-    ],
+    allow_origins=settings.cors_origins_list,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

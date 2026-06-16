@@ -28,8 +28,33 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
-    # CORS
-    CORS_ORIGINS: str = "http://localhost:5173,http://localhost:5174,http://localhost:3000,https://mboa-market.netlify.app"
+    # CORS (comma-separated origins)
+    CORS_ORIGINS: str = (
+        "http://localhost:5173,http://127.0.0.1:5173,"
+        "http://localhost:5174,http://127.0.0.1:5174,"
+        "http://localhost:3000,http://127.0.0.1:3000,"
+        "https://mboa-market.netlify.app,"
+        "https://mboa-backoffice-admin.netlify.app"
+    )
+    PRODUCTION_CORS_ORIGINS: tuple[str, ...] = (
+        "https://mboa-market.netlify.app",
+        "https://mboa-backoffice-admin.netlify.app",
+    )
+
+    @property
+    def cors_origins_list(self) -> list[str]:
+        origins: list[str] = []
+        seen: set[str] = set()
+        for origin in self.CORS_ORIGINS.split(","):
+            origin = origin.strip()
+            if origin and origin not in seen:
+                origins.append(origin)
+                seen.add(origin)
+        for origin in self.PRODUCTION_CORS_ORIGINS:
+            if origin not in seen:
+                origins.append(origin)
+                seen.add(origin)
+        return origins
     
     # SMS Configuration
     SMS_PROVIDER: str = "twilio"
