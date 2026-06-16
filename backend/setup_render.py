@@ -31,12 +31,12 @@ from app.models.user import UserStatus
 
 
 CATEGORIES = [
-    {"id": str(uuid4()), "name": "Agriculture", "slug": "agriculture", "icon": "🌱"},
-    {"id": str(uuid4()), "name": "Élevage", "slug": "elevage", "icon": "🐄"},
-    {"id": str(uuid4()), "name": "Maraîchage", "slug": "maraichage", "icon": "🥬"},
-    {"id": str(uuid4()), "name": "Céréales", "slug": "cereales", "icon": "🌽"},
-    {"id": str(uuid4()), "name": "Tubercules", "slug": "tubercules", "icon": "🥔"},
-    {"id": str(uuid4()), "name": "Fruits tropicaux", "slug": "fruits", "icon": "🍌"},
+    {"id": str(uuid4()), "name_fr": "Agriculture", "name_en": "Agriculture", "kind": "sector"},
+    {"id": str(uuid4()), "name_fr": "Élevage", "name_en": "Livestock", "kind": "sector"},
+    {"id": str(uuid4()), "name_fr": "Maraîchage", "name_en": "Market gardening", "kind": "sector"},
+    {"id": str(uuid4()), "name_fr": "Céréales", "name_en": "Cereals", "kind": "category"},
+    {"id": str(uuid4()), "name_fr": "Tubercules", "name_en": "Tubers", "kind": "category"},
+    {"id": str(uuid4()), "name_fr": "Fruits tropicaux", "name_en": "Tropical fruits", "kind": "category"},
 ]
 
 
@@ -61,14 +61,14 @@ async def setup():
         print("\n📦 Seed catégories...")
         for cat in CATEGORIES:
             existing = await session.execute(
-                select(Category).where(Category.slug == cat["slug"])
+                select(Category).where(Category.name_fr == cat["name_fr"])
             )
             if not existing.scalar_one_or_none():
                 session.add(Category(
                     id=cat["id"],
-                    name=cat["name"],
-                    slug=cat["slug"],
-                    description=cat["name"]
+                    name_fr=cat["name_fr"],
+                    name_en=cat["name_en"],
+                    kind=cat["kind"]
                 ))
         await session.commit()
         print(f"✅ {len(CATEGORIES)} catégories insérées")
