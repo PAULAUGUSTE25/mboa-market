@@ -195,7 +195,7 @@ export default function LoginPage() {
   return (
     <>
     <div ref={containerRef} className="min-h-screen w-full overflow-hidden relative flex">
-      {/* ─── VIDEO BACKGROUND ─── Updated for Frankfurt backend */}
+      {/* ─── VIDEO BACKGROUND ─── Frankfurt API */}
       <div className="absolute inset-0 z-0 overflow-hidden">
         <video
           autoPlay
