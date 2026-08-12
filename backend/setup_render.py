@@ -40,13 +40,22 @@ CATEGORIES = [
 ]
 
 
+import ssl
+
 async def setup():
     print("=" * 60)
     print("🚀 MBOA Market — Initialisation Render")
     print(f"📊 DB: {settings.DATABASE_URL[:40]}...")
     print("=" * 60)
 
-    engine = create_async_engine(settings.DATABASE_URL, echo=False)
+    connect_args = {}
+    if "render.com" in settings.DATABASE_URL or "dpg-" in settings.DATABASE_URL:
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        connect_args["ssl"] = ctx
+
+    engine = create_async_engine(settings.DATABASE_URL, echo=False, connect_args=connect_args, pool_pre_ping=True)
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     # 1. Créer toutes les tables avec retry
