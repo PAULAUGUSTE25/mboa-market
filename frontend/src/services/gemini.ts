@@ -3,13 +3,12 @@ import axios from 'axios';
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const BASE_URL = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-// List of models to try in order of preference (updated for 2025)
+// List of models to try in order of preference
 const MODELS = [
-  'gemini-2.0-flash-exp',
-  'gemini-1.5-flash-8b',
-  'gemini-1.5-flash',
-  'gemini-1.5-pro',
-  'gemini-1.5-flash-002'
+  'gemini-flash-latest',
+  'gemini-3.6-flash',
+  'gemini-3.5-flash',
+  'gemini-2.5-flash'
 ];
 
 // Simple rate limiting - track last request time

@@ -98,6 +98,10 @@ class MultiAIService {
       throw new Error('Backend AI returned empty response');
     }
 
+    if (data.provider?.includes('Local AI Engine')) {
+      throw new Error('Backend returned Local AI Engine fallback');
+    }
+
     return data.text;
   }
 
