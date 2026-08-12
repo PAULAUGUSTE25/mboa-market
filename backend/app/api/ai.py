@@ -146,13 +146,12 @@ async def chat_with_ai(payload: AIChatRequest):
         if not model:
             continue
         try:
-            text = await asyncio.to_thread(_call_gemini_model, full_prompt, model)
+            text = await asyncio.to_thread(_call_gemini_model, full_prompt, model, key)
             return AIChatResponse(text=text, provider=f"Gemini ({model})")
         except urllib.error.HTTPError as exc:
-            if exc.code == 400:
-                print(f"⚠️ Gemini API Key invalid (HTTP 400). Using Bigiss Local AI fallback.")
-                break
-        except (urllib.error.URLError, ValueError, TimeoutError) as exc:
+            print(f"⚠️ Gemini model {model} HTTP {exc.code}: {exc.reason}. Trying next model...")
+            continue
+        except Exception as exc:
             print(f"⚠️ Gemini model {model} error: {exc}. Trying next model...")
             continue
 
