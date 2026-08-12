@@ -80,8 +80,8 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "development"
 
     # AI / Gemini
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-flash-latest"
     
     # PostgreSQL specific settings
     DB_POOL_SIZE: int = 20
@@ -90,7 +90,8 @@ class Settings(BaseSettings):
     DB_POOL_RECYCLE: int = 3600
     
     class Config:
-        env_file = ".env"
+        env_file = ("backend/.env", ".env")
+        extra = "ignore"
 
 
 settings = Settings()
