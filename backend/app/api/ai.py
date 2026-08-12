@@ -17,11 +17,9 @@ router = APIRouter(prefix="/ai", tags=["AI"])
 DEFAULT_GEMINI_KEY = base64.b64decode("QVEuQWI4Uk42SnBuVW9kYlp2UWhXR3NZcHI1YXg4VjZoblJmTjg0RlFtZkNlTXdUOVpQOXc=").decode("utf-8")
 
 GEMINI_MODELS = [
-    settings.GEMINI_MODEL,
     "gemini-flash-latest",
     "gemini-3.6-flash",
     "gemini-3.5-flash",
-    "gemini-2.5-flash",
 ]
 
 
@@ -35,6 +33,18 @@ class AIChatResponse(BaseModel):
     provider: str = "Gemini"
 
 
+def _get_clean_api_key() -> str:
+    """Valide et nettoie la clé API Gemini pour éviter les erreurs HTTP 400 Bad Request."""
+    env_key = (os.environ.get("GEMINI_API_KEY") or "").strip().strip('"').strip("'")
+    settings_key = (getattr(settings, "GEMINI_API_KEY", "") or "").strip().strip('"').strip("'")
+    
+    for k in (env_key, settings_key):
+        if k and len(k) >= 20 and not k.startswith("AIzaSyDMve") and not k.startswith("your-") and " " not in k:
+            return k
+            
+    return DEFAULT_GEMINI_KEY
+
+
 def _build_prompt(prompt: str, context: Optional[str]) -> str:
     base = (
         "Tu es Bigiss, l'assistant IA de MBOA Market, une plateforme agricole du Cameroun. "
@@ -46,7 +56,7 @@ def _build_prompt(prompt: str, context: Optional[str]) -> str:
 
 
 def _call_gemini_model(prompt: str, model: str, api_key: Optional[str] = None) -> str:
-    key = api_key or settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY") or DEFAULT_GEMINI_KEY
+    key = api_key or _get_clean_api_key()
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
         f"?key={key}"
@@ -85,7 +95,7 @@ async def chat_with_ai(payload: AIChatRequest):
             provider="Bigiss AI",
         )
 
-    key = settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY") or DEFAULT_GEMINI_KEY
+    key = _get_clean_api_key()
     full_prompt = _build_prompt(prompt_str, payload.context)
 
     errors = []
@@ -96,7 +106,13 @@ async def chat_with_ai(payload: AIChatRequest):
             text = await asyncio.to_thread(_call_gemini_model, full_prompt, model, key)
             return AIChatResponse(text=text, provider=f"Gemini ({model})")
         except urllib.error.HTTPError as exc:
-            err_msg = f"HTTP {exc.code}: {exc.reason}"
+            try:
+                err_body = exc.read().decode("utf-8")
+                err_json = json.loads(err_body)
+                msg = err_json.get("error", {}).get("message") or exc.reason
+            except Exception:
+                msg = exc.reason
+            err_msg = f"HTTP {exc.code}: {msg}"
             print(f"⚠️ Gemini model {model} error: {err_msg}")
             errors.append(f"{model} ({err_msg})")
             continue
@@ -107,6 +123,5 @@ async def chat_with_ai(payload: AIChatRequest):
 
     raise HTTPException(
         status_code=502,
-        detail=f"Échec des appels aux modèles Gemini Google Cloud. Dtails: {'; '.join(errors)}"
+        detail=f"Échec des appels aux modèles Gemini Google Cloud. Détails: {'; '.join(errors)}"
     )
-
