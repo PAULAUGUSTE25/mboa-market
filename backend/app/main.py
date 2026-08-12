@@ -93,12 +93,13 @@ async def api_health_check():
 @app.get("/api/db-status")
 async def db_status():
     """Diagnostic: teste la connexion DB"""
+    from app.core.database import engine
+    from sqlalchemy import text
     try:
-        from app.core.database import engine
-        from sqlalchemy import text
         async with engine.connect() as conn:
             result = await conn.execute(text("SELECT 1"))
             row = result.scalar()
-        return {"db": "connected", "test": row, "url_prefix": str(engine.url)[:30]}
+        return {"db": "connected", "test": row, "host": engine.url.host}
     except Exception as e:
-        return {"db": "error", "detail": str(e)[:200]}
+        safe_url = f"{engine.url.drivername}://{engine.url.username}:***@{engine.url.host}:{engine.url.port}/{engine.url.database}"
+        return {"db": "error", "detail": str(e), "target_host": engine.url.host, "url": safe_url}
