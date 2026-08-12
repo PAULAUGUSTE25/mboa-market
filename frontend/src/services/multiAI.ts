@@ -54,14 +54,12 @@ class MultiAIService {
         };
       }
     } catch (error) {
-      console.warn('Direct Gemini Client failed, fallback to Local AI...', error);
+      console.warn('Direct Gemini Client failed:', error);
     }
 
-    // Si tous échouent, utiliser le fallback local
-    const localResponse = this.localFallback(prompt);
     return {
-      text: localResponse,
-      provider: 'Local',
+      text: "Erreur lors de l'appel à l'IA Google Gemini Cloud. Veuillez vérifier votre connexion et réessayer.",
+      provider: 'Erreur Gemini API',
       cached: false
     };
   }
