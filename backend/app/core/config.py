@@ -14,6 +14,10 @@ def _fix_db_url(url: str) -> str:
         url = url.replace("@dpg-", "@dpg-").replace("-a/", "-a.frankfurt-postgres.render.com/")
         if "-a:" in url:
             url = url.replace("-a:", "-a.frankfurt-postgres.render.com:")
+    # Render PostgreSQL requires ssl parameter for asyncpg
+    if ("render.com" in url or "dpg-" in url) and "ssl=" not in url:
+        sep = "&" if "?" in url else "?"
+        url = f"{url}{sep}ssl=require"
     return url
 
 
