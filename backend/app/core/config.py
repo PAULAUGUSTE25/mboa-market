@@ -85,7 +85,7 @@ class Settings(BaseSettings):
 
     # AI / Gemini
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
-    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+    GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
     
     # PostgreSQL specific settings
     DB_POOL_SIZE: int = 20
