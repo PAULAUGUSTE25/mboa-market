@@ -8,6 +8,12 @@ def _fix_db_url(url: str) -> str:
         url = url.replace("postgres://", "postgresql+asyncpg://", 1)
     elif url.startswith("postgresql://") and "+asyncpg" not in url:
         url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    # Render internal database host fix if internal hostname without domain is passed
+    if "@dpg-" in url and ".render.com" not in url:
+        # Append region domain suffix for frankfurt
+        url = url.replace("@dpg-", "@dpg-").replace("-a/", "-a.frankfurt-postgres.render.com/")
+        if "-a:" in url:
+            url = url.replace("-a:", "-a.frankfurt-postgres.render.com:")
     return url
 
 
