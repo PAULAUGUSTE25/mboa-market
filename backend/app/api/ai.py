@@ -131,7 +131,7 @@ async def chat_with_ai(payload: AIChatRequest):
         )
 
     # Check key validity before attempting remote call
-    key = settings.GEMINI_API_KEY
+    key = settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", "")
     if not key or len(key) < 20 or key.startswith("AIzaSyDMveMdsMx0sCjOF6sdPNYuxzNe5r7ExYc"):
         # Fallback to local AI engine if API key is empty or dummy placeholder
         return AIChatResponse(
