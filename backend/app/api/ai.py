@@ -39,10 +39,11 @@ def _build_prompt(prompt: str, context: Optional[str]) -> str:
     return f"{base}\n\nQuestion: {prompt}"
 
 
-def _call_gemini_model(prompt: str, model: str) -> str:
+def _call_gemini_model(prompt: str, model: str, api_key: Optional[str] = None) -> str:
+    key = api_key or settings.GEMINI_API_KEY or os.environ.get("GEMINI_API_KEY", "")
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-        f"?key={settings.GEMINI_API_KEY}"
+        f"?key={key}"
     )
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
