@@ -19,7 +19,7 @@ services:
       - key: DATABASE_URL
         fromDatabase:
           name: mboa-market-db
-          property: connectionString
+          property: externalConnectionString
       - key: SECRET_KEY
         value: mboa-market-secret-key-2024-production-v2
       - key: PYTHON_VERSION
