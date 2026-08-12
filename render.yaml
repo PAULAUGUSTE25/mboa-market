@@ -12,8 +12,8 @@ services:
     region: frankfurt
     plan: free
     rootDir: backend
-    buildCommand: "pip install -r requirements.txt && python setup_render.py"
-    startCommand: "uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "python setup_render.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL

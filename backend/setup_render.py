@@ -49,11 +49,21 @@ async def setup():
     engine = create_async_engine(settings.DATABASE_URL, echo=False)
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
-    # 1. Créer toutes les tables
-    print("\n📋 Création des tables...")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    print("✅ Tables créées")
+    # 1. Créer toutes les tables avec retry
+    max_retries = 5
+    for attempt in range(1, max_retries + 1):
+        try:
+            print(f"\n📋 Connexion DB et création des tables (tentative {attempt}/{max_retries})...")
+            async with engine.begin() as conn:
+                await conn.run_sync(Base.metadata.create_all)
+            print("✅ Tables créées avec succès")
+            break
+        except Exception as e:
+            if attempt == max_retries:
+                print(f"❌ Échec de la connexion DB après {max_retries} tentatives : {e}")
+                sys.exit(1)
+            print(f"⚠️ Connexion échouée ({e}), nouvelle tentative dans 3 secondes...")
+            await asyncio.sleep(3)
 
     async with async_session() as session:
 
