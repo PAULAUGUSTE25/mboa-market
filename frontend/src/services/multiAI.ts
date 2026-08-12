@@ -1,7 +1,4 @@
-/**
- * Multi-AI Service avec Fallback Automatique
- * Utilise plusieurs providers gratuits pour garantir la disponibilité
- */
+import { generateGeminiResponse } from './gemini';
 
 interface AIProvider {
   name: string;
@@ -18,40 +15,46 @@ interface AIResponse {
 }
 
 class MultiAIService {
-  private providers: AIProvider[] = [
-    {
-      name: 'MBOA Backend AI',
-      endpoint: `${import.meta.env.VITE_API_URL || 'http://localhost:8000/api'}/ai/chat`,
-      apiKey: '',
-      model: 'gemini-server',
-      enabled: true
+  private getApiUrl(): string {
+    const envUrl = import.meta.env.VITE_API_URL;
+    if (envUrl) {
+      return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
     }
-  ];
+    return 'https://mboa-market-backend.onrender.com/api';
+  }
 
   private cache: Map<string, { response: string; timestamp: number }> = new Map();
   private cacheExpiry = 3600000; // 1 heure
 
   /**
-   * Génère une réponse IA avec fallback automatique
+   * Génère une réponse IA avec fallback automatique multi-niveaux
    */
   async generateResponse(prompt: string, context?: string): Promise<AIResponse> {
-    // Essayer chaque provider dans l'ordre
-    for (const provider of this.providers) {
-      if (!provider.enabled) {
-        continue;
-      }
+    // 1. Essayer le backend MBOA (Gemini Server)
+    try {
+      const endpoint = `${this.getApiUrl()}/ai/chat`;
+      const response = await this.callBackendAI(endpoint, prompt, context);
+      return {
+        text: response,
+        provider: 'MBOA Gemini Server',
+        cached: false
+      };
+    } catch (error) {
+      console.warn('Backend AI failed, trying Direct Gemini Client...', error);
+    }
 
-      try {
-        const response = await this.callProvider(provider, prompt, context);
+    // 2. Essayer Gemini Client Direct
+    try {
+      const clientResponse = await generateGeminiResponse(prompt, context);
+      if (clientResponse && !clientResponse.includes("n'est pas configuré")) {
         return {
-          text: response,
-          provider: provider.name,
+          text: clientResponse,
+          provider: 'Gemini Client',
           cached: false
         };
-      } catch (error) {
-        // Continue avec le prochain provider
-        continue;
       }
+    } catch (error) {
+      console.warn('Direct Gemini Client failed, fallback to Local AI...', error);
     }
 
     // Si tous échouent, utiliser le fallback local
@@ -67,14 +70,14 @@ class MultiAIService {
    * Appelle un provider spécifique
    */
   private async callProvider(provider: AIProvider, prompt: string, context?: string): Promise<string> {
-    return await this.callBackendAI(provider, prompt, context);
+    return await this.callBackendAI(provider.endpoint, prompt, context);
   }
 
   /**
    * Appel au backend MBOA (qui appelle Gemini côté serveur)
    */
-  private async callBackendAI(provider: AIProvider, prompt: string, context?: string): Promise<string> {
-    const response = await fetch(provider.endpoint, {
+  private async callBackendAI(endpointUrl: string, prompt: string, context?: string): Promise<string> {
+    const response = await fetch(endpointUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'

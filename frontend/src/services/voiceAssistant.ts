@@ -32,7 +32,7 @@ export interface VoiceAssistantConfig {
 }
 
 class VoiceAssistant {
-  private recognition: SpeechRecognition | null = null;
+  private recognition: any = null;
   private synthesis: SpeechSynthesis;
   private isListening: boolean = false;
   private config: VoiceAssistantConfig;
@@ -65,11 +65,11 @@ class VoiceAssistant {
       this.recognition.interimResults = true;
       this.recognition.lang = this.config.language === 'fr' ? 'fr-FR' : 'en-US';
       
-      this.recognition.onresult = (event) => {
+      this.recognition.onresult = (event: any) => {
         this.handleSpeechResult(event);
       };
       
-      this.recognition.onerror = (event) => {
+      this.recognition.onerror = (event: any) => {
         console.error('Speech recognition error:', event.error);
         if (event.error === 'no-speech') {
           this.speak("Je n'ai pas entendu ce que vous avez dit. Pouvez-vous répéter ?");
@@ -113,7 +113,7 @@ class VoiceAssistant {
   /**
    * Handle speech recognition results
    */
-  private handleSpeechResult(event: SpeechRecognitionEvent): void {
+  private handleSpeechResult(event: any): void {
     const last = event.results.length - 1;
     const transcript = event.results[last][0].transcript.toLowerCase();
     

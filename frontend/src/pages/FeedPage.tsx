@@ -1329,7 +1329,7 @@ export default function FeedPage() {
               <div className="flex gap-3">
                 <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden">
                   {(user?.profile as any)?.avatar_url ? (
-                    <img src={(user.profile as any).avatar_url} alt="" className="w-full h-full object-cover" />
+                    <img src={(user?.profile as any)?.avatar_url} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center font-bold text-gray-500">
                       {user?.profile?.display_name?.charAt(0) || 'U'}

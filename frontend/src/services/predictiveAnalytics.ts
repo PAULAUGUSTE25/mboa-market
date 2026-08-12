@@ -314,7 +314,8 @@ class PredictiveAnalyticsEngine {
   }
 
   private calculatePredictedYield(baseline: number, factors: any): number {
-    const avgFactor = Object.values(factors).reduce((a: any, b: any) => a + b, 0) / Object.keys(factors).length;
+    const values = Object.values(factors) as number[];
+    const avgFactor = values.reduce((a, b) => a + b, 0) / (values.length || 1);
     return Math.round(baseline * avgFactor);
   }
 

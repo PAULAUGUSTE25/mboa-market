@@ -13,8 +13,10 @@ router = APIRouter(prefix="/ai", tags=["AI"])
 
 GEMINI_MODELS = [
     settings.GEMINI_MODEL,
+    "gemini-2.0-flash",
     "gemini-1.5-flash",
     "gemini-1.5-pro",
+    "gemini-1.5-flash-8b",
 ]
 
 

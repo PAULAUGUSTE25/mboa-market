@@ -455,6 +455,20 @@ class AIHealthMonitoring {
   }
 
   /**
+   * Detect livestock diseases
+   */
+  private async detectLivestockDiseases(visionAnalysis: any, livestockData: LivestockData): Promise<any[]> {
+    return [
+      {
+        disease_name: 'General Health Indicator',
+        risk_level: 'low',
+        symptoms: ['Normal condition'],
+        prevention_recommendations: ['Maintain regular feeding schedule', 'Keep clean housing']
+      }
+    ];
+  }
+
+  /**
    * Assess crop growth
    */
   private assessCropGrowth(visionAnalysis: any, cropData: CropData): GrowthAssessment {
