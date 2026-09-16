@@ -1,0 +1,422 @@
+// MBOA MARKET - Database Schema for dbdiagram.io
+// Paste this content at https://dbdiagram.io
+
+// USER & AUTH
+Table users {
+  id uuid [pk]
+  phone varchar [not null, unique]
+  phone_verified boolean [not null]
+  email varchar
+  password_hash varchar
+  status varchar [not null]
+  badge varchar [not null, default: "UNVERIFIED"]
+  locale varchar [not null, default: "fr"]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table profiles {
+  id uuid [pk]
+  user_id uuid [not null, unique]
+  display_name varchar [not null]
+  activity_type varchar [not null]
+  domain varchar
+  region varchar [not null]
+  locality varchar
+  bio text
+  avatar_storage_key varchar
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table roles {
+  id uuid [pk]
+  code varchar [not null, unique]
+  name varchar [not null]
+  description text
+}
+
+Table user_roles {
+  user_id uuid [pk]
+  role_id uuid [pk]
+  granted_by uuid
+  granted_at timestamptz [not null]
+}
+
+// MARKETPLACE
+Table categories {
+  id uuid [pk]
+  name_fr varchar [not null]
+  name_en varchar [not null]
+  kind varchar [not null]
+  parent_id uuid
+  is_active boolean [not null, default: true]
+}
+
+Table products_ref {
+  id uuid [pk]
+  name_fr varchar [not null]
+  name_en varchar [not null]
+  unit_default varchar
+  is_active boolean [not null, default: true]
+}
+
+Table listings {
+  id uuid [pk]
+  seller_id uuid [not null]
+  category_id uuid [not null]
+  product_ref_id uuid
+  title varchar
+  variety varchar
+  domain varchar
+  quantity decimal [not null, default: 0]
+  unit varchar [not null]
+  price_per_unit decimal [not null, default: 0]
+  currency varchar [not null, default: "XAF"]
+  region varchar [not null]
+  locality varchar
+  lat decimal
+  lng decimal
+  available_from date
+  status varchar [not null, default: "PUBLISHED"]
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table listing_photos {
+  id uuid [pk]
+  listing_id uuid [not null]
+  storage_key varchar [not null]
+  position int [not null, default: 1]
+  created_at timestamptz [not null]
+}
+
+// ORDERS & PAYMENTS
+Table orders {
+  id uuid [pk]
+  buyer_id uuid [not null]
+  seller_id uuid [not null]
+  listing_id uuid
+  status varchar [not null, default: "CREATED"]
+  subtotal decimal [not null, default: 0]
+  fee_platform decimal [not null, default: 0]
+  fee_logistics decimal [not null, default: 0]
+  total decimal [not null, default: 0]
+  currency varchar [not null, default: "XAF"]
+  delivery_mode varchar
+  delivery_address text
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table order_items {
+  id uuid [pk]
+  order_id uuid [not null]
+  product_ref_id uuid
+  quantity decimal [not null]
+  unit varchar [not null]
+  price_per_unit decimal [not null]
+  amount decimal [not null]
+}
+
+Table payments {
+  id uuid [pk]
+  order_id uuid [not null, unique]
+  provider varchar [not null]
+  provider_ref varchar [unique]
+  status varchar [not null, default: "INITIATED"]
+  amount decimal [not null]
+  idempotency_key varchar [not null, unique]
+  initiated_at timestamptz [not null]
+  confirmed_at timestamptz
+}
+
+Table escrow_holds {
+  id uuid [pk]
+  order_id uuid [not null, unique]
+  payment_id uuid [not null]
+  status varchar [not null, default: "HELD"]
+  held_amount decimal [not null]
+  released_amount decimal [not null, default: 0]
+  released_at timestamptz
+  created_at timestamptz [not null]
+}
+
+Table disputes {
+  id uuid [pk]
+  order_id uuid [not null, unique]
+  opened_by uuid [not null]
+  status varchar [not null, default: "OPEN"]
+  reason varchar [not null]
+  decided_by uuid
+  created_at timestamptz [not null]
+}
+
+Table reviews {
+  id uuid [pk]
+  from_user_id uuid [not null]
+  to_user_id uuid [not null]
+  order_id uuid
+  rating int [not null]
+  comment text
+  created_at timestamptz [not null]
+}
+
+// MESSAGING
+Table conversations {
+  id uuid [pk]
+  listing_id uuid
+  created_at timestamptz [not null]
+  updated_at timestamptz [not null]
+}
+
+Table conversation_participants {
+  conversation_id uuid [pk]
+  user_id uuid [pk]
+  joined_at timestamptz [not null]
+  last_read_at timestamptz
+}
+
+Table messages {
+  id uuid [pk]
+  conversation_id uuid [not null]
+  sender_id uuid [not null]
+  content text [not null]
+  is_read boolean [not null, default: false]
+  created_at timestamptz [not null]
+}
+
+// KYC
+Table kyc_submissions {
+  id uuid [pk]
+  user_id uuid [not null]
+  status varchar [not null, default: "PENDING"]
+  kyc_level int [not null, default: 1]
+  submitted_at timestamptz [not null]
+  reviewed_by uuid
+  reviewed_at timestamptz
+  rejection_reason text
+}
+
+Table kyc_documents {
+  id uuid [pk]
+  submission_id uuid [not null]
+  doc_type varchar [not null]
+  storage_key varchar [not null]
+  checksum_sha256 varchar
+  encrypted boolean [not null, default: true]
+  created_at timestamptz [not null]
+}
+
+// B2B
+Table b2b_requests {
+  id uuid [pk]
+  buyer_org_user_id uuid [not null]
+  product_ref_id uuid
+  product_name varchar [not null]
+  volume decimal [not null]
+  unit varchar [not null]
+  status varchar [not null, default: "OPEN"]
+  created_at timestamptz [not null]
+}
+
+Table b2b_offers {
+  id uuid [pk]
+  request_id uuid [not null]
+  producer_user_id uuid [not null]
+  offered_volume decimal [not null]
+  price_per_unit decimal [not null]
+  status varchar [not null, default: "SUBMITTED"]
+  created_at timestamptz [not null]
+}
+
+Table b2b_contracts {
+  id uuid [pk]
+  request_id uuid [not null]
+  buyer_user_id uuid [not null]
+  status varchar [not null, default: "CREATED"]
+  created_at timestamptz [not null]
+}
+
+// LIVESTOCK
+Table livestock_batches {
+  id uuid [pk]
+  owner_user_id uuid [not null]
+  species varchar [not null]
+  name varchar
+  start_date date [not null]
+  initial_count int [not null]
+  created_at timestamptz [not null]
+}
+
+Table sync_clients {
+  id uuid [pk]
+  user_id uuid [not null]
+  device_id varchar [not null]
+  platform varchar
+  last_sync_at timestamptz
+}
+
+Table livestock_events {
+  id uuid [pk]
+  batch_id uuid [not null]
+  owner_user_id uuid [not null]
+  event_type varchar [not null]
+  client_event_id varchar [not null]
+  client_id uuid [not null]
+  event_at timestamptz [not null]
+  server_received_at timestamptz [not null]
+
+  indexes {
+    (client_id, client_event_id) [unique]
+  }
+}
+
+// LOGISTICS
+Table hubs {
+  id uuid [pk]
+  name varchar [not null]
+  region varchar [not null]
+  is_active boolean [not null, default: true]
+}
+
+Table transport_requests {
+  id uuid [pk]
+  requester_user_id uuid [not null]
+  order_id uuid
+  status varchar [not null, default: "OPEN"]
+  created_at timestamptz [not null]
+}
+
+Table transport_missions {
+  id uuid [pk]
+  request_id uuid [not null, unique]
+  transporter_user_id uuid [not null]
+  status varchar [not null, default: "ASSIGNED"]
+  created_at timestamptz [not null]
+}
+
+// SYSTEM
+Table notifications {
+  id uuid [pk]
+  user_id uuid [not null]
+  channel varchar [not null]
+  title varchar
+  body text
+  created_at timestamptz [not null]
+}
+
+Table audit_logs {
+  id uuid [pk]
+  actor_user_id uuid
+  action varchar [not null]
+  entity_type varchar [not null]
+  entity_id uuid
+  created_at timestamptz [not null]
+}
+
+Table login_history {
+  id uuid [pk]
+  user_id uuid [not null]
+  ip_address varchar
+  user_agent varchar
+  device_type varchar
+  location varchar
+  success varchar [not null, default: "true"]
+  created_at timestamptz [not null]
+}
+
+Table site_visits {
+  id uuid [pk]
+  session_id varchar [not null]
+  ip_address varchar
+  user_agent varchar
+  device_type varchar
+  referrer varchar
+  page varchar
+  action varchar [not null, default: "visit"]
+  user_id uuid
+  created_at timestamptz [not null]
+
+  indexes {
+    (session_id)
+  }
+}
+
+Table two_factor_codes {
+  id uuid [pk]
+  user_id uuid [not null]
+  code varchar [not null]
+  purpose varchar [not null, default: "login"]
+  expires_at timestamptz [not null]
+  used varchar [not null, default: "false"]
+  created_at timestamptz [not null]
+}
+
+// ============================================================
+// RELATIONSHIPS
+// ============================================================
+
+Ref: users.id - profiles.user_id
+Ref: users.id < user_roles.user_id
+Ref: roles.id < user_roles.role_id
+Ref: users.id < user_roles.granted_by
+
+Ref: users.id < listings.seller_id
+Ref: categories.id < listings.category_id
+Ref: products_ref.id < listings.product_ref_id
+Ref: listings.id < listing_photos.listing_id
+
+Ref: categories.parent_id > categories.id
+
+Ref: users.id < orders.buyer_id
+Ref: users.id < orders.seller_id
+Ref: listings.id < orders.listing_id
+Ref: orders.id < order_items.order_id
+Ref: products_ref.id < order_items.product_ref_id
+
+Ref: orders.id - payments.order_id
+Ref: orders.id - escrow_holds.order_id
+Ref: payments.id - escrow_holds.payment_id
+
+Ref: orders.id - disputes.order_id
+Ref: users.id < disputes.opened_by
+Ref: users.id < disputes.decided_by
+
+Ref: users.id < reviews.from_user_id
+Ref: users.id < reviews.to_user_id
+Ref: orders.id < reviews.order_id
+
+Ref: listings.id < conversations.listing_id
+Ref: conversations.id < conversation_participants.conversation_id
+Ref: users.id < conversation_participants.user_id
+Ref: conversations.id < messages.conversation_id
+Ref: users.id < messages.sender_id
+
+Ref: users.id < kyc_submissions.user_id
+Ref: users.id < kyc_submissions.reviewed_by
+Ref: kyc_submissions.id < kyc_documents.submission_id
+
+Ref: users.id < b2b_requests.buyer_org_user_id
+Ref: products_ref.id < b2b_requests.product_ref_id
+Ref: b2b_requests.id < b2b_offers.request_id
+Ref: users.id < b2b_offers.producer_user_id
+Ref: b2b_requests.id < b2b_contracts.request_id
+Ref: users.id < b2b_contracts.buyer_user_id
+
+Ref: users.id < livestock_batches.owner_user_id
+Ref: users.id < sync_clients.user_id
+Ref: livestock_batches.id < livestock_events.batch_id
+Ref: users.id < livestock_events.owner_user_id
+Ref: sync_clients.id < livestock_events.client_id
+
+Ref: users.id < transport_requests.requester_user_id
+Ref: orders.id < transport_requests.order_id
+Ref: transport_requests.id - transport_missions.request_id
+Ref: users.id < transport_missions.transporter_user_id
+
+Ref: users.id < notifications.user_id
+Ref: users.id < audit_logs.actor_user_id
+Ref: users.id < login_history.user_id
+Ref: users.id < site_visits.user_id
+Ref: users.id < two_factor_codes.user_id

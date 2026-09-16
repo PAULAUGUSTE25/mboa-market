@@ -7,6 +7,16 @@ import urllib.request
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
+from fastapi import UploadFile, File, Depends
+from fastapi import status
+from app.core.database import get_db
+from sqlalchemy import select
+from datetime import datetime
+from sqlalchemy.ext.asyncio import AsyncSession
+import pathlib
+from uuid import uuid4
+from app.models.messaging import Conversation, Message, ConversationParticipant
+from app.models.user import User, Profile
 from pydantic import BaseModel
 
 from app.core.config import settings
@@ -26,6 +36,8 @@ GEMINI_MODELS = [
 class AIChatRequest(BaseModel):
     prompt: str
     context: Optional[str] = None
+    user_name: Optional[str] = None
+    interlocutor_name: Optional[str] = None
 
 
 class AIChatResponse(BaseModel):
@@ -45,14 +57,53 @@ def _get_clean_api_key() -> str:
     return DEFAULT_GEMINI_KEY
 
 
-def _build_prompt(prompt: str, context: Optional[str]) -> str:
-    base = (
-        "Tu es Bigiss, l'assistant IA de MBOA Market, une plateforme agricole du Cameroun. "
-        "Réponds en français de manière utile, concise et professionnelle."
+def _build_prompt(prompt: str, context: Optional[str], user_name: Optional[str] = None, interlocutor_name: Optional[str] = None) -> str:
+    """Construit une consigne robuste pour Gemini.
+    - S'adresse toujours à l'utilisateur par son prénom si fourni.
+    - Cadre : conseils agricoles et d'élevage adaptés au Cameroun.
+    - Si l'utilisateur exprime une intention d'élevage, poser des questions de qualification utiles (espace, budget, nombre d'animaux, expérience).
+    - Ne pas divulguer d'informations sensibles ou de clés.
+    """
+
+    lower_prompt = (prompt or "").lower()
+    has_greeting_word = any(w in lower_prompt for w in ["bonjour", "salut", "hello", "coucou", "bonsoir"])
+    is_first_greeting = has_greeting_word and not context
+
+    # Consignes de base pour le modèle
+    base_instructions = (
+        "Tu es Bigiss, l'assistant IA de MBOA Market, expert en agriculture et élevage pour le Cameroun. "
+        "Fournis des réponses pratiques, courtes et adaptées au contexte camerounais. "
+        "Lorsque l'utilisateur montre une intention de démarrer une activité (ex: élevage, culture), pose au moins une question de qualification utile (espace, budget, nombre d'animaux, expérience). "
+        "Toujours t'adresser à l'utilisateur par son prénom s'il est fourni. Si un interlocuteur est fourni (ex: Léa), prends en compte le rôle mais adresse-toi principalement à l'utilisateur."
     )
+
+    if is_first_greeting:
+        greeting_instruction = (
+            "Consigne de salutation : L'utilisateur salue pour la première fois. Réponds par une salutation brève et amicale suivie d'une question d'ouverture. "
+            "Exemple : 'Bonjour {name} ! Je suis Bigiss, l\'assistant IA de MBOA Market. Comment puis-je vous aider ?'"
+        )
+    else:
+        greeting_instruction = (
+            "CONSIGNE DE SALUTATION : Ne commence pas par une nouvelle salutation si la conversation est déjà engagée. Réponds directement et de façon concise."
+        )
+
+    # Ajout des instructions spécifiques pour l'élevage/culture
+    follow_up_instructions = (
+        "Si l'utilisateur parle d\'élevage ou exprime un intérêt pour démarrer (mots-clés: 'élevage', 'démarrer élevage', 'poulet', 'porc', 'bétail', 'cheptel'), "
+        "pose des questions de qualification utiles : 'Quel est l\'espace que vous prévoyez (m² ou ha)?', 'Quel est votre budget approximatif (en XAF)?', 'Combien d\'animaux prévoyez-vous?', 'Avez-vous de l\'expérience ?' ; "
+        "ensuite propose un plan sommaire (3 étapes) adapté au budget et à l\'espace fournis."
+    )
+
+    name_part = f"L'utilisateur se nomme {user_name}." if user_name else "L'utilisateur n'a pas fourni de prénom." 
+    interlocutor_part = f"Interlocuteur: {interlocutor_name}." if interlocutor_name else ""
+
     if context:
-        return f"{base}\n\nContexte: {context}\n\nQuestion: {prompt}"
-    return f"{base}\n\nQuestion: {prompt}"
+        return (
+            f"{base_instructions}\n\n{greeting_instruction}\n\n{follow_up_instructions}\n\nContexte fourni:\n{context}\n\n{ name_part } {interlocutor_part}\n\nQuestion de l'utilisateur:\n{prompt}"
+        )
+    return (
+        f"{base_instructions}\n\n{greeting_instruction}\n\n{follow_up_instructions}\n\n{ name_part } {interlocutor_part}\n\nQuestion de l'utilisateur:\n{prompt}"
+    )
 
 
 def _call_gemini_model(prompt: str, model: str, api_key: Optional[str] = None) -> str:
@@ -96,7 +147,7 @@ async def chat_with_ai(payload: AIChatRequest):
         )
 
     key = _get_clean_api_key()
-    full_prompt = _build_prompt(prompt_str, payload.context)
+    full_prompt = _build_prompt(prompt_str, payload.context, payload.user_name, payload.interlocutor_name)
 
     errors = []
     for model in GEMINI_MODELS:
@@ -113,11 +164,11 @@ async def chat_with_ai(payload: AIChatRequest):
             except Exception:
                 msg = exc.reason
             err_msg = f"HTTP {exc.code}: {msg}"
-            print(f"⚠️ Gemini model {model} error: {err_msg}")
+            print(f"[WARN] Gemini model {model} error: {err_msg}")
             errors.append(f"{model} ({err_msg})")
             continue
         except Exception as exc:
-            print(f"⚠️ Gemini model {model} error: {exc}")
+            print(f"[WARN] Gemini model {model} error: {exc}")
             errors.append(f"{model} ({exc})")
             continue
 
@@ -125,3 +176,68 @@ async def chat_with_ai(payload: AIChatRequest):
         status_code=502,
         detail=f"Échec des appels aux modèles Gemini Google Cloud. Détails: {'; '.join(errors)}"
     )
+
+
+@router.post('/upload_audio')
+async def upload_audio(file: UploadFile = File(...)):
+    """Receive an audio file and save it to STORAGE_PATH, return public URL path."""
+    storage_dir = pathlib.Path(settings.STORAGE_PATH)
+    storage_dir.mkdir(parents=True, exist_ok=True)
+
+    ext = pathlib.Path(file.filename).suffix or '.webm'
+    fname = f"audio_{uuid4().hex}{ext}"
+    target = storage_dir / fname
+
+    with target.open('wb') as f:
+        content = await file.read()
+        f.write(content)
+
+    # Return relative URL
+    return {"audio_url": f"/uploads/{fname}"}
+
+
+@router.post('/save_message')
+async def save_message(
+    conversation_id: Optional[str] = None,
+    sender_name: Optional[str] = None,
+    content: Optional[str] = None,
+    audio_url: Optional[str] = None,
+    db: AsyncSession = Depends(get_db)
+):
+    """Save a message for a conversation. If conversation_id not provided, create a lightweight conversation."""
+    # Simple flow: create conversation if needed, attempt to link to user by profile name
+    conv = None
+    if conversation_id:
+        res = await db.execute(select(Conversation).where(Conversation.id == conversation_id))
+        conv = res.scalar_one_or_none()
+
+    if not conv:
+        conv = Conversation(id=uuid4())
+        db.add(conv)
+        await db.flush()
+
+    # Try to resolve sender to a user id
+    sender_user = None
+    if sender_name:
+        res = await db.execute(select(Profile).where(Profile.display_name == sender_name))
+        profile = res.scalar_one_or_none()
+        if profile:
+            sender_user = profile.user
+
+    # Fallback: leave sender_id null is not possible; we set to first participant if exists
+    sender_id = None
+    if sender_user:
+        sender_id = sender_user.id
+    else:
+        # If no users exist, create a placeholder anonymous user? For simplicity, set to None -> will fail constraint
+        # Instead, return error guiding client to use messaging endpoints with auth
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Sender not found. Use authenticated messaging endpoints to persist messages.")
+
+    msg_content = content or (f"[voice message] {audio_url}" if audio_url else "")
+    message = Message(id=uuid4(), conversation_id=conv.id, sender_id=sender_id, content=msg_content)
+    db.add(message)
+    conv.updated_at = datetime.utcnow()
+    await db.commit()
+    await db.refresh(message)
+
+    return {"message_id": str(message.id), "conversation_id": str(conv.id)}

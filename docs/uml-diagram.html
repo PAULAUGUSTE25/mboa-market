@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagramme UML - MBOA Market</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: white;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1 {
+            text-align: center;
+            color: #2d5a27;
+            margin-bottom: 30px;
+        }
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+        .legend {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 8px;
+        }
+        .legend h3 {
+            color: #2d5a27;
+            margin-top: 0;
+        }
+        .legend-item {
+            margin: 10px 0;
+        }
+        .actor-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 4px;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .visitor { background: #e3f2fd; color: #1565c0; }
+        .farmer { background: #e8f5e9; color: #2e7d32; }
+        .buyer { background: #fff3e0; color: #ef6c00; }
+        .admin { background: #fce4ec; color: #c2185b; }
+        .ia { background: #f3e5f5; color: #7b1fa2; }
+        
+        @media print {
+            body { padding: 0; }
+            .legend { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Figure X : Diagramme de Cas d'Utilisation - MBOA Market</h1>
+    
+    <div class="mermaid">
+flowchart TB
+    subgraph Acteurs["👥 ACTEURS"]
+        V["🚶 Visiteur"]
+        A["🌾 Agriculteur/Éleveur"]
+        Ac["🛒 Acheteur"]
+        Ad["⚙️ Administrateur"]
+        IA["🤖 Bigiass IA"]
+    end
+
+    subgraph Auth["🔐 AUTHENTIFICATION"]
+        UC1["S'inscrire"]
+        UC2["Se connecter"]
+        UC3["Se déconnecter"]
+        UC4["Modifier profil"]
+    end
+
+    subgraph Annonces["📋 GESTION DES ANNONCES"]
+        UC6["Créer une annonce"]
+        UC7["Modifier une annonce"]
+        UC8["Supprimer une annonce"]
+        UC9["Ajouter des photos"]
+        UC10["Gérer le stock"]
+    end
+
+    subgraph Recherche["🔍 RECHERCHE & DÉCOUVERTE"]
+        UC11["Parcourir les annonces"]
+        UC12["Rechercher par mot-clé"]
+        UC13["Filtrer par catégorie"]
+        UC16["Voir détails annonce"]
+    end
+
+    subgraph Social["💬 INTERACTION SOCIALE"]
+        UC17["Aimer une publication"]
+        UC18["Commenter"]
+        UC20["Contacter le vendeur"]
+        UC21["Discuter en direct"]
+    end
+
+    subgraph Commandes["💳 COMMANDES & PAIEMENT"]
+        UC22["Ajouter au panier"]
+        UC23["Passer une commande"]
+        UC25["Payer MoMo/OM"]
+        UC26["Suivre la commande"]
+    end
+
+    subgraph Assistant["🧠 ASSISTANT IA"]
+        UC28["Poser une question"]
+        UC29["Conseils agricoles"]
+        UC30["Diagnostic maladies"]
+        UC31["Analyse prix marché"]
+    end
+
+    subgraph Admin["🛡️ ADMINISTRATION"]
+        UC33["Dashboard analytics"]
+        UC34["Modérer contenu"]
+        UC35["Gérer utilisateurs"]
+        UC36["Vérifier KYC"]
+    end
+
+    %% Visiteur
+    V --> UC1
+    V --> UC2
+    V --> UC11
+    V --> UC12
+
+    %% Agriculteur/Éleveur
+    A --> UC2
+    A --> UC3
+    A --> UC4
+    A --> UC6
+    A --> UC7
+    A --> UC8
+    A --> UC9
+    A --> UC10
+    A --> UC26
+
+    %% Acheteur
+    Ac --> UC2
+    Ac --> UC3
+    Ac --> UC4
+    Ac --> UC11
+    Ac --> UC12
+    Ac --> UC13
+    Ac --> UC16
+    Ac --> UC17
+    Ac --> UC18
+    Ac --> UC20
+    Ac --> UC21
+    Ac --> UC22
+    Ac --> UC23
+    Ac --> UC25
+    Ac --> UC26
+
+    %% IA
+    IA --> UC28
+    IA --> UC29
+    IA --> UC30
+    IA --> UC31
+
+    %% Admin
+    Ad --> UC33
+    Ad --> UC34
+    Ad --> UC35
+    Ad --> UC36
+
+    %% Include relations
+    UC23 -.->|include| UC25
+    UC6 -.->|include| UC9
+
+    %% Extend relations
+    UC16 -.->|extend| UC20
+    UC20 -.->|extend| UC21
+    </div>
+
+    <div class="legend">
+        <h3>Légende</h3>
+        <div class="legend-item">
+            <span class="actor-badge visitor">Visiteur</span>
+            Utilisateur non authentifié pouvant parcourir les annonces
+        </div>
+        <div class="legend-item">
+            <span class="actor-badge farmer">Agriculteur/Éleveur</span>
+            Vendeur de produits agricoles ou d'élevage
+        </div>
+        <div class="legend-item">
+            <span class="actor-badge buyer">Acheteur</span>
+            Utilisateur souhaitant acquérir des produits
+        </div>
+        <div class="legend-item">
+            <span class="actor-badge admin">Administrateur</span>
+            Gestionnaire de la plateforme
+        </div>
+        <div class="legend-item">
+            <span class="actor-badge ia">Bigiass (IA)</span>
+            Assistant virtuel intelligent intégré
+        </div>
+        <hr>
+        <p><strong>Relations :</strong></p>
+        <ul>
+            <li><strong>→</strong> Association (l'acteur utilise le cas d'utilisation)</li>
+            <li><strong>- - → include</strong> Inclusion (le cas d'utilisation inclut obligatoirement un autre)</li>
+            <li><strong>- - → extend</strong> Extension (le cas d'utilisation peut étendre un autre)</li>
+        </ul>
+        <hr>
+        <p><em>MBOA Market - Plateforme Agricole du Cameroun | 37 cas d'utilisation | 5 acteurs | 7 modules</em></p>
+    </div>
+
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true,
+                curve: 'basis'
+            }
+        });
+    </script>
+</body>
+</html>

@@ -29,11 +29,11 @@ class MultiAIService {
   /**
    * Génère une réponse IA avec fallback automatique multi-niveaux
    */
-  async generateResponse(prompt: string, context?: string): Promise<AIResponse> {
+  async generateResponse(prompt: string, context?: string, options?: { user_name?: string; interlocutor_name?: string }): Promise<AIResponse> {
     // 1. Essayer le backend MBOA (Gemini Server)
     try {
       const endpoint = `${this.getApiUrl()}/ai/chat`;
-      const response = await this.callBackendAI(endpoint, prompt, context);
+      const response = await this.callBackendAI(endpoint, prompt, context, options);
       return {
         text: response,
         provider: 'MBOA Gemini Server',
@@ -74,16 +74,17 @@ class MultiAIService {
   /**
    * Appel au backend MBOA (qui appelle Gemini côté serveur)
    */
-  private async callBackendAI(endpointUrl: string, prompt: string, context?: string): Promise<string> {
+  private async callBackendAI(endpointUrl: string, prompt: string, context?: string, options?: { user_name?: string; interlocutor_name?: string }): Promise<string> {
+    const body: any = { prompt, context };
+    if (options?.user_name) body.user_name = options.user_name;
+    if (options?.interlocutor_name) body.interlocutor_name = options.interlocutor_name;
+
     const response = await fetch(endpointUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
       },
-      body: JSON.stringify({
-        prompt,
-        context
-      })
+      body: JSON.stringify(body)
     });
 
     if (!response.ok) {

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import httpClient from '@/api/client';
 import { X, Send, Sparkles, Bot, Mic, MicOff, Volume2, VolumeX, Square, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { multiAI } from '@/services/multiAI';
@@ -34,6 +35,9 @@ export default function AIAssistant() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const [conversationId, setConversationId] = useState<string | null>(null);
 
   const getWelcomeMessage = () => {
     const userName = (user?.profile as any)?.display_name || t('cher utilisateur', 'dear user');
@@ -144,6 +148,39 @@ export default function AIAssistant() {
 
       recognition.start();
       recognitionRef.current = recognition;
+
+      // Also start MediaRecorder to capture audio blob for upload
+      try {
+        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+          const mr = new MediaRecorder(stream);
+          audioChunksRef.current = [];
+          mr.ondataavailable = (e) => {
+            if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
+          };
+          mr.onstop = async () => {
+            const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+            // upload audio
+            try {
+              const form = new FormData();
+              form.append('file', blob, `recording_${Date.now()}.webm`);
+              const res = await httpClient.post('/ai/upload_audio', form, { headers: { 'Content-Type': 'multipart/form-data' } });
+              const audio_url = res.data?.audio_url;
+              // Save message referencing audio
+              const userName = (user?.profile as any)?.display_name || t("l'utilisateur", 'the user');
+              const saveRes = await httpClient.post('/ai/save_message', null, { params: { conversation_id: conversationId, sender_name: userName, audio_url } });
+              if (saveRes?.data?.conversation_id) setConversationId(saveRes.data.conversation_id);
+            } catch (err) {
+              console.error('Audio upload failed', err);
+            }
+          };
+          mr.start();
+          mediaRecorderRef.current = mr;
+        }).catch((err) => {
+          console.error('MediaDevices.getUserMedia error:', err);
+        });
+      } catch (e) {
+        console.error('MediaRecorder init failed', e);
+      }
     } catch (err) {
       console.error('Error starting speech recognition:', err);
       setIsRecording(false);
@@ -155,6 +192,15 @@ export default function AIAssistant() {
       try {
         recognitionRef.current.stop();
       } catch (e) {}
+    }
+    // stop media recorder
+    if (mediaRecorderRef.current) {
+      try {
+        mediaRecorderRef.current.stop();
+        // stop all tracks
+        mediaRecorderRef.current.stream?.getTracks().forEach((t) => t.stop());
+      } catch (e) {}
+      mediaRecorderRef.current = null;
     }
     setIsRecording(false);
   };
@@ -182,10 +228,19 @@ export default function AIAssistant() {
 
     try {
       const userName = (user?.profile as any)?.display_name || t("l'utilisateur", 'the user');
-      const response = await multiAI.generateResponse(
-        textToSend,
-        `Tu es Bigiss, l'assistant IA vocal et agricole de ${userName} sur MBOA Market au Cameroun. Réponds en français de manière amicale, pratique et concise.`
-      );
+      // Persist user message to backend conversation storage
+      try {
+        const saveRes = await httpClient.post('/ai/save_message', null, { params: { conversation_id: conversationId, sender_name: userName, content: textToSend } });
+        if (saveRes?.data?.conversation_id) setConversationId(saveRes.data.conversation_id);
+      } catch (e) {
+        console.warn('Failed to persist user message:', e);
+      }
+      const recentHistory = messages.slice(-4).map(m => `${m.sender === 'user' ? userName : 'Bigiss'}: ${m.text}`).join('\n');
+      const context = messages.length > 1 
+        ? `Conversation récente avec ${userName}:\n${recentHistory}`
+        : `Utilisateur: ${userName}`;
+
+      const response = await multiAI.generateResponse(textToSend, context, { user_name: userName });
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),

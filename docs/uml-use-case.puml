@@ -1,0 +1,138 @@
+@startuml MBOA_Market_Use_Case
+
+' Configuration
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor LightYellow
+    BorderColor DarkGreen
+    ArrowColor DarkGreen
+}
+skinparam actor {
+    BackgroundColor LightBlue
+    BorderColor DarkBlue
+}
+
+' Titre
+title Diagramme de Cas d'Utilisation - MBOA Market
+
+' Acteurs
+actor "Visiteur" as V
+actor "Agriculteur/\nÉleveur" as A
+actor "Acheteur" as Ac
+actor "Administrateur" as Ad
+actor "Bigiass (IA)" as IA
+
+' Package Authentification
+rectangle "Authentification" {
+    usecase "S'inscrire" as UC1
+    usecase "Se connecter" as UC2
+    usecase "Se déconnecter" as UC3
+    usecase "Modifier profil" as UC4
+}
+
+' Package Gestion Annonces
+rectangle "Gestion des Annonces" {
+    usecase "Créer une annonce" as UC6
+    usecase "Modifier une annonce" as UC7
+    usecase "Supprimer une annonce" as UC8
+    usecase "Ajouter des photos" as UC9
+    usecase "Gérer le stock" as UC10
+}
+
+' Package Recherche
+rectangle "Recherche & Découverte" {
+    usecase "Parcourir les annonces" as UC11
+    usecase "Rechercher par mot-clé" as UC12
+    usecase "Filtrer par catégorie" as UC13
+    usecase "Voir détails annonce" as UC16
+}
+
+' Package Interaction
+rectangle "Interaction Sociale" {
+    usecase "Aimer une publication" as UC17
+    usecase "Commenter" as UC18
+    usecase "Contacter le vendeur" as UC20
+    usecase "Discuter en direct" as UC21
+}
+
+' Package Commandes
+rectangle "Commandes & Paiement" {
+    usecase "Ajouter au panier" as UC22
+    usecase "Passer une commande" as UC23
+    usecase "Payer (MoMo/OM)" as UC25
+    usecase "Suivre la commande" as UC26
+}
+
+' Package IA
+rectangle "Assistant IA" {
+    usecase "Poser une question" as UC28
+    usecase "Conseils agricoles" as UC29
+    usecase "Diagnostic maladies" as UC30
+    usecase "Analyse prix marché" as UC31
+}
+
+' Package Admin
+rectangle "Administration" {
+    usecase "Dashboard analytics" as UC33
+    usecase "Modérer contenu" as UC34
+    usecase "Gérer utilisateurs" as UC35
+    usecase "Vérifier KYC" as UC36
+}
+
+' Relations Visiteur
+V --> UC1
+V --> UC2
+V --> UC11
+V --> UC12
+
+' Relations Agriculteur/Éleveur
+A --> UC2
+A --> UC3
+A --> UC4
+A --> UC6
+A --> UC7
+A --> UC8
+A --> UC9
+A --> UC10
+A --> UC20
+A --> UC26
+
+' Relations Acheteur
+Ac --> UC2
+Ac --> UC3
+Ac --> UC4
+Ac --> UC11
+Ac --> UC12
+Ac --> UC13
+Ac --> UC16
+Ac --> UC17
+Ac --> UC18
+Ac --> UC22
+Ac --> UC23
+Ac --> UC25
+Ac --> UC26
+Ac --> UC20
+Ac --> UC21
+
+' Relations IA
+IA --> UC28
+IA --> UC29
+IA --> UC30
+IA --> UC31
+
+' Relations Admin
+Ad --> UC33
+Ad --> UC34
+Ad --> UC35
+Ad --> UC36
+
+' Relations Include
+UC23 ..> UC25 : <<include>>
+UC6 ..> UC9 : <<include>>
+
+' Relations Extend
+UC20 ..> UC21 : <<extend>>
+UC16 ..> UC20 : <<extend>>
+
+@enduml

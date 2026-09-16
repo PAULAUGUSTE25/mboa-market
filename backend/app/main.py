@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
 from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics, admin, analytics, ai
 from app.core.config import settings
@@ -28,6 +29,13 @@ app = FastAPI(
     version="1.0.0",
     lifespan=lifespan
 )
+
+# Serve uploaded files
+try:
+    app.mount("/uploads", StaticFiles(directory=settings.STORAGE_PATH), name="uploads")
+except Exception:
+    # If directory doesn't exist yet, ignore until created
+    pass
 
 # CORS middleware — NE PAS mélanger allow_credentials=True avec allow_origins=["*"]
 app.add_middleware(

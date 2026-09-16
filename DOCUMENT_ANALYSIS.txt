@@ -1,0 +1,1892 @@
+COMPLETE DOCUMENT ANALYSIS
+================================================================================
+
+
+[PARAGRAPH 2]
+BACHELOR THESIS
+
+[PARAGRAPH 3]
+Submitted to the Scientific Council of the ICT Faculty in partial fulfilment of the requirements for the award of a Bachelor Degree in Software Engineering at The ICT University
+
+[PARAGRAPH 6]
+Submitted by: NDEFO KUATE PAUL AUGUSTE
+
+[PARAGRAPH 7]
+Student ID: ICTU20212527
+
+[PARAGRAPH 8]
+Supervisor: DR NKANDEU PASCAL
+
+[PARAGRAPH 9]
+DEAN OF STUDIES, LECTURER, ICT FACULTY, ICT UNIVERSITY
+Host Organization: Zen Africa
+
+[PARAGRAPH 10]
+Academic Year: 2025 - 2026
+
+[PARAGRAPH 11]
+DECLARATION
+
+[PARAGRAPH 12]
+I declare that this work entitled "Design and Implementation of a Digital Marketplace Platform Connecting Agricultural Stakeholders in Cameroon: MBOA Market" is my own original work, conceived and presented in partial fulfilment of the requirements for the Bachelor Degree in Software Engineering at The ICT University. This work has not been submitted for any degree or examination in any other university apart from The ICT University, and all sources used or quoted have been indicated and acknowledged as complete references.
+
+[PARAGRAPH 13]
+Signed: ______________________________        Date: ______________________________
+
+[PARAGRAPH 14]
+Name: NDEFO KUATE PAUL AUGUSTE
+
+[PARAGRAPH 15]
+Registration Number: ______________________________
+
+[PARAGRAPH 17]
+CERTIFICATION
+
+[PARAGRAPH 18]
+This is to certify that the project entitled "Design and Implementation of a Digital Marketplace Platform Connecting Agricultural Stakeholders in Cameroon: MBOA Market" submitted by NDEFO KUATE PAUL AUGUSTE in partial fulfilment of the requirements for the award of a Bachelor Degree in Software Engineering has been carried out under my supervision and guidance. This project is a genuine record of the student's work and meets the academic standards required by The ICT University.
+
+[PARAGRAPH 19]
+Signed: ______________________________        Date: ______________________________ Supervisor: DR NKANDEU PASCAL
+
+[PARAGRAPH 20]
+The ICT University/ICT Faculty______________________________
+
+[PARAGRAPH 21]
+Date: ______________________________
+
+[PARAGRAPH 23]
+DEDICATION
+
+[PARAGRAPH 24]
+This work is dedicated to my dear and loving family NDEFO and NANA, whose sacrifice, support and boundless encouragement have been my greatest source of strength throughout these years.
+
+[PARAGRAPH 26]
+ACKNOWLEDGEMENTS
+
+[PARAGRAPH 27] **EXPLANATION**
+I express my sincere gratitude to my academic supervisor, Dr. Ngadue Pascal, for his guidance, constructive remarks and academic supervision throughout the development of this project. His observations helped improve the structure, methodological clarity and visual explanation of the final work.
+
+[PARAGRAPH 28]
+I thank the Faculty of ICT at The ICT University for the academic training, technical foundation and institutional support received during my studies in Software Engineering.
+
+[PARAGRAPH 29]
+I am also grateful to Zen Africa, the host organization, for providing a professional environment that supported the practical design, development and deployment of MBOA Market.
+
+[PARAGRAPH 30]
+Finally, I thank my family, classmates and friends for their encouragement, patience and support during the research, design, implementation, testing and documentation phases of this project.
+
+[PARAGRAPH 32]
+FACULTY APPROVAL
+
+[PARAGRAPH 33]
+This dissertation has been duly reviewed by the Department and the ICT Faculty and is ready for examination with our approval.
+
+[PARAGRAPH 34]
+Approved By
+
+[PARAGRAPH 35]
+Dr,NkandeuPascal,Supervisor
+Signature: ______________________________        Date: ______________________________
+
+[PARAGRAPH 36]
+Dr. Ngadue Pascal, Dean ICT Faculty
+
+[PARAGRAPH 37]
+Signature: ______________________________        Date: ______________________________
+
+[PARAGRAPH 39]
+ABSTRACT
+
+[PARAGRAPH 40] **EXPLANATION**
+Agriculture remains one of the most important sectors in Cameroon, yet many producers, buyers and suppliers continue to face difficulties related to market visibility, price transparency, direct access to reliable partners and the absence of digital tools adapted to the local agricultural environment. This project presents the design, implementation and evaluation of MBOA Market, a web-based agricultural marketplace developed to connect farmers, livestock breeders, suppliers and buyers through a secure and accessible digital platform. The system was designed using a structured software engineering approach combining literature review, needs analysis, system modelling, architecture design, implementation and testing. The platform implements phone-based registration, JWT-secured authentication, user profile management, agricultural and livestock listings, marketplace browsing, product publication, market price ticker, bilingual interface support, a smart dashboard and API documentation. The technical architecture is based on a React frontend, a FastAPI REST backend and a PostgreSQL database, deployed through Netlify and Render to provide real access to users. The study also compares existing platforms such as Jumia, OLX, Esoko, Farmcrowdy, Hello Tractor and AgroHub, showing that most address isolated needs but do not provide an integrated, Cameroon-oriented marketplace for agricultural and livestock trade. System evaluation was carried out through functional testing, usability review, interface inspection and comparative feature analysis. The results show that MBOA Market successfully addresses key gaps in agricultural digital commerce by integrating product visibility, user authentication, regional market information and stakeholder interaction into one coherent system. Current limitations include the absence of integrated payment, real-time chat, advanced KYC verification, native mobile application and automated price data collection; these are proposed as future improvements beyond the bachelor project scope.
+
+[PARAGRAPH 41]
+Keywords: Agricultural marketplace, MBOA Market, React, Fast API, PostgreSQL, JWT authentication, Cameroon, digital agriculture, Agri Tech, REST API.
+
+[PARAGRAPH 43]
+PROJECT SUMMARY
+
+[PARAGRAPH 44]
+MBOA Market is a web-based agricultural marketplace designed to improve the way farmers, livestock breeders, suppliers and buyers interact within the Cameroonian agricultural ecosystem. The project responds to persistent challenges such as limited product visibility, weak price transparency, dependence on informal intermediaries, fragmented communication channels and the absence of a locally adapted digital platform for both crop and livestock trade. The system was developed through a structured software engineering process covering requirements analysis, literature review, system modelling, architecture design, implementation, testing and evaluation. Its main features include phone-based user registration, secure JWT authentication, profile management, agricultural and livestock listing publication, marketplace browsing, market price ticker display, bilingual-ready interface structure, smart dashboard support and API documentation. Technically, the platform is built with a React frontend, a FastAPI backend, a PostgreSQL database and cloud deployment using Netlify and Render. The study compares existing solutions such as Jumia, OLX, Esoko, Farmcrowdy, Hello Tractor and AgroHub, showing that they address isolated needs but do not provide a complete, secure and context-aware agricultural marketplace for Cameroon. Functional testing, interface inspection and comparative evaluation show that MBOA Market addresses the main gaps identified in digital agricultural commerce by combining visibility, authentication, market information and stakeholder interaction in one coherent system. Current limitations include the absence of integrated payment, real-time messaging, advanced KYC verification, a native mobile application and fully automated price data collection; these elements are proposed as future improvements beyond the bachelor level.
+
+[PARAGRAPH 45]
+Keywords: Agricultural marketplace, MBOA Market, React, FastAPI, PostgreSQL, JWT authentication, Cameroon, digital agriculture, AgriTech, REST API.
+
+[PARAGRAPH 47]
+TABLE OF CONTENTS
+
+[PARAGRAPH 48]
+LIST OF FIGURES
+
+[PARAGRAPH 50]
+LIST OF TABLES
+
+[PARAGRAPH 52]
+LIST OF ABBREVIATIONS AND ACRONYMS
+
+[PARAGRAPH 54]
+CHAPTER ONE: GENERAL INTRODUCTION
+
+[PARAGRAPH 55]
+1.1 General Context
+
+[PARAGRAPH 56]
+In the traditional agricultural trade chain from producer to local trader, intermediaries, urban market and finally consumer,  the producer is usually the weakest actor in the chain because market information and price control are concentrated around traders and intermediaries (Figure 1.1). This visual therefore justifies the need for MBOA Market, whose purpose is to reduce the distance between producers and buyers while improving visibility, price awareness and traceability.
+
+================================================================================
+[PARAGRAPH 58] === IMAGE #1 ===
+================================================================================
+
+[PARAGRAPH 59]
+Figure 1.1: Traditional agricultural trade chain in Cameroon
+
+[PARAGRAPH 60]
+1.1.1 The Macroeconomic Importance of Agriculture in Cameroon
+
+[PARAGRAPH 61]
+Cameroon, often referred to as "Africa in miniature" due to its remarkable geographical and ecological diversity, is a nation where agriculture is not merely an economic activity but a cultural identity, a historical legacy, and a daily survival strategy for millions of households. Stretching from the humid equatorial rainforests of the south to the semi-arid savannahs of the north, from the volcanic highlands of the west to the Atlantic coastline in the southwest, Cameroon's varied geography supports an extraordinarily rich range of agricultural production zones, each with its own climate, soil composition, and agro-ecological potential.
+
+[PARAGRAPH 62]
+According to the most recent data published by the Ministry of Agriculture and Rural Development (MINADER, 2023), agriculture accounts for approximately 20.4% of Cameroon's Gross Domestic Product (GDP), making it the single largest sector of the national economy by direct contribution. More significantly from a social perspective, the sector provides direct employment or livelihoods to an estimated 70 to 75% of the active rural population - representing millions of individuals and families whose daily economic security is directly tied to the performance of agricultural markets. When the agricultural sector functions well, rural households eat well, children attend school, and communities invest in their futures. When it functions poorly - when prices collapse, when harvests cannot reach markets, when information is controlled by middlemen - the consequences cascade through entire rural communities in the form of food insecurity, debt, and despair.
+
+[PARAGRAPH 63]
+The primary subsectors of Cameroonian agriculture can be broadly categorized as follows. Food crops - including cassava (manioc), maize, plantain, yam, cocoyam, and groundnut - constitute the nutritional foundation of the Cameroonian diet and are produced predominantly by smallholder farmers on plots averaging between one and three hectares. Cash crops - including cacao (of which Cameroon is one of Africa's top producers), coffee, cotton, and rubber - generate significant export revenue and employ hundreds of thousands of Cameroonians in the Centre, South, Littoral, and West regions. Livestock - including cattle (particularly in the Adamaoua, North, and Far North regions, where Cameroon's Fulani herders maintain vast cattle herds), sheep, goats, pigs, and poultry - provide both protein and income for a large segment of the population. Fisheries, both artisanal and industrial, contribute importantly along the Atlantic coast and in the Lake Chad basin.
+
+[PARAGRAPH 64]
+Despite this impressive diversity and economic weight, the agricultural sector in Cameroon operates far below its full productive and commercial potential. Numerous structural barriers prevent the sector from realizing its capacity to create wealth, reduce poverty, and ensure food security at scale. Among the most frequently cited barriers in both government policy documents and independent academic studies are: inadequate rural infrastructure (roads, electricity, cold storage), limited access to quality inputs (improved seeds, fertilizers, pesticides) at affordable prices, insufficient access to financial services (credit, insurance), low levels of agricultural mechanization, and - critically for this project - the severe lack of digital market infrastructure that would connect producers to buyers efficiently and transparently.
+
+[PARAGRAPH 65]
+1.1.2 The Digital Revolution and African Agriculture
+
+[PARAGRAPH 66]
+Sub-Saharan Africa is experiencing a digital revolution that is transforming virtually every sector of its economy. Mobile phone penetration on the continent has surpassed all forecasts made just a decade ago: according to GSMA Intelligence (2023), there were approximately 495 million unique mobile subscribers in Sub-Saharan Africa as of 2023, representing a penetration rate of approximately 46% of the total population - and growing at a rate that far outpaces any other world region. In Central Africa, and specifically in Cameroon, the pace of mobile adoption has been particularly accelerated by competitive pricing from operators such as MTN Cameroon, Orange Cameroon, and Camtel, making smartphone access increasingly affordable for middle and lower-income households.
+
+[PARAGRAPH 67]
+The proliferation of smartphones and mobile internet has created an unprecedented opportunity to deliver digital services - including market information, e-commerce, financial services, and communication tools - directly into the hands of rural agricultural producers who were previously completely excluded from the digital economy. Platforms such as M-Pesa in Kenya, Esoko in Ghana, and Apollo Agriculture in East Africa have demonstrated concretely that mobile-first digital solutions can dramatically improve the economic outcomes of smallholder farmers by reducing market information asymmetries, improving access to inputs and finance, and enabling more efficient market linkages.
+
+[PARAGRAPH 68]
+In Cameroon specifically, the government's Vision 2035 development strategy explicitly identifies the digitalization of agriculture as a strategic priority. The National Development Strategy 2020-2030 (SND-30) includes measurable targets for increasing ICT adoption in rural areas and developing digital infrastructure to support agricultural value chains. This policy environment creates a favorable context for initiatives like MBOA Market, which align with national development priorities while addressing a concrete market failure.
+
+[PARAGRAPH 69]
+1.1.3 The Problem of Market Information Asymmetry
+
+[PARAGRAPH 70]
+One of the most economically damaging features of Cameroonian agricultural markets is the profound asymmetry of market price information. In a functioning market, prices serve as signals that coordinate the decisions of producers and buyers: when prices are high, producers know to produce more; when prices fall, buyers know to buy more. But this coordination mechanism only works when all market participants have access to accurate and timely price information - a condition that is systematically absent in Cameroon's traditional agricultural market system.
+
+[PARAGRAPH 71]
+In practice, the current system works as follows: a cassava farmer in a village in the Mfoundi region harvests her crop and must decide how much to sell and at what price. She has no reliable way of knowing what the going price for cassava is in the Mvog-Betsi market in Yaounde, or in the Dibamba market near Douala, or in the Bafoussam central market. She is entirely dependent on the word of a traveling trader who arrives at her farm, offering whatever price he chooses to offer, knowing full well that she has no alternative information and no ability to wait indefinitely for a better offer. The trader, armed with market price knowledge that she lacks, systematically extracts value from her through this information advantage - buying cheaply at the farm gate and selling expensively in the city market. The spread between farm gate price and consumer price in Cameroon's food markets has been documented in multiple studies to range from 40% to over 150% for perishable commodities, with much of this spread representing intermediary margins rather than genuine transportation or handling costs.
+
+[PARAGRAPH 72]
+This information asymmetry is not merely an economic inconvenience - it is a significant driver of rural poverty. When farmers consistently receive prices far below what the market would support under conditions of full information, their incomes stagnate, their ability to invest in better seeds, fertilizers, and equipment diminishes, and the productivity-enhancing investments that would increase yields and incomes remain out of reach. Breaking this cycle of information asymmetry is therefore not simply a technical challenge but a development imperative with direct implications for rural poverty reduction and food security.
+
+[PARAGRAPH 73]
+1.1.4 The Role of Zen Africa and the Internship Context
+
+[PARAGRAPH 74]
+MBOA Market was developed in the context of a professional internship at Zen Africa, an innovative technology company committed to leveraging digital solutions for African development challenges. Zen Africa provided the professional environment, the mentorship resources, and the entrepreneurial culture within which the project concept was refined, validated, and developed from initial idea to deployed product. The company's focus on impact-driven technology for the African market deeply aligned with the social mission of MBOA Market, and the support of the professional supervisor Mr. SEFFI PEGUI was invaluable in guiding the project from concept to reality.
+
+[PARAGRAPH 75]
+The internship context enriched the project in several important ways. First, it grounded the technical development work in a professional environment with real-world standards for code quality, documentation, and project management. Second, it enabled access to professional tools, feedback from experienced practitioners, and a network of contacts within the African digital economy. Third, it allowed the project to be tested and refined against the expectations of a professional audience, not only an academic one - resulting in a more polished, more thoroughly tested, and more deployment-ready product than would have been possible in a purely academic setting.
+
+[PARAGRAPH 76]
+1.2 Problem Statement
+
+================================================================================
+[PARAGRAPH 77] === IMAGE #2 ===
+================================================================================
+
+[PARAGRAPH 78]
+Figure 1.2: Problem logic of MBOA Market
+
+[PARAGRAPH 79] **EXPLANATION**
+The image converts the research problem into system requirements. On the left side, it identifies the main difficulties faced by agricultural actors, including isolated producers, price opacity, fragmented communication and low trust. On the right side, it shows the platform responses: digital listings, market price ticker, integrated marketplace and structured user profiles. The figure demonstrates that each implemented feature was derived from a specific problem observed in the agricultural commerce process. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 86]
+Table 1.1: Decomposition of the research problem
+
+[PARAGRAPH 87] **EXPLANATION**
+This table breaks the research problem into operational dimensions. It links each difficulty observed in the Cameroonian agricultural market to a concrete system response, showing that MBOA Market was designed from identifiable user needs rather than from isolated technical assumptions. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 89]
+1.2.1 The Core Problem
+
+[PARAGRAPH 90]
+The central problem that MBOA Market seeks to address can be stated succinctly: agricultural producers, buyers, and input suppliers in Cameroon lack a dedicated, accessible, and functional digital platform through which they can connect, share market price information, and conduct commerce efficiently and transparently.
+
+[PARAGRAPH 91]
+How can a modern, full-stack web platform be designed, developed, and deployed to effectively bridge the digital divide in Cameroon's agricultural commerce sector - enabling producers to reach buyers directly, reducing market information asymmetry through real-time price broadcasting, and providing a secure, mobile-optimized experience accessible to Cameroonian agricultural actors of varying digital literacy levels?
+
+[PARAGRAPH 92]
+1.2.2 Decomposition into Sub-Problems
+
+[PARAGRAPH 93]
+This central research question decomposes into the following specific sub-problems, each of which is addressed in the corresponding sections of this report:
+
+[PARAGRAPH 94]
+User needs analysis: What specific digital capabilities do Cameroonian agricultural producers, buyers, and input suppliers need most urgently, and what are the technical constraints (device types, connectivity, literacy) that must be taken into account in the design of any solution?
+
+[PARAGRAPH 95]
+Architecture design: What software architecture provides the optimal combination of performance, scalability, maintainability, and deployment cost-effectiveness for a marketplace platform targeting the Cameroonian agricultural sector?
+
+[PARAGRAPH 96]
+Security implementation: How should user authentication and data security be implemented to protect users' personal information and transaction data while maintaining a frictionless user experience for users who may be unfamiliar with digital security concepts?
+
+[PARAGRAPH 97]
+Real-time information: What mechanisms can be implemented to broadcast current agricultural market prices across the platform in a way that is visually engaging, informative, and reliable?
+
+[PARAGRAPH 98]
+Deployment and accessibility: How can the platform be deployed to production in a way that ensures maximum uptime, global accessibility, and cost sustainability within the constraints of a student project budget?
+
+[PARAGRAPH 99]
+1.2.3 Why Existing Solutions Are Insufficient
+
+[PARAGRAPH 100]
+It is reasonable to ask why this problem has not already been solved - given the clear economic need and the growth of the African digital economy. The answer lies partly in the specificity of the Cameroonian context and partly in the business model constraints of generic commercial platforms. Large pan-African e-commerce platforms such as Jumia have found it commercially unattractive to invest in building dedicated agricultural features for a market segment that is geographically dispersed, predominantly rural, and represents relatively low average transaction values per listing. Meanwhile, international AgriTech solutions designed for this segment - such as Esoko or Hello Tractor - have not expanded to Cameroon, leaving the market underserved. Local initiatives have attempted to fill this gap but have failed to achieve technical maturity, user adoption, or sustainable operation. The result is a clear and documented market failure: a large, economically important user community that lacks an adequate digital tool built specifically for their needs.
+
+[PARAGRAPH 101]
+1.3 Justification of the Study
+
+[PARAGRAPH 102]
+1.3.1 Economic Justification
+
+[PARAGRAPH 103]
+The economic case for digital agricultural marketplaces in developing countries is now well-established in the academic literature. The foundational study by Aker and Mbiti (2010) on the impact of mobile phones on agricultural markets in Niger demonstrated that mobile-enabled price information reduced price dispersion across markets by 6.4 percentage points - a 10% reduction in market inefficiency with directly measurable welfare implications for both producers and consumers. Subsequent studies in Kenya, Ghana, and India have replicated and extended these findings across different crop types, market structures, and technology platforms, consistently demonstrating that information technology interventions in agricultural markets generate significant economic returns.
+
+[PARAGRAPH 104]
+Extrapolating these findings to the Cameroonian context, even a modest 5% improvement in price transparency across Cameroon's agricultural markets would represent hundreds of millions of FCFA in value redistributed from intermediaries to producers and consumers annually. The economic justification for MBOA Market is therefore not speculative - it rests on a solid body of empirical evidence demonstrating the economic value of digital market information in agricultural contexts similar to Cameroon's.
+
+[PARAGRAPH 105]
+Furthermore, the platform's potential to reduce transaction costs - including the time and money that producers currently spend traveling to multiple markets to find buyers - could generate additional economic value. A smallholder farmer who can post a listing on MBOA Market and receive inquiries from buyers in Yaoundé, Douala, and Bafoussam simultaneously, without leaving her farm, avoids transportation costs, opportunity costs of lost farming time, and the risk of price discovery failure.
+
+[PARAGRAPH 106]
+1.3.2 Social and Development Justification
+
+[PARAGRAPH 107]
+Beyond the purely economic analysis, MBOA Market addresses several dimensions of social and human development that align with the United Nations Sustainable Development Goals (SDGs) adopted in the 2030 Agenda for Sustainable Development. Most directly, the platform contributes to SDG 1 (No Poverty) by improving the income-generating capacity of smallholder agricultural producers; to SDG 2 (Zero Hunger) by improving the efficiency of food supply chains and supporting more productive agricultural practices; and to SDG 9 (Industry, Innovation and Infrastructure) by developing digital market infrastructure in a sector that has historically been excluded from the benefits of technological innovation.
+
+[PARAGRAPH 108]
+At a more granular level, MBOA Market has particular potential to reduce gender-based economic disadvantages in Cameroonian agriculture. Women constitute approximately 60-80% of food crop producers in Cameroon (FAO, 2023), yet they consistently face greater difficulties than men in accessing market information, transportation, and trading networks. A platform that delivers market information and market access directly to a mobile device eliminates several of the structural barriers that disproportionately affect women agricultural producers - making MBOA Market an implicit instrument of gender economic equity as well.
+
+[PARAGRAPH 109]
+1.3.3 Technological Justification
+
+[PARAGRAPH 110]
+The development tools available today have also transformed what is achievable by a single developer within a constrained time frame. The Windsurf AI-powered IDE used in this project represents a new generation of development environment that can understand the full context of a codebase, suggest meaningful code completions across both frontend and backend layers simultaneously, identify bugs before they manifest, and accelerate development velocity by an estimated 30-50% compared to traditional development environments - enabling a level of technical ambition in this project that would not have been achievable with conventional tools alone.
+
+[PARAGRAPH 111]
+1.3.4 Academic Justification
+
+[PARAGRAPH 112]
+From the academic perspective of ICT University's Bachelor of Science in ICT Software Engineering programme, this project represents a comprehensive practical application of virtually every technical competency developed during the course of study. The project demands and demonstrates mastery of: web development technologies (HTML, CSS, JavaScript/TypeScript), modern frontend frameworks (React), backend API development (FastAPI/Python), relational database design and management (PostgreSQL), software security principles (JWT authentication, bcrypt hashing, CORS configuration), software architecture design patterns (client-server, REST, MVC), version control and collaborative development (Git/GitHub), cloud deployment and DevOps principles (Netlify, Render, environment variables, CI/CD), and project management methodologies (Agile/Scrum).
+
+[PARAGRAPH 113]
+The project also demonstrates the application of theoretical knowledge from courses in software engineering, database systems, computer networks, information security, and human-computer interaction - making it an exemplary capstone project that synthesizes the full breadth of the programme's curriculum in service of a meaningful real-world problem.
+
+[PARAGRAPH 114]
+1.4 Research Objectives
+
+[PARAGRAPH 115]
+1.4.1 General Objective
+
+[PARAGRAPH 116]
+The general objective of this project is to design, develop, test, and deploy a full-stack web marketplace platform - MBOA Market - that enables agricultural producers, buyers, and input suppliers in Cameroon to connect digitally, exchange market price information in real time, publish and browse product listings with multimedia support, and manage their commercial profiles through a secure, mobile-optimized interface.
+
+[PARAGRAPH 117]
+1.4.2 Specific Objectives
+
+[PARAGRAPH 118]
+Conduct a systematic analysis of the needs of Cameroonian agricultural market actors and the limitations of existing digital solutions, in order to identify the specific functional requirements that MBOA Market must fulfill.
+
+[PARAGRAPH 119]
+Design a robust, scalable, and maintainable software architecture based on the REST architectural style, using FastAPI as the backend framework and React 18 as the frontend library, with PostgreSQL as the relational database management system.
+
+[PARAGRAPH 120]
+Implement a secure user authentication system based on phone number registration, bcrypt password hashing, and stateless JWT-based session management with access token and refresh token mechanisms.
+
+[PARAGRAPH 121]
+Develop a full-featured product listing management module enabling authenticated users to create, read, update, and delete agricultural and livestock product listings, with support for multiple product photographs, pricing in FCFA, unit-based pricing, regional location tagging, and category assignment.
+
+[PARAGRAPH 122]
+Integrate a real-time agricultural market price information system in the form of a continuously scrolling ticker display, covering the main commodity prices across Cameroon's major regional markets.
+
+[PARAGRAPH 123]
+Deploy the complete application to production cloud infrastructure, with the frontend hosted on Netlify's CDN and the backend API and database hosted on Render's managed cloud services.
+
+[PARAGRAPH 124]
+Validate the platform's functionality through systematic functional testing of all API endpoints, user interface flows, authentication mechanisms, and deployment configurations, demonstrating that the platform meets all defined requirements in a real production environment.
+
+[PARAGRAPH 125]
+1.5  Scope and Delimitations
+
+[PARAGRAPH 126]
+1.5.1 Scope of the Study
+
+[PARAGRAPH 127]
+This study focuses on the design, development, and deployment of a web-based platform for agricultural product distribution and stakeholder interaction. The platform enables farmers, distributors, retailers, and consumers to register, manage profiles, publish agricultural products, and search for available products through a secure and responsive web interface. Key functionalities include user authentication, product listing management with image support, stakeholder networking, market price information, bilingual support (English and French), cloud deployment, and API documentation. The system is designed to improve market accessibility, information sharing, and business opportunities within the agricultural sector.
+
+[PARAGRAPH 128]
+1.5.2 Delimitations of the Study
+
+[PARAGRAPH 129]
+The current study does not include mobile payment integration, native mobile applications, real-time messaging, advanced identity verification, geolocation services, artificial intelligence-based recommendations, logistics management, or administrative analytics dashboards. These features are considered future enhancements and are reserved for subsequent versions of the platform. The study is limited to the development and evaluation of a functional web-based solution for agricultural product distribution and stakeholder encounters.
+
+[PARAGRAPH 130]
+1.6 Structure of the Report
+
+[PARAGRAPH 131]
+This report is organized into five chapters, each addressing a distinct dimension of the project:
+
+[PARAGRAPH 132]
+Chapter 1 (this chapter) establishes the general context of the project, formulates the research problem, justifies the study from economic, social, technological, and academic perspectives, defines the research objectives, and delineates the scope and structure of the report.
+
+[PARAGRAPH 133]
+Chapter 2 reviews the relevant literature and existing platforms, defines key theoretical concepts, conducts a systematic comparative analysis of six competitor platforms, articulates the theoretical framework underpinning the project, and identifies the gap in existing solutions that MBOA Market fills.
+
+[PARAGRAPH 134] **EXPLANATION**
+Chapter 3 presents the methodology and system design, covering the Agile development process adopted, the tools and resources used (including Windsurf, Canva, Freepik, and ChatGPT), the system architecture, the UML modelling artefacts, the database design, and the user interface design principles.
+
+[PARAGRAPH 135]
+Chapter 4 details the technical implementation of the platform, presenting key code sections for both backend and frontend, describing the deployment process and configuration, and presenting the results of functional testing and validation.
+
+[PARAGRAPH 136]
+Chapter 5 synthesizes the achievements of the project, discusses the challenges encountered and the solutions implemented, and proposes a comprehensive roadmap of future improvements organized across short, medium, and long-term horizons.
+
+[PARAGRAPH 138]
+CHAPTER 2: LITERATURE REVIEW
+
+[PARAGRAPH 139]
+2.1 Key Concepts and Definitions
+
+[PARAGRAPH 140]
+2.1.1 Digital Marketplace Platforms
+
+[PARAGRAPH 141]
+A digital marketplace, also referred to as a multi-sided platform or electronic marketplace, is a digital intermediary that facilitates commercial transactions between two or more distinct groups of economic participants. Unlike a traditional single-vendor e-commerce website - where a single business sells its own products to consumers - a marketplace aggregates the supply-side offerings of multiple independent vendors and enables buyers to discover, compare, and engage with those offerings through a unified digital interface. Classic examples of marketplace platforms include Amazon Marketplace, eBay, Airbnb, and Uber - each of which creates value not by owning or producing the goods or services being transacted, but by dramatically reducing the search costs, information costs, and coordination costs that would otherwise make transactions between strangers difficult or impossible.
+
+[PARAGRAPH 142]
+The academic literature on marketplace platforms has grown substantially since the early 2000s, particularly following the influential contributions of Rochet and Tirole (2003), who formalized the concept of "two-sided markets" as a distinct economic structure characterized by the presence of network externalities - positive feedback effects where the platform becomes more valuable to each user type as the number of users of the other type increases. In a marketplace connecting agricultural producers and buyers, for example, the platform becomes more valuable to buyers as more producers list their products (more selection, better prices through competition), and simultaneously becomes more valuable to producers as more buyers join (larger potential audience, more competition for their products, higher prices). This virtuous cycle - sometimes called the "marketplace flywheel" - is the fundamental economic engine that drives marketplace platforms to dominance once they achieve critical mass.
+
+[PARAGRAPH 143]
+2.1.2 Agricultural Technology (AgriTech)
+
+[PARAGRAPH 144]
+AgriTech is a portmanteau of "Agriculture" and "Technology" that refers to the application of technological innovations - including digital platforms, sensors, automation, biotechnology, and artificial intelligence - to the agricultural sector with the aim of improving efficiency, productivity, sustainability, and profitability across the entire agricultural value chain. The global AgriTech sector has experienced explosive growth over the past decade: according to a report by AgFunder (2023), global venture capital investment in AgriTech reached approximately $4.7 billion in 2022, reflecting strong investor confidence in the sector's potential to address both food security challenges and commercial opportunities.
+
+[PARAGRAPH 145]
+In the African context, AgriTech has emerged as one of the most promising categories of technology investment and innovation. The unique combination of a large agricultural sector, rapidly growing mobile internet penetration, a young and entrepreneurially inclined population, and significant unmet needs across every link of the agricultural value chain creates a fertile environment for AgriTech solutions. Africa-specific AgriTech platforms have attracted increasing attention from both impact investors focused on development outcomes and commercial investors seeking growth opportunities in frontier markets.
+
+[PARAGRAPH 146]
+The categories of AgriTech solutions most relevant to this project include: digital marketplace platforms (connecting buyers and sellers of agricultural products), market information systems (providing real-time price data to market participants), input supply platforms (connecting farmers with suppliers of seeds, fertilizers, and agrochemicals), and financial services platforms (providing access to credit, savings, and insurance products tailored to agricultural needs). MBOA Market operates primarily in the first two categories, with design elements that anticipate eventual expansion into the third and fourth.
+
+[PARAGRAPH 147]
+2.1.3 RESTful API Architecture
+
+[PARAGRAPH 148]
+The Representational State Transfer (REST) architectural style, first articulated by Roy Thomas Fielding in his seminal 2000 doctoral dissertation at the University of California, Irvine, has become the dominant architectural paradigm for web service development over the past two decades. Fielding defined REST as a set of architectural constraints that, when applied consistently, produce web services with superior performance, scalability, simplicity, modifiability, visibility, portability, and reliability compared to alternative approaches such as SOAP (Simple Object Access Protocol) or RPC (Remote Procedure Call).
+
+[PARAGRAPH 149]
+The six architectural constraints that define a RESTful system are: (1) Client-Server separation, where the user interface concerns are separated from the data storage concerns; (2) Statelessness, where each request from client to server must contain all the information necessary to understand the request; (3) Cacheability, where responses must define themselves as cacheable or non-cacheable to improve efficiency; (4) Uniform Interface, which simplifies and decouples the architecture by establishing standard conventions for identifying resources, manipulating resources through representations, and including self-descriptive messages; (5) Layered System, where a client cannot ordinarily tell whether it is connected directly to the end server or to an intermediary; and (6) Code on Demand (optional), which allows servers to extend client functionality by transferring executable code.
+
+[PARAGRAPH 150]
+2.1.4 Single Page Applications (SPA)
+
+[PARAGRAPH 151]
+A Single Page Application (SPA) is a web application architecture in which the application loads a single HTML page and dynamically updates the content of that page in response to user interactions, without requiring full page reloads from the server. In contrast to traditional multi-page applications (MPAs), where every user action that requires new content triggers a full round-trip to the server (including re-downloading the entire HTML structure, stylesheets, and scripts), an SPA downloads the application logic once and subsequently exchanges only data - typically in JSON format - with the server, dramatically reducing network usage and perceived application responsiveness.
+
+[PARAGRAPH 152]
+React, developed and maintained by Meta (formerly Facebook), is the most widely adopted library for building SPAs as of 2024, with a global market share of approximately 42% among JavaScript frameworks according to the State of JavaScript 2024 survey. React's component-based architecture - where UIs are decomposed into reusable, self-contained components that manage their own state and render themselves independently - has proven exceptionally well-suited to building complex, interactive user interfaces with predictable behaviour and high maintainability. React 18, the version used in MBOA Market, introduces several significant performance improvements including Concurrent Rendering (which allows React to interrupt and resume rendering work to maintain interface responsiveness), automatic batching of state updates, and the Suspense component for declarative loading states.
+
+[PARAGRAPH 153]
+2.1.5 JSON Web Tokens (JWT) and Stateless Authentication
+
+[PARAGRAPH 154]
+JSON Web Token (JWT), standardized in RFC 7519, is an open standard that defines a compact and self-contained mechanism for securely transmitting information between parties as a JSON object. A JWT consists of three Base64URL-encoded components separated by periods: the Header (specifying the token type and signing algorithm), the Payload (containing the claims - statements about an entity and additional metadata), and the Signature (created by signing the encoded header and payload with a secret key using the specified algorithm). The signature allows the recipient to verify that the token has not been tampered with in transit and that it was issued by an entity with knowledge of the secret key.
+
+[PARAGRAPH 155]
+In the context of web application security, JWTs are most commonly used for stateless authentication: after a user successfully authenticates (by providing their phone number and password), the server generates a JWT containing the user's identity information (such as their user ID) and signs it with a server-side secret key. The JWT is returned to the client, which stores it (in localStorage, sessionStorage, or a cookie) and includes it in the Authorization header of subsequent API requests. The server validates the JWT on every protected request by verifying the signature - without needing to maintain any session state in a database or cache. This stateless approach is particularly well-suited to the microservice and cloud-native architectures that characterize modern web applications, as it eliminates the need for a centralized session store and enables horizontal scaling of the backend without session affinity requirements.
+
+[PARAGRAPH 156]
+MBOA Market implements a two-token JWT authentication strategy: a short-lived access token (valid for 30 minutes) used for API authentication, and a longer-lived refresh token (valid for 7 days) used to obtain new access tokens without requiring the user to re-authenticate. This approach balances security (the short access token lifetime limits the damage of token compromise) with usability (the refresh token ensures users are not constantly logged out).
+
+[PARAGRAPH 157]
+2.1.6 Asynchronous Python and FastAPI
+
+[PARAGRAPH 158]
+FastAPI's automatic generation of OpenAPI 3.0-compliant documentation (exposed via the Swagger UI at /docs) is particularly valuable in a project context: it allows the backend API to be explored, tested, and validated without any external tooling, and serves as living documentation that is always synchronized with the actual API implementation. In MBOA Market, the Swagger documentation at https://mboa-market-backend.onrender.com/docs provides a complete and interactive reference for all endpoints, request schemas, response schemas, and authentication requirements.
+
+[PARAGRAPH 159]
+2.2 Review of Existing Platforms
+
+[PARAGRAPH 160]
+2.2.1 Jumia (Pan-African)
+
+[PARAGRAPH 161]
+Jumia was founded in Lagos, Nigeria, in 2012 and has since grown to become the largest e-commerce platform in Africa, operating in 11 countries including Cameroon. Often referred to as the "Amazon of Africa," Jumia provides a comprehensive marketplace that connects sellers with consumers across a wide range of product categories. In 2019, Jumia became the first African technology company to list on the New York Stock Exchange (NYSE), achieving a market valuation at IPO that reflected significant investor optimism about the African e-commerce opportunity.
+
+[PARAGRAPH 162]
+However, Jumia's strategic focus has always been on high-volume, relatively standardized product categories - particularly electronics, fashion, beauty products, and household items - where high margins, strong brand differentiation, and manageable logistics requirements make commercial viability achievable. Agricultural products, especially fresh food commodities, represent a fundamentally different commercial challenge: low unit values, extreme perishability, significant quality variability, complex and expensive cold-chain logistics, and a fragmented, predominantly rural supply base. These characteristics make Jumia's existing marketplace infrastructure largely unsuitable for agricultural commerce. While Jumia has made occasional forays into the food category in some markets, these efforts have been primarily focused on packaged and processed foods in urban areas, not on connecting primary agricultural producers with buyers. The platform's fee structure - including listing fees, commission percentages, and subscription tiers for professional sellers - further reduces its attractiveness for smallholder agricultural producers with limited financial resources.
+
+[PARAGRAPH 163]
+Assessment for MBOA Market context: Jumia demonstrates the commercial viability of digital marketplace platforms in Africa and provides a model for certain aspects of the user experience (particularly the product listing format and search/filter functionality). However, its complete absence of agriculture-specific features, its cost structure unsuitable for smallholder farmers, and its strategic indifference to the rural agricultural market create the exact gap that MBOA Market fills.
+
+[PARAGRAPH 164]
+2.2.2 OLX Cameroon
+
+[PARAGRAPH 165]
+OLX, originally founded in Buenos Aires in 2006 and now owned by the South African media conglomerate Naspers, operates a global network of classified advertisement platforms in dozens of countries. In Cameroon, OLX Cameroon (olx.cm) operates as a general-purpose peer-to-peer marketplace for buying and selling used goods, vehicles, real estate, electronics, and assorted items between private individuals. Its simple interface, free basic listings, and mobile accessibility have earned it a meaningful user base in Cameroon's urban centres, particularly Yaounde and Douala.
+
+[PARAGRAPH 166]
+Despite its simplicity and accessibility, OLX Cameroon's fundamental nature as a general classified advertisement site makes it poorly adapted to agricultural commerce. The platform has no category structure specific to agricultural products or livestock, no price comparison tools, no mechanisms for broadcasting current market prices, no agricultural community features, and no accommodations for the seasonal and perishable nature of agricultural goods. More fundamentally, OLX's user base is predominantly urban and tech-literate, meaning that rural agricultural producers - who are precisely the users that MBOA Market seeks to serve - are largely absent from the platform. The platform's complete lack of agriculture-specific context (such as product variety information, regional provenance tags, growing methods, or certification status) means that agricultural listings on OLX are indistinguishable from listings for used household goods, providing no additional credibility or context to prospective buyers.
+
+[PARAGRAPH 167]
+2.2.3 Esoko (West Africa)
+
+[PARAGRAPH 168]
+Esoko, founded in Ghana in 2005 (originally as TradeNet) and later rebranded, was one of Africa's earliest and most innovative agricultural market information systems. The platform's core innovation was the delivery of current market price data directly to farmers' basic mobile phones via SMS - an approach that effectively bypassed the requirement for internet connectivity that would have been a prohibitive barrier for rural users at the time of the platform's launch. At its peak, Esoko operated in multiple African countries and was widely cited in academic and development literature as a model for mobile agricultural information services.
+
+[PARAGRAPH 169]
+Esoko demonstrated conclusively that agricultural market price information, delivered via mobile technology, can generate significant economic benefits for producers. Studies commissioned by the International Food Policy Research Institute (IFPRI) and other development institutions documented meaningful improvements in producer prices, reduced price dispersion across markets, and increased farmer bargaining power in communities where Esoko was actively used. These results strongly validate the core assumption behind MBOA Market's real-time price ticker feature.
+
+[PARAGRAPH 170]
+However, Esoko's limitations are significant from the perspective of MBOA Market's design. The platform's primary delivery mechanism - SMS - while revolutionary for its time, is fundamentally limited in the richness of information it can convey: text-only, no photos, no multimedia, limited data capacity per message. The platform's SMS-centric architecture also means it cannot support the marketplace functionality (listing creation, browsing, search, filtering) that MBOA Market provides. Additionally, Esoko has not expanded its operations to Cameroon, leaving the Cameroonian market entirely unserved by its model. Its web interface, while functional, is dated and not optimized for mobile devices.
+
+[PARAGRAPH 171]
+2.2.4 Farmcrowdy (Nigeria)
+
+[PARAGRAPH 172]
+Farmcrowdy, founded in Lagos in 2016, pioneered a distinctive business model in the African AgriTech space: rather than connecting producers with buyers of agricultural products, it connects investors with agricultural production opportunities. Through the Farm rowdy platform, urban investors can purchase "farm units" - fractional ownership stakes in specific agricultural production cycles - and receive financial returns when the harvest is sold. The platform handles all aspects of farm management, input procurement, production monitoring, and product sales on behalf of the investor, while the farmer receives technical support, guaranteed input supply, and a minimum income guarantee.
+
+[PARAGRAPH 173]
+While Farm rowdy’s model addresses some of the financing challenges that constrain agricultural productivity in Nigeria, it is structurally different from MBOA Market's purpose: it is fundamentally an investment platform, not a marketplace for buying and selling agricultural products. The platform does not allow producers to list their products for direct sale to consumers, and it does not provide market price information or facilitate direct commerce between producers and buyers. Its geographic focus is exclusively Nigeria, and its model is designed for specific types of agricultural production that fit an investable structure - not the diverse, small-scale, immediate-market-oriented production that characterizes most Cameroonian smallholder agriculture.
+
+[PARAGRAPH 174]
+2.2.5 Hello Tractor (East Africa)
+
+[PARAGRAPH 175]
+Hello Tractor, often described as the "Uber of agriculture" or the "Uber for tractors," is a Nigerian-founded, Kenya-headquartered platform that digitizes the market for agricultural machinery rental in Africa. The platform connects smallholder farmers who need tractor services with tractor owners who have underutilized machinery capacity, enabling farmers to access mechanized services on a pay-per-use basis that would be unaffordable if they needed to purchase their own tractors. Hello Tractor integrates IoT (Internet of Things) tracking technology in the tractors themselves to enable transparent, data-driven billing and usage monitoring.
+
+[PARAGRAPH 176]
+Hello Tractor has demonstrated impressive results in its operating markets - particularly in Nigeria and Kenya - where mechanization constraints are a significant productivity bottleneck for smallholder farmers. The platform's innovative application of the sharing economy model to agricultural machinery has attracted significant development finance from the Bill & Melinda Gates Foundation, the International Finance Corporation (IFC), and other impact investors. However, its relevance to MBOA Market is limited by its exclusive focus on the machinery rental sub-market, its absence from Cameroon, and its fundamental difference in purpose: Hello Tractor does not enable the buying and selling of agricultural products or the sharing of market price information.
+
+[PARAGRAPH 177]
+2.2.6 AgroHub Cameroon (Local)
+
+[PARAGRAPH 178] **EXPLANATION**
+AgroHub Cameroon represents the most directly relevant existing attempt at building an agricultural digital marketplace specifically for the Cameroonian market. The initiative, which maintains a presence on social media platforms including Facebook, has positioned itself as a connector between agricultural producers and buyers in Cameroon, with a stated goal similar to MBOA Market's. The project has generated meaningful community engagement on social media, with a Facebook page that has attracted thousands of followers interested in agricultural commerce.
+
+[PARAGRAPH 179]
+However, a technical assessment of Agroha’s current state reveals fundamental limitations that have prevented it from functioning as an effective digital marketplace. The platform lacks a dedicated web application with robust architecture - it operates primarily through social media posts and informal communication channels rather than a structured digital marketplace with user accounts, listing management, search and filter capabilities, and market price information. There is no evidence of a secure authentication system, a dedicated mobile-optimized interface, an API-driven backend, or production-grade cloud hosting. The platform's listings are ad-hoc social media posts rather than structured database records, making systematic search and comparison by buyers essentially impossible. In essence, AgroHub Cameroon demonstrates community demand for a service like MBOA Market but confirms the absence of a technically adequate implementation of that service in the Cameroonian market.
+
+[PARAGRAPH 180]
+2.3 Comparative Analysis
+
+[PARAGRAPH 181]
+2.4 Visual Comparative Interpretation of Literature Gaps
+
+[PARAGRAPH 182]
+The review of existing solutions is useful only when it helps transform observed limitations into design decisions. In this study, the comparison is not used simply to claim that MBOA Market is better than other platforms. Instead, the comparison identifies what each platform does well, what it fails to provide, and which functions must therefore be included in the proposed system. This is the reason why the comparative flowcharts are placed in the literature review while the final performance comparison is reserved for the results chapter.
+
+[PARAGRAPH 183]
+Jumia demonstrates the strength of a large e-commerce ecosystem, but its model is generic and product-oriented rather than farmer-oriented. OLX shows how simple classified advertisements can help users publish offers quickly, but the absence of agricultural structure makes it difficult to separate serious agricultural listings from unrelated items. Soko is closer to the agricultural domain because it is associated with market information, yet it does not provide a complete marketplace where producers, suppliers and buyers can manage profiles and listings within one interface. Farm rowdy focuses more on agricultural investment and project financing, while Hello Tractor focuses on mechanization services. AgroHub demonstrates local agricultural interest, but available information does not show the same integrated full-stack architecture, secure authentication, bilingual interface and deployed API-based structure implemented in this project.
+
+[PARAGRAPH 184]
+From these observations, the research gap becomes clearer. The problem is not that no digital solution exists. The problem is that the existing solutions solve fragmented pieces of the agricultural value chain. A farmer may find general e-commerce visibility on one platform, price information on another, equipment services on another, and informal communication through social networks. This fragmentation increases cognitive load and makes it difficult for users to manage all commercial activities from one coherent system. MBOA Market is therefore designed as an integrated agricultural marketplace that combines identity, listings, categories, prices, user profile, dashboard and API maintainability.
+
+[PARAGRAPH 185]
+The feature coverage curve and feature gap matrix provide a visual interpretation of this gap. They show that existing platforms may perform well in one area but weakly in another. For example, a generic marketplace may have a strong user base but weak agricultural specialization. A specialized agricultural information service may have price information but no transaction-oriented marketplace. By contrast, MBOA Market attempts to provide a balanced functional coverage across the main requirements identified during the literature review.
+
+[PARAGRAPH 186]
+Table 2.1: Summary of existing platform limitations
+
+[PARAGRAPH 187] **EXPLANATION**
+This table summarizes the strengths and limitations of platforms reviewed in the literature. It shows that each platform solves one part of the digital agriculture problem, but none fully combines local agricultural orientation, livestock support, market price visibility and secure marketplace functions for Cameroon. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 189]
+Table 2.2: Feature gap analysis of existing solutions
+
+[PARAGRAPH 190] **EXPLANATION**
+This table converts the weaknesses found in existing solutions into design implications for MBOA Market. It clarifies why the proposed system needed user roles, product categories, price visibility, authentication and local Cameroon-specific interface choices. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 192] === IMAGE #3 ===
+================================================================================
+
+[PARAGRAPH 193]
+Figure 2.1: Existing agricultural platform gap map
+
+[PARAGRAPH 194] **EXPLANATION**
+This gap map shows the elements required for a complete agricultural marketplace in the Cameroonian context: secure API access, price data, bilingual interface, local adaptation, agriculture focus and livestock support. The central idea is that existing platforms cover only isolated parts of this requirement set. By placing all requirements around a single complete solution, the figure explains why MBOA Market was designed as an integrated platform rather than as a simple classified advertisement tool. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 195] === IMAGE #4 ===
+================================================================================
+
+[PARAGRAPH 196]
+Figure 2.2: Detailed flow comparing existing systems with the proposed platform
+
+[PARAGRAPH 197]
+The flowchart compares the logic of existing platforms with the logic adopted for MBOA Market. It shows that generic e-commerce platforms, classified advertisement sites, market information services, investment platforms and mechanization platforms each solve only one part of the agricultural value chain. MBOA Market is positioned as a combined solution that brings user identity, listings, market information, dashboard access and API-based maintainability into one workflow. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 198] === IMAGE #5 ===
+================================================================================
+
+[PARAGRAPH 199]
+Figure 2.3: Feature coverage curve comparing agricultural digital platforms
+
+[PARAGRAPH 200]
+The coverage curve gives a visual interpretation of how different platforms perform across key agricultural marketplace requirements. Some platforms show strong performance in one area, such as general visibility or market information, but drop in other areas such as local agricultural specialization, livestock support or secure user management. The purpose of the curve is to show that MBOA Market aims for balanced functional coverage rather than excellence in only one isolated feature. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 201] === IMAGE #6 ===
+================================================================================
+
+[PARAGRAPH 202]
+Figure 2.4: Feature gap matrix showing coverage limitations of existing platforms
+
+[PARAGRAPH 203] **EXPLANATION**
+The matrix presents the feature-by-feature comparison used to identify the research gap. It makes the missing elements of each existing platform visible, especially where agricultural specialization, Cameroonian context, secure authentication, price visibility and livestock support are weak or absent. This figure supports the design decision to include profiles, listing management, market prices and localized access in MBOA Market. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 204] === IMAGE #7 ===
+================================================================================
+
+[PARAGRAPH 205]
+Figure 2.5: Comparative flowchart of existing platforms and MBOA Market
+
+[PARAGRAPH 206] **EXPLANATION**
+This flowchart organizes the reviewed platforms according to what they mainly provide. Jumia and OLX represent general commerce and classified visibility, Soko represents market information, Farm rowdy represents agricultural investment, Hello Tractor represents mechanization, and AgroHub represents local agricultural interest. MBOA Market is shown as the proposed response that consolidates the most relevant missing functions into one agricultural marketplace. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 207] === IMAGE #8 ===
+================================================================================
+
+[PARAGRAPH 208]
+Figure 2.6: Gap-to-design flow linking literature limitations to system design
+
+[PARAGRAPH 209] **EXPLANATION**
+The diagram links literature review findings directly to technical design decisions. Each limitation identified in existing solutions becomes a design requirement: lack of trust leads to authentication and profiles, weak price visibility leads to a price ticker, limited local adaptation leads to Cameroonian regions and FCFA pricing, and fragmented services lead to a unified marketplace interface. This makes the transition from literature review to system design clear and traceable. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 210]
+The following table synthesizes the comparative assessment of existing platforms against MBOA Market across ten key evaluation dimensions identified through the literature review and needs analysis:
+
+[PARAGRAPH 213]
+Table 2.3: Comparative Analysis of Agricultural Digital Platforms
+
+[PARAGRAPH 214]
+Ce tableau fournit une comparaison directe entre MBOA Market et les solutions existantes. Il met en évidence les avantages compétitifs de notre plateforme. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 215]
+The comparative analysis confirms that MBOA Market uniquely satisfies all eleven evaluation criteria - a result that no existing platform achieves. The closest competitors, Soko and AgroHub Cameroon, satisfy four criteria each but fail to meet critical requirements in opposite areas: Soko has strong market information capabilities but no marketplace functionality, no availability in Cameroon, and no modern web interface; AgroHub Cameroon has Cameroonian market knowledge and agriculture focus but completely lacks technical infrastructure, security, and scalability.
+
+[PARAGRAPH 216]
+2.5 Theoretical Framework
+
+[PARAGRAPH 217]
+2.5.1 Two-Sided Market Theory
+
+[PARAGRAPH 218]
+In MBOA Market's case, the two primary sides are agricultural producers (sellers) and buyers (which may include individual consumers, urban retailers, restaurant owners, export companies, and others). The platform creates value for producers by providing access to a large base of buyers who would otherwise be difficult and expensive to reach; it creates value for buyers by providing access to a wide variety of agricultural products directly from producers, with transparent pricing and regional provenance information. Each user who joins the platform on either side increases the value of the platform for users on the other side - creating the self-reinforcing growth dynamic characteristic of successful marketplace platforms.
+
+[PARAGRAPH 219]
+The theoretical implications of two-sided market structure for MBOA Market's design include: the importance of achieving critical mass on both sides simultaneously during the launch phase (the classic "chicken-and-egg" problem of marketplaces); the potential value of subsidizing user acquisition on the supply side (producers) in order to attract buyers, since a marketplace with few listings is unattractive to buyers who might otherwise provide the listings needed to attract producers; and the importance of designing platform rules that maximize the quality of interactions between sides while minimizing friction and transaction costs.
+
+[PARAGRAPH 220]
+2.5.2 Technology Acceptance Model (TAM)
+
+================================================================================
+[PARAGRAPH 221] === IMAGE #9 ===
+================================================================================
+
+[PARAGRAPH 222]
+Figure 2.7: Technology Acceptance Model adapted to MBOA Market
+
+[PARAGRAPH 223]
+Le modèle d'acceptation technologique (TAM) est utilisé pour expliquer pourquoi les utilisateurs adoptent ou rejettent les nouvelles technologies. Dans le contexte de MBOA Market, ce modèle guide la conception de l'interface utilisateur. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 224]
+The Technology Acceptance Model (TAM), originally developed by Fred Davis (1989) and subsequently extended by Venkatesh and Davis (2000), provides a theoretical framework for understanding and predicting why users adopt or reject new technology systems. TAM proposes that two core constructs - Perceived Usefulness (PU), defined as the degree to which a user believes that using the system will enhance their job performance, and Perceived Ease of Use (PEOU), defined as the degree to which a user believes that using the system will be free of effort - are the primary determinants of users' attitudes toward and intentions to use a technology system.
+
+[PARAGRAPH 225]
+TAM has direct implications for MBOA Market's design philosophy. In the context of Cameroonian agricultural actors - many of whom may have limited prior experience with digital platforms, varying levels of smartphone literacy, and time constraints that make complex interfaces frustrating - both Perceived Usefulness and Perceived Ease of Use must be carefully optimized. Perceived Usefulness is maximized by ensuring that the platform offers genuinely valuable features (direct market access, price information, photo-supported listings) that translate clearly into economic value for the user. Perceived Ease of Use is maximized through a mobile-first, visually intuitive design that minimizes the number of steps required to complete key tasks (listing creation, account registration, browsing), uses familiar interface patterns, and provides clear feedback at every interaction point.
+
+[PARAGRAPH 226]
+2.5.3 Information Asymmetry Theory
+
+================================================================================
+[PARAGRAPH 227] === IMAGE #10 ===
+================================================================================
+
+[PARAGRAPH 228]
+Figure 2.8: Information asymmetry reduction mechanism
+
+[PARAGRAPH 229]
+Cette image montre comment MBOA Market réduit l'asymétrie d'information entre producteurs et acheteurs. La plateforme centralise les informations sur les produits, prix et disponibilités. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 230]
+George Akerlof's seminal 1970 paper "The Market for Lemons" - for which he was awarded the 2001 Nobel Prize in Economics - demonstrated that information asymmetry between buyers and sellers can lead to market failure: when buyers cannot verify the quality of goods being sold, they are unwilling to pay prices that reflect high quality, which drives high-quality sellers out of the market, further reducing average quality, further reducing willingness to pay - creating a downward spiral that can cause markets to collapse entirely. This analysis, while developed in the context of used car markets, has been applied extensively to agricultural markets, where information asymmetry about product quality, provenance, and price is pervasive and consequential.
+
+[PARAGRAPH 231]
+MBOA Market addresses information asymmetry on two dimensions: price information (through the real-time market price ticker, which broadcasts current prices across Cameroon's major markets, eliminating the information advantage that middlemen exploit) and product quality signaling (through multi-photo listing support, detailed product descriptions, producer profile information including activity type, region, and reputation, and the accountability structure created by user accounts with persistent identities).
+
+[PARAGRAPH 232]
+2.6 Gap Identified and MBOA Market's Response
+
+[PARAGRAPH 233]
+The literature review and comparative platform analysis converge on a clear and well-defined gap in the existing digital ecosystem for Cameroonian agricultural commerce: there is currently no platform that combines, within a single technically robust, mobile-optimized, and locally relevant digital interface, the full range of functionalities that Cameroonian agricultural market actors need - specifically: (1) product listing marketplace functionality with photo support, (2) real-time agricultural market price information, (3) phone-number-based authentication adapted to users who may not have or use email addresses, (4) coverage of both agriculture and livestock sectors, (5) bilingual French-English interface, (6) availability and relevance in the Cameroonian market context, and (7) zero cost to basic users.
+
+[PARAGRAPH 234]
+MBOA Market is designed precisely to fill this gap. Every architectural decision, every design choice, and every feature prioritization in the platform's development has been guided by the specific needs identified through this literature review and comparative analysis - making MBOA Market not a generic marketplace with Cameroonian branding, but a purpose-built solution for a well-documented and genuinely unmet need.
+
+[PARAGRAPH 236]
+CHAPTER THREE: METHODOLOGY AND SYSTEM DESIGN
+
+[PARAGRAPH 238] **EXPLANATION**
+This chapter presents the methodology and system design adopted for MBOA Market. It explains the development approach, tools, architecture, UML models, database design, user interface principles and evaluation standards used to transform the identified agricultural market problem into a reproducible software solution. The objective is to show not only what was built, but how another developer or researcher can understand and reproduce the system development process.
+
+================================================================================
+[PARAGRAPH 242] === IMAGE #11 ===
+================================================================================
+
+[PARAGRAPH 243]
+Figure 3.1: Detailed UML class diagram
+
+[PARAGRAPH 244]
+Le diagramme de classes UML présente les principales entités logicielles utilisées dans MBOA Market. Il montre les relations entre les utilisateurs, les annonces, les commandes et les autres composants du système. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 245] === IMAGE #12 ===
+================================================================================
+
+[PARAGRAPH 246]
+Figure 3.2: Component diagram of frontend, backend and data layers
+
+[PARAGRAPH 247]
+Le diagramme de composants montre les principaux blocs techniques qui constituent la plateforme. Il illustre l'architecture modulaire adoptée pour faciliter la maintenance et l'évolution du système. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 248]
+3.1 Development Methodology
+
+[PARAGRAPH 249]
+3.1.1 Rationale for the Agile Approach
+
+[PARAGRAPH 250]
+The development of MBOA Market followed the Agile software development methodology, drawing on the principles and practices of the Scrum framework (Schwaber and Sutherland, 2020). The choice of Agile over traditional plan-driven methodologies such as the Waterfall model was deliberate and multi-faceted. First, the requirements of an agricultural marketplace platform in Cameroon - a domain where no direct local precedent exists - were inherently uncertain and subject to evolution as understanding of the domain deepened. Agile's embrace of evolving requirements is therefore better suited to this context than Waterfall's assumption of stable, fully-specified requirements at project inception.
+
+[PARAGRAPH 251]
+Second, the internship context at Zen Africa, with its emphasis on rapid iteration and practical value delivery, aligned naturally with Agile's short sprint cycles and continuous delivery orientation. The professional supervisor, Mr. SEFFI PEGUI, provided iterative feedback between development cycles that was more effectively incorporated through an Agile process than it would have been through the milestone-based review structure of Waterfall. Third, the academic supervisor, Dr. NGADUE PASCAL, provided periodic review and guidance that could be integrated most naturally at sprint boundaries rather than at the fixed stage gates of a Waterfall plan.
+
+[PARAGRAPH 252]
+The Agile Manifesto's four core values - individuals and interactions over processes and tools; working software over comprehensive documentation; customer collaboration over contract negotiation; and responding to change over following a plan - were all directly applicable to this project. The "customer" was interpreted as the target community of Cameroonian agricultural actors whose needs informed every design and prioritization decision.
+
+[PARAGRAPH 253]
+3.1.2 Sprint Structure and Phase Deliverables
+
+[PARAGRAPH 254]
+The project was organized into four development sprints, each of approximately two weeks' duration:
+
+[PARAGRAPH 255]
+Table 3.1: MBOA Market Project Sprint Plan
+
+[PARAGRAPH 256]
+Ce tableau montre comment le travail du projet a été organisé en phases distinctes. Chaque phase correspond à un ensemble d'activités et de livrables spécifiques. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 257]
+3.1.3 Backlog and MoSCoW Prioritization
+
+[PARAGRAPH 258]
+The product backlog was organized using the MoSCoW framework - Must Have, Should Have, Could Have, Won't Have this time. This ensured development effort was always focused on the features delivering the greatest value to core users.
+
+[PARAGRAPH 259]
+Must Have: Phone registration, JWT login, listing CRUD with photos, price ticker, profile management, bilingual UI, mobile-responsive design, production deployment.
+
+[PARAGRAPH 260]
+Should Have: Video backgrounds, animated transitions, demonstration listings, health check API endpoints.
+
+[PARAGRAPH 261]
+Could Have: Advanced full-text search, listing view counter, phone number display for contact.
+
+[PARAGRAPH 262]
+Won't Have (future): In-app payments, native mobile app, real-time chat, admin dashboard, AI recommendations, geolocation maps.
+
+[PARAGRAPH 263]
+3.2 Tools and Resources Used
+
+[PARAGRAPH 264]
+3.2.1 Windsurf - AI-Powered IDE
+
+[PARAGRAPH 265]
+Windsurf, the AI-powered Integrated Development Environment developed by Codeium, served as the primary development environment for the entire MBOA Market project. Windsurf represents a new generation of coding tools in which an embedded AI assistant - named Cascade - maintains deep contextual awareness of the full codebase and can propose multi-file edits, explain complex behaviors, identify root causes of bugs, and generate new components on request. Unlike traditional autocomplete tools that operate at the token or line level, Windsurf's Cascade understands the semantic intent of development tasks and can plan and execute complex, multi-step implementation workflows across both the TypeScript frontend and the Python backend simultaneously.
+
+[PARAGRAPH 266]
+The practical impact of Windsurf on the MBOA Market project was transformational in several areas. It identified the root cause of the critical CORS misconfiguration that was blocking all authenticated API calls from the frontend - the incompatibility between allow_origins=["*"] and allow_credentials=True under RFC 6454, which the FastAPI middleware enforces strictly. It proposed the lifespan-based database table initialization pattern that resolved the startup race condition on Render's cloud platform. It designed and implemented the Zustand global state store with localStorage persistence for JWT token management. By enabling a single developer to maintain architectural coherence across a multi-language, multi-layer codebase, Windsurf effectively amplified individual productivity by an estimated 40-50% and was instrumental in making the project's technical ambition achievable within the ten-week timeframe.
+
+[PARAGRAPH 267]
+3.2.2 Canva - Design and Video Generation
+
+[PARAGRAPH 268]
+Canva, the cloud-based visual design platform, played a dual role in MBOA Market's development. As a design tool, it was used in Sprint 1 to create high-fidelity UI mockups of the platform's key screens - the landing page, registration form, product feed, and profile management page. These mockups provided a visual blueprint that aligned expectations between the developer and supervisors before a single line of code was written, reducing the risk of costly redesigns later in the project.
+
+[PARAGRAPH 269]
+As a video generation tool, Canva's AI-powered video creation features were used to produce the looping agricultural background video that plays on the MBOA Market landing, login, registration, and profile pages. The video was created by combining Canva's stock video library with AI-generated transitions and atmospheric effects, then exported in optimized MP4 format for web embedding. This immersive video background was a deliberate UX decision: it communicates MBOA Market's agricultural identity and local cultural grounding immediately to any first-time visitor, before they have read a single word of the interface text. The result is a powerful first impression that positions MBOA Market as a purpose-built agricultural platform rather than a generic marketplace.
+
+[PARAGRAPH 270]
+3.2.3 Freepik - Stock Images and Visual Assets
+
+[PARAGRAPH 271]
+Freepik was the primary source of high-quality agricultural and livestock product photographs used to populate MBOA Market's demonstration listings. Creating a convincing marketplace requires realistic product images - cassava, maize, plantain, cattle, poultry, and other commodities - that give potential users an accurate sense of what the platform will look like when populated with real data. Sourcing authentic photographs directly from Cameroonian producers was not feasible within the project's constraints, making Freepik's extensive agricultural imagery library an invaluable resource.
+
+[PARAGRAPH 272]
+Selected images were downloaded, renamed using underscores instead of spaces for URL compatibility, resized for web optimization, and organized into the application's public directory structure under frontend/public/images/agriculture/ and frontend/public/images/livestock/. These paths are served as static assets by Vite during development and by Netlify's CDN in production - a distinction that drove the important architectural decision to store images in the public/ directory rather than the src/assets/ directory, since only the former is served statically without bundling by Vite.
+
+[PARAGRAPH 273]
+3.2.4 ChatGPT - Research and Knowledge Acceleration
+
+[PARAGRAPH 274]
+ChatGPT (GPT-4 series, OpenAI) served as a research acceleration tool throughout the project. During the literature review phase, it synthesized information across agricultural economics, marketplace platform theory, and African digital economy research, providing structured summaries that guided deeper reading of primary academic sources. It effectively functioned as an intelligent first-pass filter for the vast literature, helping identify the most relevant theoretical frameworks - including two-sided market theory, TAM, and information asymmetry theory - for the MBOA Market context.
+
+[PARAGRAPH 275]
+3.3 System Architecture
+
+[PARAGRAPH 276]
+3.3.1 Reproducible System Development Procedure
+
+[PARAGRAPH 277]
+A methodology chapter must show how another developer can reproduce the work. For MBOA Market, reproducibility begins with the separation of the system into three layers: the React frontend, the FastAPI backend and the PostgreSQL database. Each layer can be installed, tested and deployed independently, but the final value of the platform appears when the three layers operate together through REST API calls. This separation was chosen because it improves maintainability and makes the system easier to extend after the bachelor project.
+
+[PARAGRAPH 278]
+The first reproducibility step is to prepare the development environment. The frontend requires Node.js and a package manager, while the backend requires Python and the FastAPI environment. The database requires PostgreSQL credentials and connection parameters. Once the environment variables are configured, the developer can start the backend, confirm that Swagger documentation opens, start the frontend and verify that the user interface communicates with the API. This procedure is important because it demonstrates that the project is not only a design document but a deployable software artefact.
+
+[PARAGRAPH 279]
+The second step is database preparation. The data layer must support users, profiles, listings, categories and market price information. The schema was designed so that a user can have a profile, a profile can publish listings, listings can be categorized by agricultural or livestock domain, and market prices can be displayed independently. This organization allows the platform to manage identity, product visibility and price information without mixing unrelated responsibilities in one table.
+
+[PARAGRAPH 280]
+The third step is authentication testing. A user enters a phone number and password from the interface. The backend verifies the credentials, checks the hashed password and returns a token when authentication succeeds. The frontend stores the token and uses it to access protected routes. This workflow is represented visually in the authentication sequence diagram because the supervisor requested diagrams that show mechanisms instead of only screenshots.
+
+[PARAGRAPH 281]
+The fourth step is marketplace testing. The developer verifies that product cards display product image, category, price, stock, location and seller information. This test is essential because the central purpose of MBOA Market is to improve product visibility. A marketplace that only allows login without showing useful products would not solve the research problem. The marketplace workflow therefore links publication, storage, retrieval and display.
+
+[PARAGRAPH 282]
+The fifth step is deployment verification. The frontend is deployed on Netlify, the backend on Render and the database in a hosted PostgreSQL environment. The deployed system is checked through the live interface and Swagger documentation. This confirms that the application can run outside the developer laptop and can be inspected by a supervisor, jury member or user.
+
+[PARAGRAPH 283]
+Table 3.2: Tools and technologies used for development
+
+[PARAGRAPH 284]
+Ce tableau identifie les principaux outils utilisés pour construire la plateforme. Il inclut les environnements de développement, les frameworks et les services tiers. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 286]
+3.3.2 Reproducible Workflow from Requirement to Interface
+
+[PARAGRAPH 287]
+The reproducible workflow begins with requirement identification. Each requirement is written as an expected behaviour instead of a vague intention. For example, the requirement is not simply that the platform should be secure. It is stated operationally: a user must authenticate with a phone number and password, the password must be stored in hashed form, the backend must issue a JWT token, and protected pages must reject unauthenticated access. This form of requirement description makes the system easier to test because each expected behaviour can be verified in Chapter 4.
+
+[PARAGRAPH 288]
+The second phase converts requirements into model elements. Actors become use cases, use cases become workflows, workflows become interface pages, and interface pages become API interactions. This is why the methodology chapter contains use case diagrams, activity diagrams, sequence diagrams and component diagrams. These diagrams are not decoration. They serve as a bridge between the problem and the implemented software by showing how a requirement becomes a concrete technical mechanism.
+
+[PARAGRAPH 289]
+The third phase converts models into implementation tasks. Authentication becomes an auth route, a password hashing function, a token generator and a frontend session store. Marketplace browsing becomes listing endpoints, product card components and database queries. Profile management becomes a data structure, a protected route and a display interface. By presenting the system in this layered manner, another student or developer can follow the reasoning and reproduce the same platform without relying only on screenshots.
+
+[PARAGRAPH 290]
+The fourth phase verifies the implementation through visible evidence. Every important interface is paired with a flowchart. The screenshot answers the question: what did the implemented page look like? The flowchart answers the question: how does a user move through the scenario and what happens behind the screen? This combination directly responds to the supervisor's requirement that a software engineering thesis should be expressive and visually explanatory.
+
+[PARAGRAPH 291]
+3.3.3 Evaluation Metrics and Acceptance Standards
+
+[PARAGRAPH 292]
+The evaluation framework was defined before presenting the results so that the implementation chapter could be assessed against clear expectations. The project was evaluated through functional completeness, usability, security, deployment, maintainability and comparative coverage. These metrics are appropriate for a software engineering project because they evaluate both what the user sees and what the system does internally.
+
+[PARAGRAPH 293]
+Functional completeness measures whether each promised function can be executed. For example, login is complete only if credentials are submitted, validated by the backend and reflected in the interface. Marketplace browsing is complete only if real listings appear with relevant agricultural or livestock information. Profile management is complete only if user information can be displayed in a structured form.
+
+[PARAGRAPH 294] **EXPLANATION**
+Usability measures whether the interface allows users to understand what to do next. Since the target users include agricultural actors who may not be advanced digital users, the interface must be simple, visual and direct. Buttons, forms, labels and categories must make sense without requiring technical explanation. This explains the use of screenshots combined with flowcharts: the screenshot proves the interface exists, while the flowchart explains the usage scenario.
+
+[PARAGRAPH 295]
+Security measures whether the system prevents unauthorized access and protects authentication data. The project does not claim to implement enterprise-grade security auditing, but it includes basic and necessary security mechanisms such as password hashing, JWT authentication, protected routes and error feedback for invalid login.
+
+[PARAGRAPH 296]
+Deployment measures whether the system is accessible outside the development environment. A deployed web application is more convincing than a local prototype because it can be opened and tested from another computer. Maintainability is evaluated through the availability of Swagger documentation and the separation of the system into frontend, backend and database components.
+
+[PARAGRAPH 297]
+Table 3.3: Evaluation metrics and acceptance standards
+
+[PARAGRAPH 298]
+Ce tableau définit comment le projet a été évalué. Il présente les critères de succès et les métriques utilisées pour mesurer la qualité de l'implémentation. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 300] === IMAGE #13 ===
+================================================================================
+
+[PARAGRAPH 301]
+Figure 3.3: General system architecture of MBOA Market
+
+[PARAGRAPH 302]
+Le diagramme d'architecture donne une vue d'ensemble des composants de la plateforme. Il montre comment le frontend, le backend et la base de données interagissent. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 303] === IMAGE #14 ===
+================================================================================
+
+[PARAGRAPH 304]
+Figure 3.4: Frontend architecture of the React application
+
+[PARAGRAPH 305]
+L'architecture frontend illustre comment l'interface utilisateur interagit avec les services backend. Elle est basée sur React.js avec TypeScript pour garantir la robustesse du code. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 306] === IMAGE #15 ===
+================================================================================
+
+[PARAGRAPH 307]
+Figure 3.5: Backend architecture of the FastAPI REST service
+
+[PARAGRAPH 308]
+L'architecture backend montre l'organisation interne du serveur. Elle utilise FastAPI (Python) pour fournir des API RESTful performantes et sécurisées. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 309]
+3.3.4 Decoupled Client-Server (JAMStack) Architecture
+
+[PARAGRAPH 310]
+MBOA Market is built on a decoupled client-server architecture, also known as the JAMStack pattern (JavaScript, APIs, Markup). This cleanly separates the presentation layer (the React SPA) from the application and data layers (FastAPI backend and PostgreSQL database), with all inter-layer communication mediated by HTTPS REST API calls. This architecture delivers superior scalability - each tier scales independently based on its specific bottleneck - and superior security, since the frontend has zero direct database access and cannot expose sensitive server-side resources.
+
+[PARAGRAPH 311]
+Table 3.4: MBOA Market Three-Tier Architecture
+
+[PARAGRAPH 312]
+Ce tableau présente les trois principales couches architecturales de la plateforme : présentation (frontend), logique métier (backend) et persistance (base de données). Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 313]
+3.3.5 Security Architecture
+
+[PARAGRAPH 314]
+Security is enforced at multiple perimeter levels. At the transport level, all communication uses HTTPS/TLS 1.3, ensuring encrypted data-in-transit. At the API level, the CORS middleware explicitly allows only known frontend origins (https://mboa-market.netlify.app and http://localhost:5173), rejecting requests from unknown origins. On every protected endpoint, the JWT middleware validates the token signature and expiration before processing begins. At the data level, the PostgreSQL database is accessible only through Render's internal private network - it cannot be reached from the public internet. Passwords are stored exclusively as bcrypt hashes; plaintext passwords are never persisted at any layer.
+
+[PARAGRAPH 315]
+3.4 UML Modelling
+
+[PARAGRAPH 316]
+Pour modéliser les interactions entre les différents acteurs et le système MBOA Market, nous avons élaboré un diagramme de cas d'utilisation UML. Ce diagramme met en relation cinq acteurs principaux avec trente-sept cas d'utilisation répartis en sept modules fonctionnels.
+
+Les acteurs identifiés sont le Visiteur (utilisateur non authentifié pouvant parcourir les annonces), l'Agriculteur ou Éleveur (vendeur de produits agricoles ou d'élevage), l'Acheteur (utilisateur souhaitant acquérir des produits), l'Administrateur (gestionnaire de la plateforme), et Bigiass (assistant virtuel intelligent intégré).
+
+Les modules fonctionnels couvrent l'authentification, la gestion des annonces, la recherche et découverte, les interactions sociales, les commandes et paiements, l'assistance IA, ainsi que l'administration. Les relations d'inclusion (include) et d'extension (extend) permettent de factoriser les comportements communs et d'exprimer les fonctionnalités optionnelles. Le diagramme de cas d'utilisation est présenté à la figure ci-dessous.
+
+3.4.1 System Actors
+
+[PARAGRAPH 317]
+Three distinct actor types interact with the MBOA Market system:
+
+[PARAGRAPH 318]
+Visitor: unauthenticated user - can view the landing page, the scrolling market price ticker, and a preview of recent listings. Cannot create listings or access the full feed.
+
+[PARAGRAPH 319]
+Authenticated User: registered user with confirmed phone number and JWT token - can access all platform features including listing creation, full feed browsing, profile management, and contact information viewing.
+
+[PARAGRAPH 320]
+Platform Administrator (future): privileged user capable of managing platform content, users, and categories - not implemented in the current version but anticipated in the database schema.
+
+[PARAGRAPH 321]
+3.4.2 Use Case Diagram Summary
+
+================================================================================
+[PARAGRAPH 322] === IMAGE #16 ===
+================================================================================
+
+[PARAGRAPH 323]
+Figure 3.6: Use case diagram of MBOA Market
+
+[PARAGRAPH 324]
+Le diagramme de cas d'utilisation identifie les principaux acteurs du système et leurs interactions. Il montre les fonctionnalités accessibles à chaque type d'utilisateur. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 325] === IMAGE #17 ===
+================================================================================
+
+[PARAGRAPH 326]
+Figure 3.7: Detailed UML use case diagram
+
+[PARAGRAPH 327]
+Ce diagramme de cas d'utilisation détaillé développe la vue générale des acteurs. Il présente les scénarios d'utilisation spécifiques pour chaque fonctionnalité. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 328]
+The primary use cases of the MBOA Market system are:
+
+[PARAGRAPH 329]
+3.4.3 Sequence Diagram - User Registration
+
+[PARAGRAPH 330]
+Browser ──► React RegisterPage ──► POST /api/auth/register ──► FastAPI
+
+[PARAGRAPH 331]
+PostgreSQL ──► None (phone not found - user does not exist)
+
+[PARAGRAPH 332]
+FastAPI ──► bcrypt.hash(password) ──► password_hash
+
+[PARAGRAPH 333]
+PostgreSQL ──► COMMIT OK
+
+[PARAGRAPH 334]
+FastAPI ──► 201 Created { user_id, phone, display_name } ──► Browser
+
+[PARAGRAPH 335]
+Browser ──► Redirect to /feed
+
+[PARAGRAPH 336]
+3.4.4 Sequence Diagram - Login and Protected Resource Access
+
+[PARAGRAPH 337]
+Browser ──► POST /api/auth/login {phone, password} ──► FastAPI
+
+[PARAGRAPH 338]
+PostgreSQL ──► User { id, phone, password_hash, ... }
+
+[PARAGRAPH 339]
+FastAPI ──► bcrypt.verify(password, password_hash) ──► True
+
+[PARAGRAPH 340]
+FastAPI ──► create_access_token(user_id, exp=30min) ──► JWT access_token
+
+[PARAGRAPH 341]
+FastAPI ──► create_refresh_token(user_id, exp=7days) ──► JWT refresh_token
+
+[PARAGRAPH 342]
+FastAPI ──► 200 OK { access_token, refresh_token } ──► Browser
+
+[PARAGRAPH 343]
+Browser ──► localStorage.setItem("access_token", access_token)
+
+[PARAGRAPH 344]
+──────────── LATER ────────────
+
+[PARAGRAPH 345]
+Browser ──► GET /api/listings [Authorization: Bearer access_token] ──► FastAPI
+
+[PARAGRAPH 346]
+FastAPI ──► verify_jwt(access_token) ──► { user_id: "uuid..." }
+
+[PARAGRAPH 347]
+PostgreSQL ──► [listing_1, listing_2, ..., listing_n]
+
+[PARAGRAPH 348]
+FastAPI ──► 200 OK [listings array] ──► Browser
+
+[PARAGRAPH 349]
+3.4.5 Class Diagram (Core Entities)
+
+[PARAGRAPH 350]
+3.5 Database Design
+
+================================================================================
+[PARAGRAPH 351] === IMAGE #18 ===
+================================================================================
+
+[PARAGRAPH 352]
+Figure 3.8: Database schema of MBOA Market
+
+[PARAGRAPH 353]
+Le schéma de base de données montre comment la couche de données est structurée. Il présente les tables, leurs attributs et les relations entre elles. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 354]
+3.5.1 Design Principles
+
+[PARAGRAPH 355]
+The MBOA Market PostgreSQL database was designed in adherence to the principles of the Third Normal Form (3NF) - ensuring that all non-key attributes are fully functionally dependent on the primary key and that no transitive dependencies exist. This normalization eliminates data redundancy, prevents update anomalies, and ensures data integrity across all tables. Every primary key uses the UUID v4 format (generated via PostgreSQL's gen_random_uuid() function) rather than sequential integer IDs - a deliberate security choice that prevents enumeration attacks (where an attacker iterates over integer IDs to discover all records) and ensures global uniqueness suitable for distributed architectures.
+
+[PARAGRAPH 356]
+PostgreSQL's native ENUM types are used extensively to enforce domain constraints at the database level, reducing the risk of invalid data entering the system even if application-level validation is bypassed. UserStatus (ACTIVE, INACTIVE, SUSPENDED), Domain (agriculture, elevage), ActivityType (producer, buyer, seed_provider), and ListingStatus (active, inactive, sold) are all implemented as PostgreSQL ENUMs.
+
+[PARAGRAPH 357]
+3.5.2 Entity-Relationship Summary
+
+[PARAGRAPH 358]
+3.5.3 Indexing Strategy
+
+[PARAGRAPH 359]
+Performance-critical columns are indexed to support the most frequent query patterns. The primary query patterns for a marketplace platform are: browsing all active listings (filtered by domain and/or region), viewing a specific listing by ID, and looking up a user by phone number during authentication. Indexes are created on: listings.status (to efficiently filter active listings), listings.domain and listings.region (composite index for domain+region filtering), users.phone (unique index, doubles as authentication lookup index), and listing_photos.listing_id (foreign key index for efficient photo retrieval by listing).
+
+[PARAGRAPH 360]
+3.6 User Interface Design
+
+[PARAGRAPH 361]
+3.6.1 Design Philosophy: Mobile-First, Simplicity, Immersion
+
+[PARAGRAPH 362]
+The MBOA Market user interface was designed around three guiding principles. Mobile-first: given that the majority of Cameroonian internet users access the web primarily or exclusively via mobile devices, the UI was designed for small screens first and then progressively enhanced for larger desktop screens - the inverse of the traditional web design approach. Simplicity: the target users include agricultural producers who may have limited smartphone experience; every interface flow was designed to be completable in the minimum number of steps, with no technical jargon, clear visual hierarchy, and immediate feedback on every interaction. Immersion: the platform's visual identity uses full-screen video backgrounds, bold typography, and a warm earth-toned color palette to create an emotional connection to Cameroonian agriculture before the user has processed any informational content.
+
+[PARAGRAPH 363]
+3.6.2 Color System
+
+[PARAGRAPH 364]
+Table 3.5: MBOA Market Color System
+
+[PARAGRAPH 365]
+Ce tableau explique le langage visuel de l'application. Les choix de couleurs sont liés à l'agriculture (vert) et au commerce (orange), créant une identité visuelle cohérente. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 366]
+This palette was chosen deliberately to evoke the visual language of Cameroonian agriculture: the deep olive greens reference dense tropical vegetation and cultivated fields; the warm cream and beige backgrounds reference sun-baked earth and natural materials; the golden amber accent references the color of ripe grain and dried cacao pods. The palette communicates agricultural identity at a subconscious level, reinforcing MBOA Market's positioning as a platform rooted in and built for Cameroon's agricultural world.
+
+[PARAGRAPH 367]
+3.6.3 Typography and Iconography
+
+[PARAGRAPH 368]
+The icon system uses Lucide React, an open-source SVG icon library that provides a consistent, clean, and modern visual language across all interface elements. Icons are used throughout the interface to reinforce label meanings, improve navigability for users with lower text literacy, and add visual rhythm to the interface. Key icons include the shopping cart for listings, the leaf for agriculture, the wheat stalk for grain products, the chart icon for price information, and the user silhouette for profile management.
+
+[PARAGRAPH 369]
+3.6.4 Page Architecture and Navigation Flow
+
+[PARAGRAPH 370]
+The MBOA Market interface is organized into five primary pages:
+
+[PARAGRAPH 371]
+Landing Page (/): The entry point for all visitors. Features a full-screen looping video background, the MBOA Market brand identity, a condensed market price ticker, a brief platform value proposition, and prominent calls-to-action for registration and login. Also displays a preview grid of recent listings to demonstrate platform content to prospective users.
+
+[PARAGRAPH 372]
+Login Page (/login): A two-panel layout with the video background on the left and a centered login form on the right. Requires phone number and password. Includes validation feedback and a link to the registration page.
+
+[PARAGRAPH 373]
+Registration Page (/register): A multi-step form - using the same video background layout - collecting phone number, display name, password, activity type (producer/buyer/input supplier), domain (agriculture/livestock), and Cameroonian region. Progressive disclosure minimizes cognitive load.
+
+[PARAGRAPH 374]
+Feed Page (/feed): A route-protected page accessible only to authenticated users. Displays a responsive grid of product listing cards with domain-specific icons, regional tags, price information, and thumbnails. Includes a filter sidebar for domain and region filtering.
+
+[PARAGRAPH 375]
+Profile Page (/profile): A route-protected page where authenticated users manage their account information, view their own listings, and access account settings.
+
+[PARAGRAPH 376]
+Navigation between pages is managed by React Router v6, using the browser's History API for client-side navigation without full page reloads. Protected routes (Feed and Profile) use a PrivateRoute wrapper component that checks the JWT token in localStorage and redirects unauthenticated users to the Login page. The useAuthStore Zustand hook provides the authentication state that the PrivateRoute component consults.
+
+[PARAGRAPH 378]
+CHAPTER FOUR: IMPLEMENTATION AND RESULTS
+
+[PARAGRAPH 379] **EXPLANATION**
+This chapter presents the implemented MBOA Market platform and the evidence obtained after development. It describes the development environment, frontend and backend technologies, deployment configuration, implemented modules, screenshots, testing results and comparative evaluation after implementation. Unlike Chapter Three, which explains the design model, this chapter demonstrates the concrete results produced by the system and evaluates whether the project objectives were achieved.
+
+================================================================================
+[PARAGRAPH 380] === IMAGE #19 ===
+================================================================================
+
+[PARAGRAPH 381]
+Figure 4.1: API request lifecycle in the implemented system
+
+[PARAGRAPH 382]
+Le diagramme du cycle de vie de l'API montre ce qui se passe lorsqu'un utilisateur effectue une action dans le frontend. L'action déclenche une requête vers le backend qui traite et retourne les données. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 383] === IMAGE #20 ===
+================================================================================
+
+[PARAGRAPH 384]
+Figure 4.2: End-to-end data flow of MBOA Market
+
+[PARAGRAPH 385]
+Le flux de bout en bout montre comment les données circulent à travers toute la plateforme, depuis l'écran de l'utilisateur jusqu'à la persistance en base de données. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 386]
+4.1 Development Environment
+
+[PARAGRAPH 387]
+4.1.1 Hardware and Operating System
+
+[PARAGRAPH 388]
+The MBOA Market platform was developed entirely on a Windows 11 workstation. The development machine provided sufficient computational resources for running concurrent local development servers - Uvicorn for the FastAPI backend on port 8000 and Vite for the React frontend on port 5173 - alongside the Windsurf IDE, the web browser for testing, and a local PostgreSQL instance for development-mode database operations.
+
+[PARAGRAPH 389]
+Table 4.1: Development Environment Specifications
+
+[PARAGRAPH 390]
+Ce tableau rend explicite l'environnement d'implémentation. Il montre le matériel, les logiciels, les environnements d'exécution et les services utilisés pour le développement. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 391]
+4.2 Technologies and Frameworks
+
+[PARAGRAPH 392]
+4.2.1 Frontend Technology Stack
+
+[PARAGRAPH 393]
+The frontend technology stack was selected to maximize developer productivity, runtime performance, and long-term maintainability. Each technology was chosen based on its maturity, community support, documented suitability for SPA development, and alignment with the mobile-first, performance-critical requirements of a marketplace platform targeting users on potentially slow mobile internet connections.
+
+[PARAGRAPH 394]
+Table 4.2: Frontend Technology Stack
+
+[PARAGRAPH 395]
+Ce tableau explique les technologies frontend utilisées pour construire l'interface utilisateur de MBOA Market. React.js, TypeScript et TailwindCSS forment le socle technique. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 396]
+4.2.2 Backend Technology Stack
+
+[PARAGRAPH 397]
+Table 4.3: Backend Technology Stack
+
+[PARAGRAPH 398]
+Ce tableau explique les technologies backend utilisées pour fournir l'authentification, la validation des données, l'accès à la base de données et les endpoints API. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 399]
+4.3 Backend Implementation
+
+[PARAGRAPH 400]
+4.3.1 Project Structure
+
+[PARAGRAPH 401]
+The FastAPI backend follows the standard Python package structure recommended for production FastAPI applications, with clear separation between configuration, models, schemas, routes, and utilities:
+
+[PARAGRAPH 402]
+The backend codebase is organized into modules for configuration, database connection, models, schemas, routes and utility functions. This separation improves maintainability because each layer has a clear responsibility and can be modified without affecting unrelated parts of the application.
+
+[PARAGRAPH 403]
+4.3.2 Application Entry Point and Lifespan Manager
+
+[PARAGRAPH 404]
+The FastAPI application is initialized in app/main.py. A critical architectural decision was the use of FastAPI's lifespan context manager to handle database table creation at application startup. This replaced an earlier approach of using a standalone setup_render.py script that attempted to create tables during the Render build phase - a timing that caused failures because the DATABASE_URL environment variable was not available during the build process.
+
+[PARAGRAPH 405]
+4.3.3 CORS Configuration
+
+[PARAGRAPH 406]
+CORS (Cross-Origin Resource Sharing) configuration is one of the most security-sensitive aspects of the backend setup. The critical rule - enforced by the browser's same-origin policy and the RFC 6454 specification - is that allow_credentials=True (which permits cookies and Authorization headers to be included in cross-origin requests) cannot be combined with allow_origins=["*"] (wildcard origin). Attempting this combination causes FastAPI to raise a RuntimeError at startup: "It is not allowed to use allow_credentials=True with allow_origins=*". The correct implementation explicitly lists all permitted origins:
+
+[PARAGRAPH 407]
+In implementation, CORS was configured with an explicit whitelist of trusted frontend origins, including the local development server and the deployed Netlify frontend. This prevents unauthorized origins from sending authenticated requests while still allowing the React application to communicate securely with the FastAPI backend.
+
+[PARAGRAPH 408]
+4.3.4 Database Configuration - Async Engine
+
+[PARAGRAPH 409]
+Database configuration is handled through an asynchronous SQLAlchemy engine connected to the deployed PostgreSQL database. The asynchronous approach is appropriate for a web API because it allows the server to process database operations without blocking other incoming requests. Environment variables are used for connection credentials so that sensitive configuration values are not hard-coded in the source code.
+
+[PARAGRAPH 410]
+4.3.5 Authentication Implementation
+
+[PARAGRAPH 411]
+The authentication system consists of three components: password hashing (bcrypt via passlib), JWT token generation and verification (python-jose), and a FastAPI dependency (get_current_user) that protects endpoints requiring authentication.
+
+[PARAGRAPH 412]
+Registration validation is enforced at schema level before a user account is created. The system checks that required fields are present, that the phone number and activity information are valid, and that the password satisfies minimum security expectations. This prevents weak or incomplete registration data from entering the database.
+
+[PARAGRAPH 413]
+4.3.6 Registration Endpoint
+
+[PARAGRAPH 414]
+The registration endpoint receives user information from the frontend, validates the submitted data, securely hashes the password and creates the corresponding user profile in the database. Its purpose is to convert a visitor into an authenticated platform user who can publish listings, browse the marketplace and manage profile information.
+
+[PARAGRAPH 415]
+4.3.7 Listings API
+
+[PARAGRAPH 416]
+The listings API manages the creation, display, update and deletion of agricultural and livestock offers. Each listing is linked to the authenticated user who created it, and the backend checks ownership before allowing modifications. This ensures that users can manage their own publications while buyers can browse available products through the marketplace interface.
+
+[PARAGRAPH 417]
+4.3.8 Health Check and Database Status Endpoints
+
+[PARAGRAPH 418]
+Health-check and database-status endpoints were implemented to verify whether the backend service is running and whether the database connection is available. These endpoints are especially useful during deployment because cloud services may require a simple route that confirms operational readiness.
+
+[PARAGRAPH 419]
+4.4 Frontend Implementation
+
+[PARAGRAPH 420]
+4.4.1 Project Structure
+
+[PARAGRAPH 421]
+The frontend codebase is organized into reusable components, pages, services, state-management files and routing configuration. This organization allows the interface to remain modular while supporting authentication, browsing, profile management and protected routes.
+
+[PARAGRAPH 422]
+4.4.2 Axios HTTP Client with JWT Interceptor
+
+[PARAGRAPH 423]
+The HTTP client centralizes communication between the React frontend and the FastAPI backend. It attaches the authentication token to protected requests and provides a single point for handling common request and response behaviour. This avoids repeating authentication logic inside every page component.
+
+[PARAGRAPH 424]
+4.4.3 Zustand Authentication Store
+
+[PARAGRAPH 425]
+Authentication state is centralized so that login status, user profile information and token persistence can be shared across the application. This improves user experience because the system can preserve an authenticated session after page refresh while still protecting restricted pages from unauthenticated access.
+
+[PARAGRAPH 426]
+4.4.4 Market Price Ticker Component
+
+================================================================================
+[PARAGRAPH 427] === IMAGE #21 ===
+================================================================================
+
+[PARAGRAPH 428]
+Figure 4.3: Market price ticker mechanism
+
+[PARAGRAPH 429]
+Le mécanisme du ticker de prix montre comment les informations de marché sont affichées aux utilisateurs de manière continue et visuelle. Il permet de suivre les tendances des prix en temps réel. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 430]
+The market price ticker is one of MBOA Market's distinctive interface elements. It displays selected commodity prices in a continuous horizontal movement so that users can quickly notice price trends while navigating the platform. In the current version, the ticker values are configured within the application data; in a future version, they can be connected to an automated price collection service.
+
+[PARAGRAPH 431]
+The animation logic was kept lightweight to reduce interface latency on low-powered devices. The implementation choice supports the usability objective because the price information remains visible without requiring users to open a separate analytics page.
+
+[PARAGRAPH 433]
+4.4.5 Video Background Implementation
+
+[PARAGRAPH 434]
+The atmospheric video background - generated using Canva's AI-powered video tools - is displayed on four pages: LandingPage, LoginPage, RegisterPage, and ProfilePage. The implementation uses the HTML5 video element with autoPlay, loop, muted, and playsInline attributes to ensure cross-browser and cross-platform compatibility (the playsInline attribute is specifically required to prevent iOS Safari from entering full-screen mode on video autoplay):
+
+[PARAGRAPH 435]
+4.4.6 Route Protection with PrivateRoute
+
+[PARAGRAPH 436]
+Protected routes (FeedPage and ProfilePage) are wrapped in a PrivateRoute component that checks authentication state before rendering the protected component:
+
+[PARAGRAPH 437]
+4.4.7 Netlify Configuration for SPA Routing
+
+[PARAGRAPH 438]
+A critical deployment configuration for React SPAs on static hosting platforms is the redirect rule that ensures all routes return the index.html file, allowing React Router to handle client-side routing. Without this rule, direct navigation to a URL like https://mboa-market.netlify.app/feed would return a 404 error from Netlify, since no actual feed.html file exists on the server:
+
+[PARAGRAPH 439]
+4.5 Production Deployment
+
+[PARAGRAPH 440]
+4.5.1 Frontend Deployment on Netlify
+
+[PARAGRAPH 441]
+Environment variables for the production frontend are configured through the Netlify dashboard rather than committed to the repository, ensuring that sensitive configuration values (API base URLs, analytics keys) are never exposed in version control. The most important production environment variable is VITE_API_URL, set to https://mboa-market-backend.onrender.com/api, which directs all API calls to the production backend.
+
+[PARAGRAPH 442]
+4.5.2 Backend Deployment on Render
+
+[PARAGRAPH 443]
+The FastAPI backend is deployed as a Render Web Service, with the startup command:
+
+[PARAGRAPH 444]
+The backend environment variables on Render include: DATABASE_URL (the internal PostgreSQL connection string - note: this uses the postgresql+asyncpg:// scheme, not the standard postgresql:// scheme that Render provides by default), SECRET_KEY (a randomly generated 64-character hexadecimal string used to sign JWT tokens), ENVIRONMENT (set to production, which disables debug SQL logging and enables stricter error handling), and CORS_ORIGINS (a comma-separated list of permitted frontend origins).
+
+[PARAGRAPH 445]
+4.5.3 Database Deployment on Render
+
+[PARAGRAPH 446]
+The PostgreSQL database is managed by Render's managed database service, which handles automated backups, security patching, and high-availability configuration. The database instance is deployed in the same Virginia (US East) data centre as the backend API service, minimizing network latency for backend-to-database queries - a critical optimization since every API request that reads or writes data incurs a database round-trip whose latency directly contributes to the API's response time.
+
+[PARAGRAPH 447]
+An important operational consideration for the Render free tier is that both the Web Service (backend) and the PostgreSQL database instance may be suspended after periods of inactivity (15-20 minutes without incoming requests). To mitigate the user-facing impact of backend cold starts (which can take 30-60 seconds), the frontend makes a silent GET request to /api/health on initial page load, waking the backend before the user attempts to interact with authenticated features.
+
+[PARAGRAPH 448]
+4.6 Testing and Validation
+
+[PARAGRAPH 449]
+4.6.1 API Endpoint Testing via Swagger UI
+
+[PARAGRAPH 450]
+All backend API endpoints were tested systematically using the Swagger UI generated automatically by FastAPI at /docs. The Swagger interface provides an interactive "Try it out" capability for each endpoint, allowing the developer to submit requests with custom parameters and inspect the full HTTP response - including status code, response headers, and response body. This proved highly efficient for validating the correct behavior of authentication endpoints, listing CRUD operations, and error handling scenarios.
+
+[PARAGRAPH 451]
+Table 4.4: API Endpoint Test Results
+
+[PARAGRAPH 452]
+Ce tableau enregistre les tests API effectués via Swagger UI et la validation manuelle des endpoints. Il montre les résultats des tests pour chaque fonctionnalité. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 453]
+4.6.2 Frontend Integration Testing
+
+[PARAGRAPH 454]
+Frontend integration was validated through systematic manual testing of all user flows in a web browser, covering both the happy path (all inputs valid, expected success outcomes) and error paths (invalid inputs, network errors, unauthorized access attempts). Tests were conducted in both desktop (1920x1080) and mobile (375x812, iPhone SE) viewport sizes to verify responsive design behavior across screen categories.
+
+[PARAGRAPH 455]
+Table 4.5: Frontend Integration Test Results
+
+[PARAGRAPH 456]
+Ce tableau résume la validation des flux utilisateur visibles. Il confirme que l'inscription, la connexion, la navigation et les autres fonctionnalités fonctionnent correctement. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 457]
+4.7 Results and Platform Presentation
+
+[PARAGRAPH 458]
+4.8 Implemented Functional Modules and Evidence of Completion
+
+[PARAGRAPH 459] **EXPLANATION**
+This section presents the implemented functions of MBOA Market one by one. Each screenshot or flowchart is followed by an explanation of the function it represents, the user action involved and the way the frontend, backend and database contribute to the result. This avoids treating the figures as isolated images and instead connects them to the platform's real operational behaviour.
+
+[PARAGRAPH 460]
+The authentication module is the entry point of the system. It allows users to log in using a phone number and password. When authentication fails, the system displays an error message rather than allowing access. This behaviour proves that the login page is connected to validation logic. The registration module complements authentication by allowing the user to define a domain and activity type. This is important because MBOA Market is not a generic platform: it distinguishes agriculture from livestock and producers from buyers or suppliers.
+
+[PARAGRAPH 461]
+The marketplace module presents product listings in a visual grid. Each product card contains information that matters in agricultural exchange: product image, product title, category, location, price and available quantity. These details reduce uncertainty for the buyer and make the producer more visible. The profile module supports trust by showing user identity and contact details, while the activity page gives the user a place to manage publications.
+
+[PARAGRAPH 462]
+The smart dashboard demonstrates that the platform can move beyond simple advertisements toward agricultural decision support. Although the dashboard is still a prototype-level feature, it shows how future versions can support yield projection, revenue estimation, soil health monitoring and alerts. The API documentation provides technical evidence that the backend has been implemented as a structured REST service and can be tested by developers.
+
+[PARAGRAPH 463]
+Together, these modules demonstrate that MBOA Market is a complete full-stack implementation rather than a set of disconnected pages. The frontend, backend and database interact through the architecture described in Chapter 3, while the screenshots and flowcharts in Chapter 4 provide visual proof of the implemented result.
+
+[PARAGRAPH 464]
+Table 4.6: Implemented modules and evidence of completion
+
+[PARAGRAPH 465]
+Ce tableau relie chaque module implémenté à des preuves visibles dans le rapport. Il prépare le lecteur aux captures d'écran et démonstrations qui suivent. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 467] === IMAGE #22 ===
+================================================================================
+
+[PARAGRAPH 468]
+Figure 4.4: Login interface of MBOA Market
+
+[PARAGRAPH 469]
+Cette capture d'écran démontre la fonctionnalité de connexion sécurisée de la plateforme. L'interface affiche un formulaire de connexion avec validation des champs. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 470] === IMAGE #23 ===
+================================================================================
+
+[PARAGRAPH 471]
+Figure 4.5: Registration interface with user role selection
+
+[PARAGRAPH 472]
+Cette capture d'écran montre l'interface de création de compte utilisée par les nouveaux membres. Le formulaire collecte le numéro de téléphone, le mot de passe et les informations de profil. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 473] === IMAGE #24 ===
+================================================================================
+
+[PARAGRAPH 474]
+Figure 4.6: Authentication validation with failed login feedback
+
+[PARAGRAPH 475]
+Cette capture d'écran illustre ce qui se passe lorsque l'authentification échoue. L'interface affiche un message d'erreur clair guidant l'utilisateur vers la correction. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 476] === IMAGE #25 ===
+================================================================================
+
+[PARAGRAPH 477]
+Figure 4.7: Marketplace grid view showing agricultural and livestock listings
+
+[PARAGRAPH 478]
+Cette capture d'écran présente la fonctionnalité de navigation dans la marketplace. Les produits sont affichés sous forme de cartes visuelles avec images, prix et informations du vendeur. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 479] === IMAGE #26 ===
+================================================================================
+
+[PARAGRAPH 480]
+Figure 4.8: User profile management interface
+
+[PARAGRAPH 481]
+Cette capture d'écran montre la zone de gestion du profil où un utilisateur enregistré peut consulter ou mettre à jour ses informations personnelles. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 482] === IMAGE #27 ===
+================================================================================
+
+[PARAGRAPH 483]
+Figure 4.9: User activity and publication management interface
+
+[PARAGRAPH 484]
+Cette capture d'écran démontre la zone où les utilisateurs gèrent leur activité sur la plateforme, notamment leurs publications et leurs interactions. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 485] === IMAGE #28 ===
+================================================================================
+
+[PARAGRAPH 486]
+Figure 4.10: Smart dashboard interface and feature map
+
+[PARAGRAPH 487]
+Cette capture d'écran présente le tableau de bord comme espace de synthèse des principales fonctions de la plateforme. Il rassemble les indicateurs clés et les accès rapides. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 488] === IMAGE #29 ===
+================================================================================
+
+[PARAGRAPH 489]
+Figure 4.11: Swagger API documentation interface
+
+[PARAGRAPH 490]
+Cette capture d'écran montre la documentation Swagger générée automatiquement pour le backend FastAPI. Elle permet de tester les endpoints directement depuis le navigateur. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 491] === IMAGE #30 ===
+================================================================================
+
+[PARAGRAPH 492]
+Figure 4.12: Flowchart demonstrating the implemented feature inventory
+
+[PARAGRAPH 493]
+Ce diagramme de flux résume les principales fonctionnalités implémentées dans la plateforme et comment elles sont connectées entre elles. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 494] === IMAGE #31 ===
+================================================================================
+
+[PARAGRAPH 495]
+Figure 4.13: Authentication scenario flowchart
+
+[PARAGRAPH 496]
+Ce diagramme de flux explique le scénario d'authentification étape par étape. Il commence par l'inscription ou la connexion et se termine par l'accès aux fonctionnalités protégées. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 497] === IMAGE #32 ===
+================================================================================
+
+[PARAGRAPH 498]
+Figure 4.14: Marketplace browsing scenario flowchart
+
+[PARAGRAPH 499]
+Ce diagramme de flux décrit comment un acheteur ou visiteur navigue dans la marketplace. L'utilisateur accède aux annonces, filtre par catégorie et consulte les détails. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 500] === IMAGE #33 ===
+================================================================================
+
+[PARAGRAPH 501]
+Figure 4.15: Product listing publication scenario flowchart
+
+[PARAGRAPH 502]
+Ce diagramme de flux décrit le processus de publication suivi par un producteur ou fournisseur. Après authentification, il peut créer, modifier et gérer ses annonces. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 503] === IMAGE #34 ===
+================================================================================
+
+[PARAGRAPH 504]
+Figure 4.16: Dashboard and API scenario flowchart
+
+[PARAGRAPH 505]
+Ce diagramme de flux connecte le tableau de bord utilisateur à l'API backend. Il montre que les informations du dashboard sont récupérées dynamiquement depuis le serveur. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 506] === IMAGE #35 ===
+================================================================================
+
+[PARAGRAPH 507]
+Figure 4.17: Functional coverage curve of implemented modules
+
+[PARAGRAPH 508]
+La courbe présente la couverture fonctionnelle atteinte par les modules implémentés. Elle montre une forte couverture des fonctionnalités essentielles. Cette représentation est illustrée à la figure ci-dessous.
+
+================================================================================
+[PARAGRAPH 509] === IMAGE #36 ===
+================================================================================
+
+[PARAGRAPH 510]
+Figure 4.18: Current limitations and future development roadmap
+
+[PARAGRAPH 511]
+Cette feuille de route identifie les limitations actuelles du système et les améliorations planifiées pour les versions futures. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 512]
+4.9 Comparative Evaluation After Implementation
+
+[PARAGRAPH 513]
+The final comparison is placed after implementation because the purpose of the results chapter is to demonstrate what has actually been built. In the literature review, the study identifies the limitations of existing platforms. In Chapter 4, the implemented MBOA Market platform is compared against those limitations to determine whether the system responds to the identified gap.
+
+[PARAGRAPH 514]
+The comparison shows that MBOA Market provides an agricultural focus, livestock support, market price visibility, phone-based authentication, profile management, product listing, dashboard access and API documentation. Existing platforms generally provide some of these features but rarely combine them in one integrated local platform. This integrated coverage is the central result of the project.
+
+[PARAGRAPH 515]
+However, the comparison should not be interpreted as claiming that MBOA Market is commercially superior to mature platforms such as Jumia or OLX. Those platforms have larger user bases, stronger infrastructure and more business maturity. The contribution of MBOA Market is different: it demonstrates a locally adapted software engineering solution focused on the agricultural trade problem identified in Cameroon. At bachelor level, the value of the project lies in design, implementation, deployment and clear demonstration of system mechanisms.
+
+[PARAGRAPH 516]
+Table 4.7: Comparative evaluation after implementation
+
+[PARAGRAPH 517]
+Ce tableau compare la plateforme MBOA Market implémentée avec les limitations identifiées lors de l'analyse initiale. Il démontre comment notre solution répond aux besoins. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 519]
+Table 4.8: Functional test cases and validation results
+
+[PARAGRAPH 520]
+Ce tableau présente les principaux tests fonctionnels effectués sur le système. Il confirme que les actions critiques fonctionnent comme prévu. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 522]
+4.10 Scenario-Based Interpretation of the Screenshots
+
+[PARAGRAPH 523]
+The screenshots in this chapter are interpreted as evidence of usage scenarios. The first scenario begins with a user who opens the platform and reaches the login screen. The page does not only show a form; it also presents an agricultural visual identity and a price ticker that reminds the user that the platform is focused on agricultural exchange. This helps connect the technical interface to the agricultural problem defined in Chapter 1.
+
+[PARAGRAPH 524]
+The second scenario concerns user registration. The registration interface asks the user to identify the domain and activity type. This is a design decision derived from the literature review. General marketplaces usually treat every user as a simple seller or buyer, but MBOA Market needs to distinguish producers, suppliers and buyers because their roles in the agricultural value chain are different. The interface therefore encodes the stakeholder model directly into the onboarding process.
+
+[PARAGRAPH 525]
+The third scenario concerns failed authentication. A failed login page may look simple, but it is important because it proves that the system performs validation and gives feedback. Without feedback, users would not know whether the problem comes from the network, the password or the account. Without validation, private features could be exposed. This small screen therefore represents both usability and security.
+
+[PARAGRAPH 526]
+The fourth scenario concerns marketplace browsing. A buyer enters the market page, sees several listings, compares price and location, and identifies a product to contact. This is the practical translation of the platform's main goal: reducing the distance between agricultural offer and demand. The grid view is important because it gives the user a quick visual summary of available products instead of forcing them to read long unstructured descriptions.
+
+[PARAGRAPH 527]
+The fifth scenario concerns the profile and activity pages. These pages are not secondary; they support trust and management. A buyer wants to know who is behind a listing, while a producer needs to manage publications. The profile page therefore supports identity, while the activity page supports continuity of use. A platform becomes useful only when users can return, manage their information and control what they publish.
+
+[PARAGRAPH 528]
+The sixth scenario concerns the smart dashboard and API documentation. These elements show that MBOA Market has the potential to evolve beyond a basic listing website. The dashboard introduces analytics, while Swagger documentation demonstrates backend maintainability. Together, they show that the system is not only an interface but a full-stack architecture prepared for future extension.
+
+[PARAGRAPH 529]
+4.7.1 Operational Status Summary
+
+[PARAGRAPH 530]
+Table 4.9: MBOA Market Feature Operational Status
+
+[PARAGRAPH 531]
+Ce tableau donne un résumé direct du statut des modules de la plateforme après implémentation. Il distingue les fonctionnalités complètes de celles en cours. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 532]
+4.7.2 Demo Account for Testing
+
+[PARAGRAPH 533]
+A demonstration account has been pre-configured to allow supervisors, jury members, and evaluators to access the authenticated features of the platform immediately without creating an account:
+
+[PARAGRAPH 534]
+Phone Number: +237123456789
+
+[PARAGRAPH 535]
+Password: Demo@2026
+
+[PARAGRAPH 536]
+Profile: Agricultural producer, Centre region, Yaounde
+
+[PARAGRAPH 537]
+Note: The backend service runs on Render's free tier and may experience a cold start delay of 30-60 seconds if the service has been dormant. The frontend automatically triggers a wake-up request in the background, but the first login attempt after a dormancy period may take up to one minute to process. Subsequent requests will be fast (under 300ms).
+
+[PARAGRAPH 538]
+4.7.3 Performance Metrics
+
+[PARAGRAPH 539]
+Table 4.10: MBOA Market Performance Metrics (production)
+
+[PARAGRAPH 540]
+Ce tableau résume le comportement observable en production. Il explique la différence entre les avertissements normaux et les erreurs critiques. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 542]
+CHAPTER 5: CONCLUSION
+
+[PARAGRAPH 543]
+5.1 Summary of Achievements
+
+[PARAGRAPH 544]
+5.1.1 Against the General Objective
+
+[PARAGRAPH 545]
+The general objective of this project - to design, develop, test, and deploy a full-stack web marketplace platform enabling agricultural producers, buyers, and input suppliers in Cameroon to connect digitally, share market price information, and manage commercial profiles through a secure, mobile-optimized interface - has been fully achieved. MBOA Market is a publicly accessible, production-deployed, fully functional web application that delivers on every dimension of this objective. It is live at https://mboa-market.netlify.app and can be used by real Cameroonian agricultural actors today.
+
+[PARAGRAPH 546]
+The platform's architecture - React 18 SPA on Netlify CDN, FastAPI backend on Render, PostgreSQL 18 database on Render's managed infrastructure - represents a genuinely modern, industry-standard technical stack whose quality and reliability are on par with commercial-grade web applications. The project goes beyond a mere academic demonstration to deliver a product with real social and economic relevance to the Cameroonian agricultural community it is designed to serve.
+
+[PARAGRAPH 547]
+5.1.2 Against Each Specific Objective
+
+[PARAGRAPH 548]
+Table 5.1: Achievement Status Against Specific Objectives
+
+[PARAGRAPH 549]
+Ce tableau évalue le projet par rapport aux objectifs spécifiques définis au Chapitre Un. Il montre le degré d'atteinte de chaque objectif. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 550]
+5.1.3 Broader Impact Assessment
+
+[PARAGRAPH 551]
+Beyond the formal academic objectives, MBOA Market achieves a broader impact across several dimensions. Technically, it demonstrates the viability of building and deploying production-grade web applications using only free-tier cloud infrastructure - a particularly important proof of concept for African developers and entrepreneurs who may lack access to substantial financial resources for cloud hosting. Economically, it provides a direct market access tool for Cameroonian agricultural producers, with the potential - if adopted at scale - to meaningfully reduce the price information asymmetry that currently disadvantages rural producers. Socially, it exemplifies how technology education in an African university context can produce work of real community relevance and practical social value, not merely theoretical academic exercises.
+
+[PARAGRAPH 552]
+Educationally, the project demonstrates the successful integration of every major competency developed in the ICT Software Engineering programme at ICT University: full-stack web development, database design, security implementation, cloud deployment, Agile project management, and technical documentation - all applied in service of a meaningful real-world problem with roots in Cameroon's most important economic sector.
+
+[PARAGRAPH 553]
+5.2 Challenges Encountered and Solutions Implemented
+
+[PARAGRAPH 554]
+5.2.1 The CORS Misconfiguration Challenge
+
+[PARAGRAPH 555]
+Problem: During the initial integration of the frontend and backend, all authenticated API requests from the Netlify-deployed frontend to the Render-deployed backend were blocked by the browser's CORS policy with the error: "The value of the 'Access-Control-Allow-Origin' header in the response must not be the wildcard '*' when the request's credentials mode is 'include'". The root cause was the incorrect CORS configuration: allow_origins=["*"] combined with allow_credentials=True. Under RFC 6454, a browser will reject a CORS response that specifies a wildcard origin when credentials (including the Authorization header used by JWT) are included in the request - this is a fundamental browser security restriction that cannot be bypassed.
+
+[PARAGRAPH 556]
+Solution: The CORS configuration was corrected to explicitly list all permitted origins (http://localhost:5173 for development and https://mboa-market.netlify.app for production) while retaining allow_credentials=True. This is the correct and secure configuration: it allows credentialed cross-origin requests but only from explicitly trusted origins, preventing credential-bearing requests from arbitrary malicious websites. The fix was identified with the assistance of the Windsurf AI IDE, which diagnosed the error and proposed the correct configuration.
+
+[PARAGRAPH 557]
+5.2.2 The Database Initialization Challenge
+
+[PARAGRAPH 558]
+Problem: The initial approach to database initialization used a standalone setup_render.py script executed during Render's build phase via the build command. This script attempted to connect to the PostgreSQL database and create all tables before the application was deployed. However, this approach failed because the DATABASE_URL environment variable - while available at runtime - was not accessible during the build phase in Render's build environment. The result was consistent build failures with database connection errors.
+
+[PARAGRAPH 559]
+Solution: The database initialization logic was migrated from the standalone build-phase script to FastAPI's lifespan context manager. The lifespan manager is invoked by the FastAPI framework immediately after application startup and before the first request is processed, but - critically - after all environment variables have been loaded. This timing guarantees that the database connection is available when the initialization logic runs. The Base.metadata.create_all() call within the lifespan manager is idempotent (it creates tables only if they do not already exist, without modifying existing tables), making it safe to run on every startup without risk of data loss.
+
+[PARAGRAPH 560]
+5.2.3 SQLAlchemy Async Migration
+
+[PARAGRAPH 561]
+5.2.4 Render Cold Start Latency
+
+[PARAGRAPH 562]
+Problem: Render's free tier suspends Web Service instances after approximately 15 minutes of inactivity. When a user visits MBOA Market after a dormancy period and attempts to log in or view listings, the first API request triggers a cold start that can take 30-60 seconds - a delay that is highly disruptive to the user experience and could cause first-time visitors to abandon the platform before it loads.
+
+[PARAGRAPH 563]
+Solution: The frontend was configured to send a silent, non-blocking GET request to /api/health when the landing page loads - before the user has attempted any interaction with authenticated features. This wake-up request runs in the background and does not block the page rendering; by the time a typical user has read the landing page content and decided to register or log in (typically 30-90 seconds of landing page engagement), the backend is usually already warm and ready to respond within its normal sub-300ms latency. The health endpoint is extremely lightweight (no database queries) and responds immediately once the backend process is running, making it ideal for this purpose.
+
+[PARAGRAPH 564]
+5.2.5 Image Path and Static File Management
+
+[PARAGRAPH 565]
+Solution: All product images were moved from src/assets/images/ to public/images/, organized into subdirectories public/images/agriculture/ and public/images/livestock/. Image paths in both the database and the demoListings.ts data file were updated to use the root-relative paths /images/agriculture/filename.jpg and /images/livestock/filename.jpg. All filenames were renamed to use underscores rather than spaces, since space characters in URLs require percent-encoding (%20) and can cause unexpected behavior in some browsers and server configurations.
+
+[PARAGRAPH 566]
+5.3 Future Perspectives
+
+[PARAGRAPH 567]
+5.4 Limitations and Future Development Beyond the Bachelor Level
+
+[PARAGRAPH 568]
+Although MBOA Market reaches the objectives defined for this final year project, it remains a first deployable version and not a complete commercial agricultural platform. The first limitation is payment. The current implementation improves visibility and contact, but payment remains outside the platform. A future version should integrate Mobile Money services such as MTN Mobile Money and Orange Money to allow transaction confirmation, order deposits and traceable payment status.
+
+[PARAGRAPH 569]
+The second limitation is communication. The platform can connect users through available contact information, but it does not yet include real-time chat. In agricultural trade, buyers often need to negotiate price, quantity, delivery method and product quality before a transaction. A chat module would keep these discussions inside the platform and could later support dispute management.
+
+[PARAGRAPH 570]
+The third limitation is verification and trust. Registration by phone number improves identity, but it does not guarantee that every seller is verified. Future versions should include KYC verification, business document checking, rating systems and verified badges. These functions would be important if the platform becomes widely used.
+
+[PARAGRAPH 571]
+The fourth limitation is automated price data. The current ticker demonstrates the concept of market price visibility, but a production version should connect to reliable market data sources or field data collection mechanisms. Automated price updates would make the platform more credible and useful for decision-making.
+
+[PARAGRAPH 572]
+The fifth limitation is mobile access. The current web application is responsive, but a native Android application would be highly relevant in Cameroon because many users rely primarily on Android phones. A mobile app could add push notifications, offline draft saving, location-based search and faster access for rural users.
+
+[PARAGRAPH 573]
+Table 5.2: Current limitations and future enhancements
+
+[PARAGRAPH 574]
+Ce tableau sépare les limitations actuelles des améliorations futures planifiées. Il aide la conclusion à rester réaliste tout en montrant le potentiel d'évolution. Cette représentation est illustrée à la figure ci-dessous.
+
+[PARAGRAPH 576]
+5.5 Recommendations
+
+[PARAGRAPH 577]
+Based on the implementation and evaluation of MBOA Market, the project recommends that future development should prioritize stakeholder trust, platform reliability and rural accessibility before large-scale commercial expansion. First, seller verification, trusted profile information and basic rating mechanisms should be introduced to improve confidence between buyers, farmers and suppliers. Second, mobile payment integration through MTN Mobile Money and Orange Money should be added only after payment testing, transaction tracking and dispute-handling procedures are clearly defined. Third, the market price ticker should be connected to reliable local price sources or a controlled administrative update workflow so that published prices remain accurate. Fourth, the interface should continue to use simple bilingual labels, responsive layouts and low-bandwidth design choices to support users in rural areas. Finally, Zen Africa and the ICT Faculty should support pilot testing with real agricultural stakeholders before extending the platform to wider regional deployment.
+
+[PARAGRAPH 578]
+The short-term roadmap should prioritize stabilization before expansion. This means improving error handling, cleaning interface messages, validating all form fields and ensuring that the deployed backend remains stable. A platform that is visually attractive but unstable would not be trusted by agricultural users. Stability is therefore the first post-licence priority.
+
+[PARAGRAPH 579]
+The medium-term roadmap should prioritize trust and transactions. Integrated payments, seller verification and rating mechanisms would make MBOA Market more credible as a commercial platform. In agricultural commerce, trust is essential because the buyer may not know the seller personally and the seller may fear unserious buyers. Verification and payment tools would help reduce these concerns.
+
+[PARAGRAPH 580]
+The long-term roadmap should prioritize intelligence and scale. Automated price data, geolocation, demand forecasting and decision support would transform the platform from a marketplace into an agricultural information system. This would create stronger value for producers because they would not only sell products but also understand market trends, regional demand and price changes.
+
+[PARAGRAPH 581]
+These future improvements are intentionally left beyond the current bachelor-level scope because each one could require a separate project. Payment integration requires financial service compliance, chat requires real-time infrastructure, KYC requires identity verification processes, and automated price collection requires reliable data sources. The present work therefore establishes the foundation on which these future modules can be built.
+
+[PARAGRAPH 582]
+5.5.1 Short-Term Recommendations (0-3 Months)
+
+[PARAGRAPH 583]
+The following improvements are identified for implementation in the immediate post-defense period, representing the highest-priority extensions to the current MVP:
+
+[PARAGRAPH 584]
+Mobile Money Payment Integration (MTN MoMo and Orange Money): The most impactful single feature addition would be the integration of in-app payment processing via Cameroon's two dominant mobile money networks: MTN Mobile Money and Orange Money. These services collectively serve over 15 million active subscribers in Cameroon (GSMA, 2023) and represent the primary digital payment mechanism used by the target demographic. Integration would use the MTN MoMo Developer API and Orange Money API respectively, enabling buyers to pay for purchases directly within the MBOA Market interface, triggering immediate payment confirmation and seller notification. This transformation - from a discovery and contact platform to a fully transactional marketplace - would represent the most significant upgrade to the platform's commercial value proposition and would position MBOA Market to generate sustainable revenue through transaction fees.
+
+[PARAGRAPH 585]
+Real-Time Messaging via WebSocket: Currently, buyers who want to contact a seller must use the phone number displayed on the listing. Integrating in-app messaging via WebSocket (using FastAPI's native WebSocket support and a lightweight message persistence layer) would keep all commercial communication within the platform, improving user engagement and retention while creating a more complete marketplace experience. The conversations and messages tables already present in the database schema anticipate this feature, minimizing the database migration work required.
+
+[PARAGRAPH 586]
+Progressive Web Application (PWA) Capabilities: Converting MBOA Market into a Progressive Web Application - by adding a Service Worker and a Web App Manifest - would enable users on Android devices to install the platform to their home screen and receive push notifications for new messages, listing inquiries, and price alerts. PWA installation eliminates the friction and cost of app store submission while delivering a near-native mobile experience that is particularly valuable for users in contexts of intermittent internet connectivity, as the Service Worker can cache key resources for offline access.
+
+[PARAGRAPH 587]
+Database Migration to Permanent Free Tier: Render's free-tier PostgreSQL instances are scheduled for deletion after 90 days if not upgraded to a paid plan. Migrating the database to Neon (which offers a generous permanent free tier with serverless PostgreSQL, automatic scaling, and connection pooling) or Supabase (which adds a complete authentication layer, realtime subscriptions, and a user-friendly dashboard) would ensure the long-term sustainability of the platform's data layer without financial cost.
+
+[PARAGRAPH 588]
+5.5.2 Medium-Term Recommendations (3-12 Months)
+
+[PARAGRAPH 589] **EXPLANATION**
+Native Mobile Application (React Native): Building native iOS and Android applications using React Native would dramatically expand MBOA Market's reach by enabling distribution through the Google Play Store and Apple App Store, accessing device hardware capabilities (camera for in-app photo capture, GPS for location tagging, push notifications through native channels), and providing a more performant and capable mobile experience than even a PWA can deliver. Given that the majority of Cameroonian internet users access the web primarily through mobile devices, the mobile application represents the most strategically important medium-term development priority. React Native's code-sharing capabilities with the existing React codebase would allow approximately 60-70% of the frontend code to be reused in the mobile application, significantly reducing development time.
+
+[PARAGRAPH 590]
+Geolocation-Based Listing Discovery: Integrating GPS-based location detection and map visualization - using the open-source OpenStreetMap tile service and the Leaflet.js mapping library - would enable a fundamentally more intuitive and useful listing discovery experience: users could view listings on a map of Cameroon, filtered to their current region, with the ability to zoom in to their specific locality. This feature would be particularly valuable for buyers looking to source products from the closest available producers, reducing transportation costs and facilitating fresher products for perishable goods.
+
+[PARAGRAPH 591]
+Rating and Review System: Implementing a two-sided rating system - where buyers rate sellers and sellers rate buyers after completed transactions - would address the trust challenge inherent in marketplace platforms connecting strangers. A transparent reputation system with visible aggregate ratings and individual text reviews would enable the platform community to self-regulate product quality and commercial behavior, creating accountability and rewarding consistent high-quality producers with more buyer inquiries. The economic value of a reliable reputation system in a marketplace context has been extensively documented in the platform economics literature.
+
+[PARAGRAPH 592]
+AI-Powered Personalization: As the platform accumulates transaction data and user behavior data, it becomes feasible to implement machine learning-based recommendation systems that surface the most relevant listings for each user based on their history, preferences, and behavioral patterns. A collaborative filtering recommendation model (similar to those used by Amazon and Netflix) could identify patterns like "users who bought cassava from the Centre region also frequently buy maize from the Adamaoua region" and use these patterns to personalize the listing feed for each user. This would dramatically improve the platform's utility as it scales, ensuring that the feed remains highly relevant even as the total number of listings grows into the thousands.
+
+[PARAGRAPH 593]
+KYC Verification - "Verified Seller" Badge: Implementing a Know Your Customer (KYC) verification process - where sellers can submit a government-issued identity document for manual or automated verification - and awarding verified sellers a prominent "Verified Seller" badge on their listings would significantly increase buyer confidence, particularly for high-value transactions such as cattle or bulk grain purchases. The KYC process could be implemented at low cost using smartphone-based document scanning and identity verification APIs such as those provided by Smile Identity (which specializes in African identity document formats).
+
+[PARAGRAPH 594]
+5.5.3 Long-Term Recommendations (12+ Months)
+
+[PARAGRAPH 595]
+Regional Expansion Across the CEMAC Zone: Having established a proven platform model in Cameroon, the logical next step is geographic expansion across the Central African Economic and Monetary Community (CEMAC) region - encompassing the Republic of Congo, Gabon, the Central African Republic, Chad, and Equatorial Guinea. These five countries share Cameroon's currency (the FCFA), face similar agricultural market challenges, and collectively represent a total population of approximately 75 million people. An expanded MBOA Market serving the entire CEMAC zone would constitute a regional digital agricultural marketplace with significant scale and impact potential, attractive to both impact investors and commercial venture capital.
+
+[PARAGRAPH 596]
+B2B Commerce Module for Cooperatives and Exporters: The current platform focuses primarily on B2C commerce - individual producers selling to individual buyers. A dedicated B2B module for agricultural cooperatives, food processing companies, hotel and restaurant chains, and export companies would open a dramatically larger transaction value opportunity. B2B agricultural transactions in Cameroon - bulk purchases of cacao for export, large-scale maize procurement for industrial processing, poultry supply contracts for hotel chains - represent order-of-magnitude larger transaction values than individual B2C sales, and a platform that can facilitate these transactions efficiently would create substantial commercial value while delivering significant development impact by helping cooperatives and producer organizations access larger and more reliable markets.
+
+[PARAGRAPH 597]
+Blockchain-Based Product Traceability: As global agricultural markets increasingly demand transparency about the provenance, growing conditions, and supply chain history of food products - driven by consumer demand for sustainably and ethically produced food, and by regulatory requirements in export markets - blockchain-based traceability represents a transformative long-term opportunity for MBOA Market. By recording key supply chain events (planting, harvesting, transportation, processing) on an immutable distributed ledger, MBOA Market could issue digital certificates of provenance for agricultural products, enabling producers to command premium prices in export markets and enabling consumers to trace their food from farm to table with confidence. This functionality would position MBOA Market not merely as a domestic marketplace but as a gateway connecting Cameroonian producers with premium international markets.
+
+[PARAGRAPH 598]
+5.6 General Conclusion
+
+[PARAGRAPH 599]
+This final year project has accomplished what it set out to achieve: the design, development, and production deployment of a complete, modern, and purposeful digital platform that addresses a real and well-documented market failure in Cameroon's agricultural sector. MBOA Market - whose name means "home marketplace" in the Beti language - is not simply a demonstration of academic competency. It is a working product that real agricultural producers, buyers, and input suppliers in Cameroon can use today to connect with each other, discover market prices, and conduct commerce more efficiently and transparently than the traditional intermediary-dominated system allows.
+
+[PARAGRAPH 600]
+The technical achievements of this project are substantial. Building and deploying a full-stack web application - with a React 18 TypeScript frontend, a FastAPI Python backend, and a PostgreSQL relational database, connected through a secure JWT-authenticated REST API and deployed on globally accessible cloud infrastructure - represents a comprehensive practical mastery of the ICT Software Engineering discipline. Every technical decision made throughout the project - from the choice of Agile methodology to the selection of Tailwind CSS to the resolution of the CORS misconfiguration - was informed by principles learned in the ICT University programme, validated through independent research, and refined through the mentorship of Dr. NGADUE PASCAL and Mr. SEFFI PEGUI at Zen Africa.
+
+[PARAGRAPH 601]
+The development process itself was enriched by a new generation of AI-powered tools - most notably the Windsurf IDE and ChatGPT - that fundamentally changed what a single developer could accomplish within a constrained timeframe. These tools did not replace the developer's judgment, creativity, or domain knowledge; they amplified them, handling the repetitive and mechanical aspects of code generation and research synthesis while the human developer focused on architecture, user experience design, and the contextual decisions that require genuine understanding of the Cameroonian agricultural context and the needs of the platform's users.
+
+[PARAGRAPH 602]
+Looking beyond the academic context, MBOA Market's most meaningful measure of success will ultimately be its adoption and use by the agricultural communities it was designed to serve. A platform that is technically sophisticated but unused delivers zero social value; a platform that is even modestly simpler but widely used by thousands of producers and buyers creates genuine economic opportunity for real people. The next phase of this project - post-defense - will therefore focus not only on the technical improvements described in the perspectives section, but on user outreach, agricultural cooperative partnerships, regional market presence, and the community-building efforts that transform a well-built technical platform into a living, growing marketplace ecosystem.
+
+[PARAGRAPH 603]
+"MBOA" means home. And MBOA Market aspires to become, for every agricultural actor in Cameroon, the digital home where commerce happens fairly, transparently, and with dignity - because every person who grows food for others deserves a market that works for them.
+
+[PARAGRAPH 604]
+Done in Yaounde, Cameroon - 2026 NDEFO KUATE PAUL AUGUSTE BSc. ICT Software Engineering Candidate ICT University
+
+[PARAGRAPH 606]
+REFERENCES
+
+[PARAGRAPH 607]
+Davis, F. D. (1989). Perceived usefulness, perceived ease of use, and user acceptance of information technology. MIS Quarterly.
+
+[PARAGRAPH 608]
+Fielding, R. T. (2000). Architectural styles and the design of network-based software architectures (Doctoral dissertation, University of California, Irvine).
+
+[PARAGRAPH 609]
+Hevner, A. R., March, S. T., Park, J., & Ram, S. (2004). Design science in information systems research. MIS Quarterly.
+
+[PARAGRAPH 610]
+Ministry of Agriculture and Rural Development. (2023). Agricultural sector information and market development context in Cameroon.
+
+[PARAGRAPH 611]
+Netlify. (2025). Netlify documentation: Static site deployment and frontend hosting documentation.
+
+[PARAGRAPH 612]
+Parker, G., Van Alstyne, M., & Choudary, S. (2016). Platform revolution. W. W. Norton & Company.
+
+[PARAGRAPH 613]
+Porter, M. E. (1985). Competitive advantage: Creating and sustaining superior performance. Free Press.
+
+[PARAGRAPH 614]
+Pressman, R. S., & Maxim, B. R. (2020). Software engineering: A practitioner's approach. McGraw-Hill.
+
+[PARAGRAPH 615]
+Render. (2025). Render documentation: Cloud application deployment documentation.
+
+[PARAGRAPH 616]
+Sommerville, I. (2016). Software engineering. Pearson.
+
+[PARAGRAPH 617]
+APPENDICES
+
+[PARAGRAPH 618]
+Appendix A: Reproducibility Checklist
+
+[PARAGRAPH 619]
+To reproduce the work, a developer should install the frontend dependencies, configure the backend environment variables, connect the PostgreSQL database, run database migrations or schema creation scripts, start the FastAPI server, start the React frontend and verify the REST API through Swagger. The user should then register, log in, create a listing, inspect marketplace output and confirm that the platform remains reachable after deployment.
+
+[PARAGRAPH 620]
+Appendix B: Minimum Environment Configuration
+
+[PARAGRAPH 621]
+The minimum development environment includes Node.js for the React frontend, Python for the FastAPI backend, PostgreSQL for persistent data storage, Git for version control and a browser for testing the deployed platform. Deployment requires a Netlify account for the frontend, a Render service for the backend and database credentials stored securely as environment variables.
+
+[PARAGRAPH 622]
+Appendix C: User Scenario Script
+
+[PARAGRAPH 623]
+Scenario one tests a producer who registers, selects agriculture as domain, chooses producer as activity type and publishes a plantain listing. Scenario two tests a buyer who logs in, browses the marketplace grid, checks product price and location, then uses the contact information to initiate a purchase. Scenario three tests a developer who opens Swagger documentation and confirms that authentication and listing endpoints are available.
+
+[PARAGRAPH 624]
+Appendix D: Detailed Reproduction Guide for Developers
+
+[PARAGRAPH 625]
+The purpose of this appendix is to provide a practical guide that can help another software engineering student reproduce the main work without reading unnecessary implementation code inside the body of the thesis. The first action is to identify the three parts of the application: the client application, the server application and the database. The client application is responsible for the pages seen by the user, including login, registration, marketplace, profile, activity and dashboard. The server application is responsible for authentication, validation, data access and API responses. The database stores persistent information such as user profiles, listings, categories and market price data. A developer who understands this separation can rebuild the system layer by layer.
+
+[PARAGRAPH 626]
+The second action is to configure the backend environment. The developer creates a Python environment, installs the backend dependencies and defines environment variables for database connection and authentication security. The most important configuration values are the database URL, the token secret and any deployment-specific settings required by the hosting platform. Once configured, the backend should be started locally and opened through the Swagger documentation page. If Swagger loads correctly, the developer can inspect the available endpoints and confirm that the API layer is working before connecting the frontend.
+
+[PARAGRAPH 627] **EXPLANATION**
+The third action is to configure the database. PostgreSQL must be available locally or through a hosted provider. The developer creates the database and prepares the tables or models required by the system. The schema should support users, profiles, listings, categories and market prices. The relationship between these entities is important because the system must associate every publication with a user or profile and every product with a category or domain. The database should be tested using a simple record insertion or an API request that creates data through the backend.
+
+[PARAGRAPH 628]
+The fourth action is to configure the frontend environment. The developer installs the frontend dependencies, starts the React development server and checks whether the application opens in the browser. At this stage, the interface may load but fail to retrieve data if the API base URL is not configured. Therefore, the frontend must point to the correct backend URL. In local development, this may be a local server address. In production, it becomes the deployed Render backend address. The Axios client or equivalent API service is responsible for sending requests to that backend.
+
+[PARAGRAPH 629]
+The fifth action is to verify authentication. The developer opens the registration or login page, submits the required data and checks the backend response. If login succeeds, the frontend should store the token and allow access to protected pages. If login fails, the user should receive visible feedback. This test confirms that the authentication flow described in the methodology chapter is not only theoretical but implemented through connected frontend and backend logic.
+
+[PARAGRAPH 630]
+The sixth action is to verify marketplace behaviour. The developer creates or loads sample listings and opens the marketplace page. Product cards should display information such as name, category, image, price, stock and location. This step is central because the marketplace is the heart of the project. If users cannot see product information clearly, the system does not solve the agricultural visibility problem. The grid display must therefore be tested on both desktop and smaller screen sizes.
+
+[PARAGRAPH 631]
+The seventh action is to verify profile and activity management. The profile page must display user identity, role and contact information, while the activity page should provide an area where the user can manage publications. These pages support continuity of use. A platform that allows a user to publish once but not manage later activity would quickly become difficult to use in real agricultural trade.
+
+[PARAGRAPH 632]
+The eighth action is to verify deployment. After local testing, the frontend is deployed on Netlify and the backend on Render. The database connection variables must be added to the backend environment settings. The frontend environment must reference the deployed backend URL. After deployment, the developer should open the live platform, test login, open the marketplace and inspect Swagger documentation. This confirms that the system can be demonstrated online to a supervisor or jury member.
+
+[PARAGRAPH 633]
+The final action is to document limitations. Reproducibility does not mean that the project is perfect. It means that the implemented scope is clear and that another developer can understand what has been completed and what remains to be improved. For MBOA Market, the current version provides the foundation: authentication, marketplace visibility, profile management, dashboard prototype, market price display and API documentation. Future developers can build on this foundation by adding payment, chat, verification, automated market data and a native mobile application.
+
+[PARAGRAPH 634]
+Appendix E: Evaluation Questionnaire and Observation Guide
+
+[PARAGRAPH 635] **EXPLANATION**
+The evaluation of MBOA Market can be reproduced by using a simple observation guide. The evaluator begins by opening the deployed platform and confirming that the homepage or login interface loads correctly. The evaluator then records whether the agricultural identity of the interface is immediately clear. This first observation is important because the platform is intended for agricultural stakeholders and must therefore communicate its domain visually before the user reads long explanations.
+
+[PARAGRAPH 636]
+The second observation concerns registration. The evaluator checks whether the registration form supports a phone number, password, full name, domain and activity type. The form should make it possible to select agriculture or livestock and to identify the user as a producer, supplier or buyer. The evaluator records whether the labels are clear and whether the user can complete the form without external guidance. This observation links directly to the Technology Acceptance Model because perceived ease of use influences adoption.
+
+[PARAGRAPH 637]
+The third observation concerns authentication. The evaluator tests both valid and invalid login behaviour. Valid login should grant access to the protected interface, while invalid credentials should generate a visible error message. This test is important because it verifies both usability and security. A good system informs the user without exposing sensitive information and refuses access when credentials are not accepted.
+
+[PARAGRAPH 638]
+The fourth observation concerns marketplace browsing. The evaluator checks whether product listings are visible, whether images load correctly, whether prices appear in FCFA, whether stock or quantity is shown and whether the location is understandable. The evaluator also records whether agriculture and livestock listings can be visually distinguished. This observation measures whether the platform solves the product visibility problem identified in the problem statement.
+
+[PARAGRAPH 639]
+The fifth observation concerns trust information. The evaluator opens a profile or contact-related page and checks whether user identity and contact information are presented in a structured manner. This does not fully solve trust, but it provides a foundation for future verification. The evaluator records whether the profile page helps identify the user behind a listing.
+
+[PARAGRAPH 640]
+The sixth observation concerns the dashboard and API documentation. The dashboard is checked for visibility of analytical cards, alerts or monitoring information. The Swagger documentation is opened to verify that backend endpoints are visible. These observations show that the project is not only a static frontend but a full-stack application with an inspectable backend service.
+
+[PARAGRAPH 641]
+The final observation concerns limitations. The evaluator records which expected commercial functions are not yet available, such as online payment, integrated chat, advanced identity verification, automated price sourcing and native mobile deployment. These limitations do not invalidate the project; they define the realistic boundary between the bachelor-level prototype and a future production agricultural marketplace.
+
+[PARAGRAPH 642]
+Appendix F: Maintenance Notes for Future Developers
+
+[PARAGRAPH 643]
+Future maintenance of MBOA Market should follow the same separation of concerns used during the initial design. Changes to the user interface should remain in the frontend layer, changes to validation and business rules should remain in the backend layer, and changes to persistent information should be reflected in the database schema. This prevents the project from becoming difficult to maintain as new features are added.
+
+[PARAGRAPH 644]
+A future developer should also keep the API documentation updated. Whenever a new endpoint is added, its request body, response structure and authentication requirement should be documented through the backend documentation system. This is important because the platform may later be maintained by a team rather than a single developer. Clear API documentation allows frontend developers, backend developers and testers to understand the expected behaviour of each endpoint.
+
+[PARAGRAPH 645]
+Testing should also be repeated after every major modification. If payment is added, tests must verify payment initiation, confirmation and failure handling. If chat is added, tests must verify message delivery, message persistence and notification behaviour. If KYC is added, tests must verify document upload, review status and data privacy. Each future module should therefore be accompanied by a scenario flowchart and a validation table, following the same approach used in this thesis.
+
+[PARAGRAPH 646] **EXPLANATION**
+Finally, visual documentation should continue to be treated as part of the engineering work. A software project becomes easier to evaluate when its architecture, workflows, database structure, module interactions and user scenarios are shown in diagrams. The future versions of MBOA Market should therefore continue to include UML diagrams, activity diagrams, sequence diagrams and screenshot-based explanations whenever the platform evolves.
+
+[PARAGRAPH 647]
+Appendix G: Final Verification Checklist
+
+[PARAGRAPH 648]
+Before submitting the thesis, the document should be checked against both academic and technical expectations. The academic check verifies that the title page contains the required institutional information, that declaration, certification, dedication, acknowledgements, faculty approval, abstract, project summary, table of contents, list of figures, list of tables and list of abbreviations appear before Chapter One, and that the chapters follow the expected order. The technical check verifies that the document explains the platform sufficiently for another developer to reproduce the work. This includes requirements, architecture, use cases, activity diagrams, database design, workflows, implementation evidence, testing and limitations.
+
+[PARAGRAPH 649]
+The visual check verifies that every important mechanism is represented by a figure, diagram, table or screenshot. The supervisor's central instruction was that the work should be expressive and visually explanatory. Therefore, the final review should confirm that the literature review contains conceptual diagrams and comparison visuals, the methodology chapter contains system architecture and workflows, the implementation chapter contains screenshots and validation tables, and the conclusion identifies realistic future improvements without pretending that every feature has already been completed.
+
+[PARAGRAPH 650] **EXPLANATION**
+The final content check verifies that the report is neither too brief nor unnecessarily overloaded. The body should contain enough explanation to understand the problem, reproduce the implementation and evaluate the result. At the same time, it should avoid pasting long code blocks that belong in source files rather than in the thesis body. This balance is the reason why the final version keeps detailed explanations, diagrams and evidence while moving the most procedural information to appendices.
+
+[PARAGRAPH 653]
+Appendix H: Deployed Platform Access
+
+[PARAGRAPH 654]
+The QR code below provides quick access to the deployed MBOA Market frontend. It is placed in the appendix because it serves as deployment evidence rather than a core analytical figure in the implementation chapter.
+
+================================================================================
+[PARAGRAPH 655] === IMAGE #37 ===
+================================================================================
+
+[PARAGRAPH 656]
+Appendix Figure H.1: QR code for accessing the deployed MBOA Market platform
+
+
+================================================================================
+TOTAL IMAGES FOUND: 37
+================================================================================
