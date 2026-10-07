@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.core.database import get_db
-from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token
+from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, normalize_phone, phone_lookup_variants
 # from app.core.rate_limiter import limiter
 from app.models.user import User, Profile, UserStatus
 from app.models.system import LoginHistory
@@ -68,10 +68,16 @@ async def register(
     db: AsyncSession = Depends(get_db)
 ):
     """Register new user - Rate limited to 5 requests per minute"""
-    logger.info(f"Registration attempt for phone: {data.phone}")
-    # Check if phone already exists
-    result = await db.execute(select(User).where(User.phone == data.phone))
-    existing_user = result.scalar_one_or_none()
+    normalized_phone = normalize_phone(data.phone)
+    logger.info(f"Registration attempt for phone: {normalized_phone}")
+    # Check if phone already exists, including alternate formatting variants
+    phone_variants = phone_lookup_variants(normalized_phone)
+    existing_user = None
+    for variant in phone_variants:
+        result = await db.execute(select(User).where(User.phone == variant))
+        existing_user = result.scalar_one_or_none()
+        if existing_user:
+            break
     
     if existing_user:
         logger.warning(f"Registration failed - phone already exists: {data.phone}")
@@ -93,8 +99,8 @@ async def register(
     
     user = User(
         id=uuid4(),
-        phone=data.phone,
-        email=data.email,
+        phone=normalized_phone,
+        email=data.email.lower().strip() if data.email else None,
         password_hash=get_password_hash(data.password) if data.password else None,
         locale=data.locale,
     )
@@ -133,15 +139,20 @@ async def login(
     """Login user - Rate limited to 10 requests per minute"""
     import asyncio
     
-    logger.info(f"Login attempt for phone: {credentials.phone}")
+    normalized_phone = normalize_phone(credentials.phone)
+    logger.info(f"Login attempt for phone: {normalized_phone}")
     
     # Constant-time delay to prevent timing attacks
     start_time = asyncio.get_event_loop().time()
-    
-    result = await db.execute(
-        select(User).options(selectinload(User.profile)).where(User.phone == credentials.phone)
-    )
-    user = result.scalar_one_or_none()
+
+    user = None
+    for variant in phone_lookup_variants(normalized_phone):
+        result = await db.execute(
+            select(User).options(selectinload(User.profile)).where(User.phone == variant)
+        )
+        user = result.scalar_one_or_none()
+        if user:
+            break
     
     # Always verify password even if user doesn't exist (constant-time)
     if user and user.password_hash:
@@ -209,9 +220,14 @@ async def verify_phone(
     db: AsyncSession = Depends(get_db)
 ):
     """Verify phone number with verification code - Rate limited to 5 requests per minute"""
-    logger.info(f"Phone verification attempt for: {data.phone}")
-    result = await db.execute(select(User).where(User.phone == data.phone))
-    user = result.scalar_one_or_none()
+    normalized_phone = normalize_phone(data.phone)
+    logger.info(f"Phone verification attempt for: {normalized_phone}")
+    user = None
+    for variant in phone_lookup_variants(normalized_phone):
+        result = await db.execute(select(User).where(User.phone == variant))
+        user = result.scalar_one_or_none()
+        if user:
+            break
     
     if not user:
         logger.warning(f"Phone verification failed - user not found: {data.phone}")

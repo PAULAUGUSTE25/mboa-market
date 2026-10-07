@@ -1,7 +1,9 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
+
+from app.core.security import normalize_phone
 
 
 class UserBase(BaseModel):
@@ -77,6 +79,11 @@ class LoginRequest(BaseModel):
     phone: str
     password: str
 
+    @field_validator("phone")
+    @classmethod
+    def normalize_phone_value(cls, value: str) -> str:
+        return normalize_phone(value)
+
 
 class LoginResponse(BaseModel):
     access_token: str
@@ -88,6 +95,11 @@ class LoginResponse(BaseModel):
 class PhoneVerificationRequest(BaseModel):
     phone: str
     code: str
+
+    @field_validator("phone")
+    @classmethod
+    def normalize_phone_value(cls, value: str) -> str:
+        return normalize_phone(value)
 
 
 class RoleResponse(BaseModel):

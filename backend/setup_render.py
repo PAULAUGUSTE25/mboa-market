@@ -11,7 +11,7 @@ from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select, text
 from app.core.config import settings
 from app.core.database import Base
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, normalize_phone
 from uuid import uuid4
 import datetime
 
@@ -96,16 +96,20 @@ async def setup():
         print("\n👤 Création utilisateur démo...")
         DEMO_PHONE = "+237123456789"
         DEMO_PASSWORD = "Demo@2026"
+        normalized_demo_phone = normalize_phone(DEMO_PHONE)
 
-        existing_user = (await session.execute(
-            select(User).where(User.phone == DEMO_PHONE)
-        )).scalar_one_or_none()
+        existing_user = None
+        for variant in [DEMO_PHONE, normalized_demo_phone, f"+{normalized_demo_phone}"]:
+            result = await session.execute(select(User).where(User.phone == variant))
+            existing_user = result.scalar_one_or_none()
+            if existing_user:
+                break
 
         if not existing_user:
             user_id = uuid4()
             user = User(
                 id=user_id,
-                phone=DEMO_PHONE,
+                phone=normalized_demo_phone,
                 password_hash=get_password_hash(DEMO_PASSWORD),
                 status=UserStatus.ACTIVE
             )

@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 from typing import Optional
+import re
 from jose import JWTError, jwt
 import bcrypt
 from fastapi import Depends, HTTPException, status
@@ -11,6 +12,28 @@ from app.core.database import get_db
 from app.models.user import User
 
 security = HTTPBearer()
+
+
+def normalize_phone(phone: str | None) -> str:
+    if not phone:
+        return ""
+    digits = re.sub(r"\D+", "", str(phone).strip())
+    if not digits:
+        return ""
+    if digits.startswith("00"):
+        digits = digits[2:]
+    return digits
+
+
+def phone_lookup_variants(phone: str | None) -> list[str]:
+    normalized = normalize_phone(phone)
+    variants: set[str] = set()
+    for value in [phone, normalized, f"+{normalized}"]:
+        if value:
+            cleaned = str(value).strip()
+            if cleaned:
+                variants.add(cleaned)
+    return list(variants)
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
