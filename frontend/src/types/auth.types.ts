@@ -2,9 +2,11 @@ export interface RegisterRequest {
   phone: string;
   password: string;
   email?: string;
+  locale?: string;
   profile: {
     display_name: string;
     activity_type: 'producer' | 'buyer' | 'seed_provider';
+    domain?: 'agriculture' | 'elevage';
     region: string;
     locality?: string;
     bio?: string;

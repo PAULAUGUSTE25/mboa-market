@@ -1,7 +1,10 @@
 # Dependencies
 node_modules/
 frontend/node_modules/
-backend/__pycache__/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
 backend/.venv/
 backend/venv/
 

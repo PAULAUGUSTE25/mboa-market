@@ -98,7 +98,7 @@ export default function LoginPage() {
   const { t, lang } = useLanguage();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
-  const [formData, setFormData] = useState({ phone: '', password: '' });
+  const [formData, setFormData] = useState({ phone: '+237', password: '' });
   const [showPassword, setShowPassword] = useState(false);
   const [activeTestimonial, setActiveTestimonial] = useState(0);
   const alreadySeen = !!sessionStorage.getItem('trust_popup_seen');
@@ -155,12 +155,13 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearError();
 
     const errors: {[key: string]: string} = {};
 
     if (!formData.phone.startsWith('+')) {
       errors.phone = t('Le numéro doit commencer par + (ex: +237...)', 'Number must start with + (e.g. +237...)');
-    } else if (formData.phone.length < 10) {
+    } else if (formData.phone.replace(/\D/g, '').length < 9) {
       errors.phone = t('Le numéro de téléphone est trop court', 'Phone number is too short');
     }
 
@@ -180,10 +181,10 @@ export default function LoginPage() {
       setShowSuccessModal(true);
       setTimeout(() => {
         navigate('/feed');
-      }, 2000);
+      }, 1500);
     } catch (err: any) {
-      const errorMsg = err.response?.data?.detail || t('Identifiants incorrects', 'Invalid credentials');
-      setFieldErrors({ general: errorMsg });
+      // Error is already set in authStore — no need to duplicate into fieldErrors
+      // Only set fieldErrors.general if there's extra context not in authStore error
     }
   };
 

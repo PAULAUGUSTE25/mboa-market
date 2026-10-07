@@ -4,7 +4,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, normalize_phone, phone_lookup_variants
-# from app.core.rate_limiter import limiter
 from app.models.user import User, Profile, UserStatus
 from app.models.system import LoginHistory
 from app.schemas.user import UserWithProfile, LoginRequest, LoginResponse, ProfileCreate
@@ -34,7 +33,7 @@ class RegisterRequest(BaseModel):
     password: str = Field(..., min_length=8, max_length=128)
     locale: str = "fr"
     profile: ProfileCreate
-    
+
     @validator('password')
     def validate_password_strength(cls, v):
         """Validate password meets security requirements"""
@@ -49,28 +48,28 @@ class RegisterRequest(BaseModel):
         if not re.search(r'[!@#$%^&*(),.?":{}|<>]', v):
             raise ValueError('Password must contain at least one special character')
         return v
-    
+
     @validator('email')
     def validate_email(cls, v):
-        if v:
-            # Regex stricte pour email valide
+        if v and v.strip():
             pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
-            if not re.match(pattern, v):
+            if not re.match(pattern, v.strip()):
                 raise ValueError('Invalid email format')
-        return v
+            return v.strip()
+        return None
 
 
-@router.post("/register", response_model=UserWithProfile, status_code=status.HTTP_201_CREATED)
-# @limiter.limit("5/minute")  # Temporarily disabled - install slowapi to enable
+# ── Registration returns LoginResponse (with tokens) so the user is immediately logged in ──
+@router.post("/register", response_model=LoginResponse, status_code=status.HTTP_201_CREATED)
 async def register(
-    # request: Request,
     data: RegisterRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    """Register new user - Rate limited to 5 requests per minute"""
+    """Register new user and return access token so client is immediately authenticated."""
     normalized_phone = normalize_phone(data.phone)
     logger.info(f"Registration attempt for phone: {normalized_phone}")
-    # Check if phone already exists, including alternate formatting variants
+
+    # Check if phone already exists (all format variants)
     phone_variants = phone_lookup_variants(normalized_phone)
     existing_user = None
     for variant in phone_variants:
@@ -78,36 +77,36 @@ async def register(
         existing_user = result.scalar_one_or_none()
         if existing_user:
             break
-    
+
     if existing_user:
         logger.warning(f"Registration failed - phone already exists: {data.phone}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Phone number already registered"
         )
-    
-    # Check if email already exists (if provided)
+
+    # Check email uniqueness if provided
     if data.email:
-        email_result = await db.execute(select(User).where(User.email == data.email))
-        existing_email = email_result.scalar_one_or_none()
-        if existing_email:
+        email_result = await db.execute(select(User).where(User.email == data.email.lower().strip()))
+        if email_result.scalar_one_or_none():
             logger.warning(f"Registration failed - email already exists: {data.email}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email already registered"
             )
-    
+
     user = User(
         id=uuid4(),
         phone=normalized_phone,
         email=data.email.lower().strip() if data.email else None,
-        password_hash=get_password_hash(data.password) if data.password else None,
+        password_hash=get_password_hash(data.password),
         locale=data.locale,
+        status=UserStatus.ACTIVE,
     )
-    
+
     db.add(user)
     await db.flush()
-    
+
     profile = Profile(
         id=uuid4(),
         user_id=user.id,
@@ -118,16 +117,24 @@ async def register(
         locality=data.profile.locality,
         bio=data.profile.bio,
     )
-    
+
     db.add(profile)
     await db.commit()
     await db.refresh(user)
     await db.refresh(profile)
-    
+
     user.profile = profile
-    
+
+    # Generate tokens immediately so the client is authenticated after registration
+    access_token = create_access_token(data={"sub": str(user.id)})
+    refresh_token = create_refresh_token(data={"sub": str(user.id)})
+
     logger.info(f"User registered successfully: {user.id}")
-    return user
+    return LoginResponse(
+        access_token=access_token,
+        refresh_token=refresh_token,
+        user=user
+    )
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -136,13 +143,14 @@ async def login(
     credentials: LoginRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    """Login user - Rate limited to 10 requests per minute"""
+    """Login user with phone and password."""
     import asyncio
-    
-    normalized_phone = normalize_phone(credentials.phone)
+
+    # credentials.phone is already normalized by LoginRequest validator (digits only)
+    normalized_phone = credentials.phone
     logger.info(f"Login attempt for phone: {normalized_phone}")
-    
-    # Constant-time delay to prevent timing attacks
+
+    # Constant-time start
     start_time = asyncio.get_event_loop().time()
 
     user = None
@@ -153,37 +161,36 @@ async def login(
         user = result.scalar_one_or_none()
         if user:
             break
-    
-    # Always verify password even if user doesn't exist (constant-time)
+
+    # Always verify password even if user doesn't exist (constant-time defense)
     if user and user.password_hash:
         password_valid = verify_password(credentials.password, user.password_hash)
     else:
-        # Fake password verification to maintain constant time
-        verify_password(credentials.password, get_password_hash("dummy_password"))
+        verify_password(credentials.password, get_password_hash("dummy_password_constant_time"))
         password_valid = False
-    
-    # Ensure minimum delay of 100ms to prevent timing attacks
+
+    # Ensure minimum 100ms delay to prevent timing attacks
     elapsed = asyncio.get_event_loop().time() - start_time
     if elapsed < 0.1:
         await asyncio.sleep(0.1 - elapsed)
-    
+
     if not user or not user.password_hash or not password_valid:
         logger.warning(f"Login failed for phone: {credentials.phone}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect phone or password"
+            detail="Incorrect phone number or password"
         )
-    
+
     if user.status != UserStatus.ACTIVE:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Account is not active"
+            detail="Account is not active. Please contact support."
         )
-    
+
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
-    
-    # ── Enregistrer la connexion dans login_history ────────────────────
+
+    # Record login history (non-blocking)
     try:
         ua = request.headers.get("user-agent", "")
         ip = request.headers.get("x-forwarded-for", request.client.host if request.client else None)
@@ -202,7 +209,6 @@ async def login(
         logger.info(f"Login history saved for user: {user.id}")
     except Exception as e:
         logger.warning(f"Could not save login history: {e}")
-    # ────────────────────────────────────────────────────────────────────
 
     logger.info(f"User logged in successfully: {user.id}")
     return LoginResponse(
@@ -213,53 +219,40 @@ async def login(
 
 
 @router.post("/verify-phone", response_model=PhoneVerificationResponse)
-# @limiter.limit("5/minute")  # Temporarily disabled - install slowapi to enable
 async def verify_phone(
-    # request: Request,
     data: PhoneVerificationRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    """Verify phone number with verification code - Rate limited to 5 requests per minute"""
+    """Verify phone number with OTP code."""
     normalized_phone = normalize_phone(data.phone)
     logger.info(f"Phone verification attempt for: {normalized_phone}")
+
     user = None
     for variant in phone_lookup_variants(normalized_phone):
         result = await db.execute(select(User).where(User.phone == variant))
         user = result.scalar_one_or_none()
         if user:
             break
-    
+
     if not user:
         logger.warning(f"Phone verification failed - user not found: {data.phone}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found"
         )
-    
-    # TODO: Implement actual code verification logic
-    # For now, this is a placeholder. In production, you should:
-    # 1. Store verification codes in database with expiration
-    # 2. Verify the code matches and hasn't expired
-    # 3. Implement rate limiting to prevent brute force
-    # Example:
-    # if not verify_code_from_db(request.phone, request.code):
-    #     raise HTTPException(
-    #         status_code=status.HTTP_400_BAD_REQUEST,
-    #         detail="Invalid or expired verification code"
-    #     )
-    
-    # TEMPORARY: Accept any 6-digit code for development
-    # REMOVE THIS IN PRODUCTION!
+
+    # Validate code format (6 digits)
     if len(data.code) != 6 or not data.code.isdigit():
         logger.warning(f"Phone verification failed - invalid code format: {data.phone}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Verification code must be 6 digits"
+            detail="Verification code must be exactly 6 digits"
         )
-    
+
+    # TODO: In production, verify against stored OTP in DB with expiration
     user.phone_verified = True
     await db.commit()
-    
+
     logger.info(f"Phone verified successfully: {user.id}")
     return PhoneVerificationResponse(
         message="Phone verified successfully",

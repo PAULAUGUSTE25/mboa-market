@@ -11,7 +11,7 @@ import gsap from 'gsap';
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { register, loading, error } = useAuthStore();
+  const { register, loading, error, clearError } = useAuthStore();
   const { t } = useLanguage();
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
@@ -83,6 +83,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    clearError();
     
     const errors: {[key: string]: string} = {};
     
@@ -221,7 +222,7 @@ export default function RegisterPage() {
               <div className="mb-4 p-3 bg-red-500/80 border border-red-500/50 rounded-xl text-sm text-white flex items-center justify-between shadow-sm backdrop-blur-sm">
                 <span>{error || fieldErrors.general}</span>
                 <button
-                  onClick={() => setFieldErrors({})}
+                  onClick={() => { setFieldErrors({}); clearError(); }}
                   className="text-white hover:text-red-100 font-bold text-lg"
                 >
                   ×
@@ -248,7 +249,7 @@ export default function RegisterPage() {
                     }}
                     className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
                       fieldErrors.phone ? 'border-red-500' : 'border-white/50'
-                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner`}
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#829952] focus:ring-2 focus:ring-[#829952]/20 transition-all shadow-inner`}
                     required
                   />
                 </div>
@@ -275,7 +276,7 @@ export default function RegisterPage() {
                     }}
                     className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
                       fieldErrors.email ? 'border-red-500' : 'border-white/50'
-                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner`}
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#829952] focus:ring-2 focus:ring-[#829952]/20 transition-all shadow-inner`}
                   />
                 </div>
                 {fieldErrors.email && <p className="text-red-200 text-xs mt-1 ml-1 font-medium drop-shadow-md">{fieldErrors.email}</p>}
@@ -299,7 +300,7 @@ export default function RegisterPage() {
                     }}
                     className={`w-full pl-12 pr-12 py-3.5 bg-white/90 border ${
                       fieldErrors.password ? 'border-red-500' : 'border-white/50'
-                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner`}
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#829952] focus:ring-2 focus:ring-[#829952]/20 transition-all shadow-inner`}
                     required
                   />
                   <button
@@ -349,7 +350,7 @@ export default function RegisterPage() {
                     }}
                     className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
                       fieldErrors.display_name ? 'border-red-500' : 'border-white/50'
-                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner`}
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#829952] focus:ring-2 focus:ring-[#829952]/20 transition-all shadow-inner`}
                     required
                   />
                 </div>
@@ -436,7 +437,7 @@ export default function RegisterPage() {
                     }}
                     className={`w-full pl-12 pr-4 py-3.5 bg-white/90 border ${
                       fieldErrors.region ? 'border-red-500' : 'border-white/50'
-                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner`}
+                    } rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#829952] focus:ring-2 focus:ring-[#829952]/20 transition-all shadow-inner`}
                     required
                   />
                 </div>
@@ -451,7 +452,7 @@ export default function RegisterPage() {
                   placeholder={t('Localité (optionnel)', 'Locality (optional)')}
                   value={formData.profile.locality}
                   onChange={(e) => setFormData({ ...formData, profile: { ...formData.profile, locality: e.target.value } })}
-                  className="w-full pl-12 pr-4 py-3.5 bg-white/90 border border-white/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#F5F5F0]0 focus:ring-2 focus:ring-[#F5F5F0]0/20 transition-all shadow-inner"
+                  className="w-full pl-12 pr-4 py-3.5 bg-white/90 border border-white/50 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:border-[#829952] focus:ring-2 focus:ring-[#829952]/20 transition-all shadow-inner"
                 />
               </div>
 
