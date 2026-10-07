@@ -35,12 +35,13 @@ class Settings(BaseSettings):
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
     
     # CORS (comma-separated origins)
-    CORS_ORIGINS: str = (
+    CORS_ORIGINS: str = os.getenv(
+        "CORS_ORIGINS",
         "http://localhost:5173,http://127.0.0.1:5173,"
         "http://localhost:5174,http://127.0.0.1:5174,"
         "http://localhost:3000,http://127.0.0.1:3000,"
         "https://mboa-market.netlify.app,"
-        "https://mboa-backoffice-admin.netlify.app"
+        "https://mboa-backoffice-admin.netlify.app",
     )
     PRODUCTION_CORS_ORIGINS: tuple[str, ...] = (
         "https://mboa-market.netlify.app",
@@ -51,7 +52,8 @@ class Settings(BaseSettings):
     def cors_origins_list(self) -> list[str]:
         origins: list[str] = []
         seen: set[str] = set()
-        for origin in self.CORS_ORIGINS.split(","):
+        raw_origins = (self.CORS_ORIGINS or "").split(",")
+        for origin in raw_origins:
             origin = origin.strip()
             if origin and origin not in seen:
                 origins.append(origin)
@@ -61,6 +63,10 @@ class Settings(BaseSettings):
                 origins.append(origin)
                 seen.add(origin)
         return origins
+
+    @property
+    def cors_origin_regex(self) -> str:
+        return r"https://.*\.netlify\.app|https://.*\.onrender\.com|http://localhost:\d+|http://127\.0\.0\.1:\d+|https?://.*\.vercel\.app"
     
     # SMS Configuration
     SMS_PROVIDER: str = "twilio"

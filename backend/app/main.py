@@ -37,10 +37,11 @@ except Exception:
     # If directory doesn't exist yet, ignore until created
     pass
 
-# CORS middleware — NE PAS mélanger allow_credentials=True avec allow_origins=["*"]
+# CORS middleware — keep exact origins for production and a regex fallback for Netlify/Render domains.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
+    allow_origin_regex=settings.cors_origin_regex,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
