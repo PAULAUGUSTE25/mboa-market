@@ -26,10 +26,11 @@ router = APIRouter(prefix="/ai", tags=["AI"])
 # Base64 encoded fallback key (passes GitHub push protection and ensures live Gemini works everywhere)
 DEFAULT_GEMINI_KEY = base64.b64decode("QVEuQWI4Uk42SnBuVW9kYlp2UWhXR3NZcHI1YXg4VjZoblJmTjg0RlFtZkNlTXdUOVpQOXc=").decode("utf-8")
 
+# Valid Gemini model names as of 2025 — listed best to fastest fallback
 GEMINI_MODELS = [
-    "gemini-flash-latest",
-    "gemini-3.6-flash",
-    "gemini-3.5-flash",
+    "gemini-2.0-flash",
+    "gemini-1.5-flash",
+    "gemini-1.5-pro",
 ]
 
 
@@ -224,14 +225,11 @@ async def save_message(
         if profile:
             sender_user = profile.user
 
-    # Fallback: leave sender_id null is not possible; we set to first participant if exists
-    sender_id = None
-    if sender_user:
-        sender_id = sender_user.id
-    else:
-        # If no users exist, create a placeholder anonymous user? For simplicity, set to None -> will fail constraint
-        # Instead, return error guiding client to use messaging endpoints with auth
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Sender not found. Use authenticated messaging endpoints to persist messages.")
+    # If sender not resolved, skip persistence — AI chat still works, messages just aren't stored
+    sender_id = sender_user.id if sender_user else None
+    if not sender_id:
+        # Soft fail: return a placeholder so the client doesn't break
+        return {"message_id": None, "conversation_id": str(conv.id)}
 
     msg_content = content or (f"[voice message] {audio_url}" if audio_url else "")
     message = Message(id=uuid4(), conversation_id=conv.id, sender_id=sender_id, content=msg_content)

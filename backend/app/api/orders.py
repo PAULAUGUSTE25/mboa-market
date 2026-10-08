@@ -95,7 +95,7 @@ async def create_order(
 
 @router.get("/my-orders", response_model=List[OrderResponse])
 async def get_my_orders(
-    status: Optional[str] = None,
+    order_status: Optional[str] = None,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
@@ -106,27 +106,25 @@ async def get_my_orders(
             Order.seller_id == current_user.id
         )
     )
-    
+
     # Apply status filter if provided
-    if status:
-        # Validate status value
+    if order_status:
         valid_statuses = [s.value for s in OrderStatus]
-        if status not in valid_statuses:
+        if order_status not in valid_statuses:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid status '{status}'. Valid values: {valid_statuses}"
+                detail=f"Invalid status '{order_status}'. Valid values: {valid_statuses}"
             )
-        
         try:
-            status_enum = OrderStatus(status)
+            status_enum = OrderStatus(order_status)
             query = query.where(Order.status == status_enum)
         except (ValueError, KeyError) as e:
-            logger.error(f"Error converting status '{status}': {e}")
+            logger.error(f"Error converting status '{order_status}': {e}")
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail=f"Invalid status '{status}'. Valid values: {valid_statuses}"
+                detail=f"Invalid status '{order_status}'. Valid values: {valid_statuses}"
             )
-    
+
     query = query.order_by(Order.created_at.desc())
     result = await db.execute(query)
     orders = result.scalars().all()

@@ -45,8 +45,8 @@ export const useAuthStore = create<AuthState>()(
             api.login(credentials),
             new Promise<never>((_, reject) => {
               setTimeout(() => {
-                reject(new Error('Le serveur met trop de temps à répondre. Vérifiez votre connexion.'));
-              }, 15000);
+                reject(new Error('Le serveur met trop de temps à répondre. Il est peut-être en cours de démarrage, réessayez dans 30 secondes.'));
+              }, 65000); // 65s — matches axios timeout + buffer for Render cold starts
             }),
           ]);
 
@@ -77,8 +77,8 @@ export const useAuthStore = create<AuthState>()(
             api.register(data),
             new Promise<never>((_, reject) => {
               setTimeout(() => {
-                reject(new Error("L'inscription met trop de temps à répondre. Vérifiez votre connexion."));
-              }, 15000);
+                reject(new Error("L'inscription met trop de temps à répondre. Le serveur est peut-être en cours de démarrage, réessayez dans 30 secondes."));
+              }, 65000); // 65s — matches axios timeout + buffer for Render cold starts
             }),
           ]);
 
