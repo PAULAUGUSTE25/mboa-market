@@ -26,11 +26,11 @@ router = APIRouter(prefix="/ai", tags=["AI"])
 # Base64 encoded fallback key (passes GitHub push protection and ensures live Gemini works everywhere)
 DEFAULT_GEMINI_KEY = base64.b64decode("QVEuQWI4Uk42SnBuVW9kYlp2UWhXR3NZcHI1YXg4VjZoblJmTjg0RlFtZkNlTXdUOVpQOXc=").decode("utf-8")
 
-# Valid Gemini model names as of 2025 — listed best to fastest fallback
+# Valid Gemini model names as of 2026
 GEMINI_MODELS = [
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-    "gemini-1.5-pro",
+    "gemini-3.6-flash",
+    "gemini-3.5-flash",
+    "gemini-flash-latest",
 ]
 
 
