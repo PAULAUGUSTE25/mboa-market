@@ -6,8 +6,34 @@ from contextlib import asynccontextmanager
 from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics, admin, analytics, ai
 from app.core.config import settings
 import logging
+import asyncio
+import os
+import httpx
 
 logger = logging.getLogger(__name__)
+
+# ──────────────────────────────────────────────
+# Keep-alive: prevents Render free tier spin-down
+# ──────────────────────────────────────────────
+KEEP_ALIVE_INTERVAL = 10 * 60  # 10 minutes (Render spins down after 15 min)
+
+async def _keep_alive_task():
+    """Periodically ping our own /api/health endpoint so Render never
+    idles the service due to inactivity on the free tier."""
+    # Give the server a moment to fully start before first ping
+    await asyncio.sleep(30)
+    # Determine base URL from environment (Render sets RENDER_EXTERNAL_URL)
+    base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:8000")
+    health_url = f"{base_url}/api/health"
+    logger.info("🔄 Keep-alive task started — pinging %s every %ds", health_url, KEEP_ALIVE_INTERVAL)
+    async with httpx.AsyncClient(timeout=10) as client:
+        while True:
+            try:
+                resp = await client.get(health_url)
+                logger.debug("✅ Keep-alive ping OK (%d)", resp.status_code)
+            except Exception as exc:
+                logger.warning("⚠️  Keep-alive ping failed: %s", exc)
+            await asyncio.sleep(KEEP_ALIVE_INTERVAL)
 
 
 @asynccontextmanager
@@ -21,7 +47,23 @@ async def lifespan(app: FastAPI):
         logger.info("✅ Tables DB vérifiées/créées au démarrage")
     except Exception as e:
         logger.error(f"❌ Erreur init DB: {e}")
+
+    # Start keep-alive background task (only on Render or prod)
+    keep_alive_task = None
+    if os.getenv("RENDER_EXTERNAL_URL") or os.getenv("ENVIRONMENT") == "production":
+        keep_alive_task = asyncio.create_task(_keep_alive_task())
+        logger.info("🚀 Keep-alive background task launched")
+
     yield
+
+    # Shutdown: cancel the keep-alive task gracefully
+    if keep_alive_task and not keep_alive_task.done():
+        keep_alive_task.cancel()
+        try:
+            await keep_alive_task
+        except asyncio.CancelledError:
+            pass
+        logger.info("🛑 Keep-alive task stopped")
 
 app = FastAPI(
     title="MBOA Market API",
