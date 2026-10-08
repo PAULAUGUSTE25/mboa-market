@@ -1,3 +1,10 @@
+databases:
+  - name: mboa-market-postgres-demo
+    databaseName: mboa_market_demo
+    user: mboa_market_user
+    region: frankfurt
+    plan: free
+
 services:
   - type: web
     name: mboa-market-backend
@@ -6,11 +13,13 @@ services:
     plan: free
     rootDir: backend
     buildCommand: "pip install -r requirements.txt"
-    startCommand: "python setup_render.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
+    startCommand: "python setup_render.py && python seed_demo_listings.py && uvicorn app.main:app --host 0.0.0.0 --port $PORT"
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
-        value: "sqlite+aiosqlite:///./mboa_market.db"
+        fromDatabase:
+          name: mboa-market-postgres-demo
+          property: connectionString
       - key: SECRET_KEY
         value: mboa-market-secret-key-2024-production-v2
       - key: PYTHON_VERSION

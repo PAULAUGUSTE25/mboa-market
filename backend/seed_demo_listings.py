@@ -3,6 +3,7 @@ Script pour créer des annonces de DÉMO avec TOUTES les images locales
 Ces annonces sont pour le design/présentation de l'application
 """
 import asyncio
+import ssl
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy import select
@@ -258,10 +259,22 @@ DEMO_LISTINGS = [
 async def seed_demo():
     """Créer les annonces de démo"""
     print("🎨 Création des annonces de DÉMO...")
-    print(f"📊 URL: {settings.DATABASE_URL}")
+    print("📊 Connexion à la base de données configurée")
     print()
     
-    engine = create_async_engine(settings.DATABASE_URL, echo=False)
+    connect_args = {}
+    if "render.com" in settings.DATABASE_URL or "dpg-" in settings.DATABASE_URL:
+        context = ssl.create_default_context()
+        context.check_hostname = False
+        context.verify_mode = ssl.CERT_NONE
+        connect_args["ssl"] = context
+
+    engine = create_async_engine(
+        settings.DATABASE_URL,
+        echo=False,
+        connect_args=connect_args,
+        pool_pre_ping=True,
+    )
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
     
     async with async_session() as session:
