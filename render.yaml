@@ -1,10 +1,3 @@
-databases:
-  - name: mboa-market-db-v3
-    databaseName: mboa_market
-    user: mboa_user
-    region: frankfurt
-    plan: free
-
 services:
   - type: web
     name: mboa-market-backend
@@ -17,9 +10,7 @@ services:
     healthCheckPath: /api/health
     envVars:
       - key: DATABASE_URL
-        fromDatabase:
-          name: mboa-market-db-v3
-          property: externalConnectionString
+        value: "sqlite+aiosqlite:///./mboa_market.db"
       - key: SECRET_KEY
         value: mboa-market-secret-key-2024-production-v2
       - key: PYTHON_VERSION
