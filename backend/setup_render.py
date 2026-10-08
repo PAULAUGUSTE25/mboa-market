@@ -37,6 +37,10 @@ CATEGORIES = [
     {"id": str(uuid4()), "name_fr": "Céréales", "name_en": "Cereals", "kind": "category"},
     {"id": str(uuid4()), "name_fr": "Tubercules", "name_en": "Tubers", "kind": "category"},
     {"id": str(uuid4()), "name_fr": "Fruits tropicaux", "name_en": "Tropical fruits", "kind": "category"},
+    {"id": str(uuid4()), "name_fr": "Légumes", "name_en": "Vegetables", "kind": "category"},
+    {"id": str(uuid4()), "name_fr": "Fruits", "name_en": "Fruit", "kind": "category"},
+    {"id": str(uuid4()), "name_fr": "Volaille", "name_en": "Poultry", "kind": "category"},
+    {"id": str(uuid4()), "name_fr": "Bétail", "name_en": "Livestock", "kind": "category"},
 ]
 
 

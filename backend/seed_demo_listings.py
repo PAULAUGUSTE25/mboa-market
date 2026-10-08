@@ -310,11 +310,18 @@ async def seed_demo():
                 print(f"⏭️  {listing_data['title']} existe déjà")
                 continue
             
+            category = categories.get(listing_data["category"])
+            if category is None:
+                raise ValueError(
+                    f"Catégorie '{listing_data['category']}' introuvable pour "
+                    f"l'annonce '{listing_data['title']}'. Exécutez setup_render.py d'abord."
+                )
+
             # Créer l'annonce
             listing = Listing(
                 id=uuid4(),
                 seller_id=user.id,
-                category_id=categories.get(listing_data["category"]).id if listing_data.get("category") in categories else None,
+                category_id=category.id,
                 product_ref_id=products.get(listing_data["product"]).id if listing_data.get("product") in products else None,
                 title=listing_data["title"],
                 variety=listing_data.get("variety"),
