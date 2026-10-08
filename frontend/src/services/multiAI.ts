@@ -20,7 +20,7 @@ class MultiAIService {
     if (envUrl) {
       return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
     }
-    return 'https://mboa-market-backend.onrender.com/api';
+    return 'https://mboa-market-backend-5y0r.onrender.com/api';
   }
 
   private cache: Map<string, { response: string; timestamp: number }> = new Map();
