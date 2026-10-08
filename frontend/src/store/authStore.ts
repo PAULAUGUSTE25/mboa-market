@@ -13,9 +13,9 @@ interface UserProfile {
 interface User {
   id: string;
   phone: string;
-  email?: string;
+  email?: string | null;
   status?: string;
-  profile?: UserProfile;
+  profile?: UserProfile | null;
 }
 
 interface AuthState {

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { User, Mail, Phone, MapPin, Edit, LogOut, Save, X, Wheat, Beef, Shield } from 'lucide-react';
+import { isAxiosError } from 'axios';
+import { Mail, Phone, MapPin, Edit, LogOut, Save, X, Wheat, Beef, Shield } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../contexts/LanguageContext';
@@ -18,6 +19,7 @@ export default function ProfilePage() {
 
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [form, setForm] = useState({
     display_name: user?.profile?.display_name || '',
     email: user?.email || '',
@@ -28,21 +30,38 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     setSaving(true);
+    setSaveError(null);
     try {
-      const updated = await usersApi.updateProfile(form as Parameters<typeof usersApi.updateProfile>[0]);
+      const updated = await usersApi.updateProfile(form);
       setUser(updated);
       setEditing(false);
-    } catch {
-      if (user) {
-        setUser({
-          ...user,
-          profile: { ...user.profile, ...form } as typeof user.profile,
-        });
-      }
-      setEditing(false);
+    } catch (error: unknown) {
+      const detail = isAxiosError<{ detail?: string | Array<{ msg?: string }> }>(error)
+        ? error.response?.data?.detail
+        : undefined;
+      const message = typeof detail === 'string'
+        ? detail
+        : Array.isArray(detail)
+          ? detail.map(item => item.msg).filter(Boolean).join('; ')
+          : error instanceof Error
+            ? error.message
+            : t('Enregistrement impossible. Veuillez réessayer.', 'Unable to save your changes. Please try again.');
+      setSaveError(message);
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleCancel = () => {
+    setForm({
+      display_name: user?.profile?.display_name || '',
+      email: user?.email || '',
+      region: user?.profile?.region || '',
+      locality: user?.profile?.locality || '',
+      activity_type: user?.profile?.activity_type || '',
+    });
+    setSaveError(null);
+    setEditing(false);
   };
 
   const handleLogout = () => {
@@ -52,6 +71,14 @@ export default function ProfilePage() {
 
   const initials = (user?.profile?.display_name || user?.phone || 'U')
     .split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+  const activityType = user?.profile?.activity_type;
+  const activityLabel = activityType === 'producer'
+    ? t('Producteur', 'Producer')
+    : activityType === 'buyer'
+      ? t('Acheteur', 'Buyer')
+      : activityType === 'seed_provider'
+        ? t('Fournisseur de semences', 'Seed provider')
+        : activityType || t('Activité non renseignée', 'Activity not provided');
 
   const domainColor = user?.profile?.domain === 'elevage' ? '#7C3D12' : '#3F441C';
 
@@ -67,7 +94,7 @@ export default function ProfilePage() {
       {/* Contenu au-dessus de la vidéo */}
       <div className="relative z-10">
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
+      <header className="bg-white border-b border-gray-200 px-3 sm:px-4 py-3 flex items-center gap-2 sm:gap-3 sticky top-0 z-10">
         <button onClick={() => navigate('/feed')} className="p-2 rounded-lg hover:bg-gray-100">
           <X className="w-5 h-5 text-gray-600" />
         </button>
@@ -77,10 +104,10 @@ export default function ProfilePage() {
         <LanguageToggle />
         <button
           onClick={handleLogout}
-          className="flex items-center gap-1.5 text-sm text-red-600 px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
+          className="flex items-center gap-1.5 text-sm text-red-600 px-2 sm:px-3 py-1.5 rounded-lg hover:bg-red-50 transition-colors"
         >
           <LogOut className="w-4 h-4" />
-          {t('Déconnexion', 'Log out')}
+          <span className="hidden sm:inline">{t('Déconnexion', 'Log out')}</span>
         </button>
       </header>
 
@@ -95,7 +122,7 @@ export default function ProfilePage() {
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-xl font-bold text-gray-900 truncate">
-              {user?.profile?.display_name || t('Utilisateur', 'User')}
+              {user?.profile?.display_name || t('Nom non renseigné', 'Name not provided')}
             </h2>
             <div className="flex items-center gap-2 mt-1">
               {user?.profile?.domain === 'elevage' ? (
@@ -104,17 +131,15 @@ export default function ProfilePage() {
                 <Wheat className="w-4 h-4 text-[#3F441C]" />
               )}
               <span className="text-sm text-gray-500 capitalize">
-                {user?.profile?.activity_type || t('Membre', 'Member')}
+                {activityLabel}
               </span>
             </div>
-            {user?.profile?.region && (
-              <div className="flex items-center gap-1 mt-1">
-                <MapPin className="w-3 h-3 text-gray-400" />
-                <span className="text-xs text-gray-400">
-                  {user.profile.locality ? `${user.profile.locality}, ` : ''}{user.profile.region}
-                </span>
+            <div className="flex items-center gap-1 mt-1">
+              <MapPin className="w-3 h-3 text-gray-400" />
+              <span className="text-xs text-gray-400">
+                {[user?.profile?.locality, user?.profile?.region].filter(Boolean).join(', ') || t('Localité non renseignée', 'Location not provided')}
+              </span>
               </div>
-            )}
           </div>
           {!editing && (
             <button
@@ -164,7 +189,7 @@ export default function ProfilePage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs text-gray-500 font-medium">{t('Région', 'Region')}</label>
                 <select
@@ -187,7 +212,13 @@ export default function ProfilePage() {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            {saveError && (
+              <div role="alert" className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {saveError}
+              </div>
+            )}
+
+            <div className="flex flex-col-reverse sm:flex-row gap-2 pt-2">
               <button
                 onClick={handleSave}
                 disabled={saving}
@@ -198,7 +229,7 @@ export default function ProfilePage() {
                 {saving ? t('Enregistrement...', 'Saving...') : t('Enregistrer', 'Save')}
               </button>
               <button
-                onClick={() => setEditing(false)}
+                onClick={handleCancel}
                 className="px-4 py-2.5 rounded-xl border border-gray-200 text-sm text-gray-600 hover:bg-gray-50"
               >
                 {t('Annuler', 'Cancel')}

@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import func, select
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, Profile
-from app.schemas.user import UserWithProfile, ProfileUpdate, ProfileResponse
+from app.schemas.user import UserWithProfile, ProfileUpdate
 from uuid import UUID
 from pydantic import BaseModel
 from typing import Optional
@@ -55,7 +55,7 @@ async def get_current_user_profile(
     return current_user
 
 
-@router.put("/me/profile", response_model=ProfileResponse)
+@router.put("/me/profile", response_model=UserWithProfile)
 async def update_profile(
     data: ProfileUpdate,
     current_user: User = Depends(get_current_user),
@@ -73,14 +73,26 @@ async def update_profile(
             detail="Profile not found"
         )
     
-    update_data = data.dict(exclude_unset=True)
+    update_data = data.model_dump(exclude_unset=True)
+    email = update_data.pop("email", current_user.email)
+    if email != current_user.email and email is not None:
+        existing_user_result = await db.execute(
+            select(User).where(func.lower(User.email) == email, User.id != current_user.id)
+        )
+        if existing_user_result.scalar_one_or_none():
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email already registered"
+            )
+
+    current_user.email = email
     for field, value in update_data.items():
         setattr(profile, field, value)
     
     await db.commit()
-    await db.refresh(profile)
+    await db.refresh(current_user, ['profile'])
     
-    return profile
+    return current_user
 
 
 @router.get("/{user_id}", response_model=PublicProfileResponse)

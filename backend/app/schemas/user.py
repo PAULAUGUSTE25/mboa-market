@@ -2,6 +2,7 @@ from pydantic import BaseModel, Field, field_validator
 from typing import Optional
 from datetime import datetime
 from uuid import UUID
+import re
 
 from app.core.security import normalize_phone
 
@@ -49,12 +50,25 @@ class ProfileCreate(ProfileBase):
 
 class ProfileUpdate(BaseModel):
     display_name: Optional[str] = None
+    email: Optional[str] = Field(None, max_length=255)
     activity_type: Optional[str] = None
     domain: Optional[str] = None
     region: Optional[str] = None
     locality: Optional[str] = None
     bio: Optional[str] = None
     avatar_storage_key: Optional[str] = None
+
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: Optional[str]) -> Optional[str]:
+        if value is None:
+            return None
+        normalized = value.strip().lower()
+        if not normalized:
+            return None
+        if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", normalized):
+            raise ValueError("Please provide a valid email address")
+        return normalized
 
 
 class ProfileResponse(ProfileBase):

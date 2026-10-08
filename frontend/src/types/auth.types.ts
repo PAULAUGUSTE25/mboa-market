@@ -1,7 +1,7 @@
 export interface RegisterRequest {
   phone: string;
   password: string;
-  email?: string;
+  email?: string | null;
   locale?: string;
   profile: {
     display_name: string;
@@ -30,7 +30,7 @@ export interface User {
   phone: string;
   email?: string;
   status: 'ACTIVE' | 'INACTIVE' | 'SUSPENDED';
-  profile?: UserProfile;
+  profile?: UserProfile | null;
 }
 
 export interface UserProfile {
