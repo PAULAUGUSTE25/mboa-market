@@ -32,11 +32,15 @@ export default function AIAssistant() {
   const [autoSpeak, setAutoSpeak] = useState(false);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
   const [recordingTranscript, setRecordingTranscript] = useState('');
+  const [typingMessageId, setTypingMessageId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const recognitionRef = useRef<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
+  const typingTimeoutRef = useRef<any>(null);
+  const activeFullTextRef = useRef<{ id: string; fullText: string; shouldSpeak: boolean } | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
 
   const getWelcomeMessage = () => {
@@ -63,8 +67,77 @@ export default function AIAssistant() {
     },
   ]);
 
+  // Stop typing and immediately display the full message if requested
+  const stopTypingOrSkip = () => {
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+      typingTimeoutRef.current = null;
+    }
+    if (activeFullTextRef.current) {
+      const { id, fullText, shouldSpeak } = activeFullTextRef.current;
+      setMessages((prev) =>
+        prev.map((m) => (m.id === id ? { ...m, text: fullText } : m))
+      );
+      if (shouldSpeak) {
+        speakText(id, fullText);
+      }
+      activeFullTextRef.current = null;
+    }
+    setTypingMessageId(null);
+    setIsLoading(false);
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+    }
+  };
+
+  // Modern progressive typewriter stream
+  const startTypewriter = (msgId: string, fullText: string, shouldSpeak: boolean) => {
+    activeFullTextRef.current = { id: msgId, fullText, shouldSpeak };
+    setTypingMessageId(msgId);
+    setIsLoading(false);
+
+    let currentIndex = 0;
+    const totalLength = fullText.length;
+    // Pacing adapted to message length: short greetings type letter-by-letter;
+    // longer answers stream smoothly in small natural tokens
+    const baseInterval = totalLength > 600 ? 12 : totalLength > 250 ? 15 : 18;
+    const stepSize = totalLength > 600 ? 4 : totalLength > 250 ? 2 : 1;
+
+    const typeNext = () => {
+      if (currentIndex < totalLength) {
+        currentIndex = Math.min(currentIndex + stepSize, totalLength);
+        const currentSlice = fullText.slice(0, currentIndex);
+
+        setMessages((prev) =>
+          prev.map((m) => (m.id === msgId ? { ...m, text: currentSlice } : m))
+        );
+
+        if (messagesContainerRef.current) {
+          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+        }
+
+        // Slight natural human-like cadence pause at punctuation
+        const lastChar = currentSlice.slice(-1);
+        const pause = (lastChar === '.' || lastChar === '!' || lastChar === '?' || lastChar === '\n') ? 35 : 0;
+
+        typingTimeoutRef.current = setTimeout(typeNext, baseInterval + pause);
+      } else {
+        // Complete
+        setTypingMessageId(null);
+        activeFullTextRef.current = null;
+        typingTimeoutRef.current = null;
+        if (shouldSpeak) {
+          speakText(msgId, fullText);
+        }
+      }
+    };
+
+    typeNext();
+  };
+
   // Reset conversation and context when user logs in, switches account, or logs out
   useEffect(() => {
+    stopTypingOrSkip();
     setMessages([
       {
         id: `welcome-${user?.id || 'anon'}-${Date.now()}`,
@@ -83,14 +156,17 @@ export default function AIAssistant() {
   }, [user?.id]);
 
   useEffect(() => {
-    if (isOpen && messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    if (isOpen && messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
   }, [messages, isOpen, isRecording]);
 
-  // Clean up speech synthesis and recognition on unmount
+  // Clean up speech synthesis, typewriter and recognition on unmount
   useEffect(() => {
     return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
       if (recognitionRef.current) {
         try {
           recognitionRef.current.stop();
@@ -103,6 +179,7 @@ export default function AIAssistant() {
   }, []);
 
   const resetConversation = () => {
+    stopTypingOrSkip();
     setMessages([
       {
         id: `welcome-${user?.id || 'anon'}-${Date.now()}`,
@@ -116,6 +193,7 @@ export default function AIAssistant() {
   };
 
   const handleClose = () => {
+    stopTypingOrSkip();
     if (isRecording) {
       stopRecording();
     }
@@ -235,24 +313,38 @@ export default function AIAssistant() {
 
   const handleSendMessage = async (customPrompt?: string, isVoicePrompt = false) => {
     const textToSend = (customPrompt || inputText).trim();
-    if (!textToSend || isLoading) return;
+    if (!textToSend) return;
+
+    // Flush any ongoing typewriter before sending
+    stopTypingOrSkip();
 
     if (isRecording) {
       stopRecording();
     }
 
     const userMessage: Message = {
-      id: Date.now().toString(),
+      id: `user-${Date.now()}`,
       text: textToSend,
       sender: 'user',
       timestamp: new Date(),
       isVoice: isVoicePrompt || isRecording,
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    const aiMessageId = `ai-${Date.now() + 1}`;
+    const pendingAiMessage: Message = {
+      id: aiMessageId,
+      text: '',
+      sender: 'ai',
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage, pendingAiMessage]);
     setInputText('');
     setRecordingTranscript('');
     setIsLoading(true);
+    setTypingMessageId(aiMessageId);
+
+    const shouldSpeak = autoSpeak || isVoicePrompt || isRecording;
 
     try {
       // Only use real display_name if user is authenticated — never invent a name
@@ -266,8 +358,12 @@ export default function AIAssistant() {
           console.warn('Failed to persist user message:', e);
         }
       }
-      // Build context: only last 4 messages to limit token usage
-      const recentHistory = messages.slice(-4).map(m => `${m.sender === 'user' ? (displayName || t('Visiteur', 'Visitor')) : 'Bigiss'}: ${m.text}`).join('\n');
+      // Build context: only last 4 non-empty messages to limit token usage
+      const recentHistory = messages
+        .filter((m) => m.text)
+        .slice(-4)
+        .map((m) => `${m.sender === 'user' ? (displayName || t('Visiteur', 'Visitor')) : 'Bigiss'}: ${m.text}`)
+        .join('\n');
       const context = messages.length > 1 ? recentHistory : undefined;
 
       const response = await multiAI.generateResponse(
@@ -275,29 +371,16 @@ export default function AIAssistant() {
         context
       );
 
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: response.text,
-        sender: 'ai',
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, aiMessage]);
-
-      if (autoSpeak || isVoicePrompt || isRecording) {
-        speakText(aiMessage.id, aiMessage.text);
-      }
+      // Smooth typewriter streaming animation
+      startTypewriter(aiMessageId, response.text, shouldSpeak);
     } catch (error) {
       console.error('Error getting AI response:', error);
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        text: t("Désolé, j'ai rencontré une erreur. Veuillez réessayer plus tard.", 'Sorry, I encountered an error. Please try again later.'),
-        sender: 'ai',
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
       setIsLoading(false);
+      setTypingMessageId(null);
+      const errorText = t("Désolé, j'ai rencontré une erreur. Veuillez réessayer plus tard.", 'Sorry, I encountered an error. Please try again later.');
+      setMessages((prev) =>
+        prev.map((m) => (m.id === aiMessageId ? { ...m, text: errorText } : m))
+      );
     }
   };
 
@@ -410,55 +493,103 @@ export default function AIAssistant() {
             </div>
 
             {/* Messages Stream */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-3.5 custom-scrollbar">
-              {messages.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[85%] p-3 rounded-2xl text-sm relative group ${
-                      msg.sender === 'user'
-                        ? 'text-white rounded-br-none shadow-md'
-                        : theme === 'dark'
-                          ? 'bg-white/10 text-white rounded-bl-none border border-white/10 shadow-sm'
-                          : 'bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100'
-                    }`}
-                    style={msg.sender === 'user' ? { backgroundColor: domainColors.primary } : undefined}
-                  >
-                    {msg.isVoice && (
-                      <div className="flex items-center gap-1 text-[11px] font-medium opacity-80 mb-1">
-                        <Mic className="w-3 h-3 text-emerald-300" />
-                        <span>{t('Note vocale', 'Voice note')}</span>
-                      </div>
-                    )}
-                    <div className="leading-relaxed whitespace-pre-wrap">{msg.text}</div>
+            <div
+              ref={messagesContainerRef}
+              className="flex-1 overflow-y-auto p-4 space-y-3.5 custom-scrollbar"
+            >
+              {messages.map((msg) => {
+                const isCurrentTyping = msg.id === typingMessageId;
+                const isThinking = isCurrentTyping && !msg.text;
 
-                    <div className="flex items-center justify-between mt-2 pt-1 border-t border-black/5 dark:border-white/5 text-[10px] opacity-70">
-                      <span>{msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                      {msg.sender === 'ai' && (
-                        <button
-                          onClick={() => speakText(msg.id, msg.text)}
-                          className="flex items-center gap-1 hover:opacity-100 transition-opacity p-0.5 rounded text-emerald-400 font-medium"
-                          title={t('Écouter le message', 'Listen to message')}
-                        >
-                          {speakingMessageId === msg.id ? (
-                            <>
-                              <Square className="w-3 h-3 text-red-400 animate-pulse" />
-                              <span className="text-red-400">{t('Arrêter', 'Stop')}</span>
-                            </>
-                          ) : (
-                            <>
-                              <Volume2 className="w-3.5 h-3.5" />
-                              <span>{t('Écouter', 'Listen')}</span>
-                            </>
+                return (
+                  <div
+                    key={msg.id}
+                    className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    <div
+                      className={`max-w-[85%] p-3 rounded-2xl text-sm relative group transition-all ${
+                        msg.sender === 'user'
+                          ? 'text-white rounded-br-none shadow-md'
+                          : theme === 'dark'
+                            ? 'bg-white/10 text-white rounded-bl-none border border-white/10 shadow-sm'
+                            : 'bg-white text-gray-800 rounded-bl-none shadow-sm border border-gray-100'
+                      }`}
+                      style={msg.sender === 'user' ? { backgroundColor: domainColors.primary } : undefined}
+                    >
+                      {msg.isVoice && (
+                        <div className="flex items-center gap-1 text-[11px] font-medium opacity-80 mb-1">
+                          <Mic className="w-3 h-3 text-emerald-300" />
+                          <span>{t('Note vocale', 'Voice note')}</span>
+                        </div>
+                      )}
+
+                      {/* Content or Thinking state */}
+                      {isThinking ? (
+                        <div className="flex items-center gap-2 py-1 px-1">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                          <span className="text-xs text-emerald-600 dark:text-emerald-400 font-medium tracking-wide">
+                            {t('Bigiss prépare votre réponse...', 'Bigiss is crafting your answer...')}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="leading-relaxed whitespace-pre-wrap">
+                          {msg.text}
+                          {isCurrentTyping && (
+                            <span
+                              className="inline-block w-1.5 h-4 ml-1 bg-emerald-500 rounded-sm animate-pulse shadow-sm"
+                              style={{ verticalAlign: 'text-bottom' }}
+                            />
                           )}
-                        </button>
+                        </div>
+                      )}
+
+                      {/* Footer: timestamp / actions */}
+                      {!isThinking && (
+                        <div className="flex items-center justify-between mt-2 pt-1 border-t border-black/5 dark:border-white/5 text-[10px] opacity-70">
+                          <span>
+                            {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                          </span>
+                          {msg.sender === 'ai' && (
+                            <div className="flex items-center gap-2">
+                              {isCurrentTyping ? (
+                                <button
+                                  type="button"
+                                  onClick={stopTypingOrSkip}
+                                  className="text-emerald-500 hover:underline font-semibold"
+                                >
+                                  {t('Afficher tout', 'Show all')}
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={() => speakText(msg.id, msg.text)}
+                                  className="flex items-center gap-1 hover:opacity-100 transition-opacity p-0.5 rounded text-emerald-400 font-medium"
+                                  title={t('Écouter le message', 'Listen to message')}
+                                >
+                                  {speakingMessageId === msg.id ? (
+                                    <>
+                                      <Square className="w-3 h-3 text-red-400 animate-pulse" />
+                                      <span className="text-red-400">{t('Arrêter', 'Stop')}</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Volume2 className="w-3.5 h-3.5" />
+                                      <span>{t('Écouter', 'Listen')}</span>
+                                    </>
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       )}
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {/* Recording Indicator */}
               {isRecording && (
@@ -475,15 +606,6 @@ export default function AIAssistant() {
                 </div>
               )}
 
-              {/* AI Loading indicator */}
-              {isLoading && (
-                <div className="flex justify-start">
-                  <div className={`p-3 rounded-2xl rounded-bl-none ${theme === 'dark' ? 'bg-white/10 border border-white/10' : 'bg-white shadow-sm'} flex items-center gap-2 text-xs text-gray-500`}>
-                    <Bot className="w-4 h-4 text-emerald-500 animate-spin" />
-                    <span>{t('Bigiss réfléchit...', 'Bigiss is thinking...')}</span>
-                  </div>
-                </div>
-              )}
               <div ref={messagesEndRef} />
             </div>
 
@@ -528,14 +650,25 @@ export default function AIAssistant() {
                   }`}
                 />
 
-                <button
-                  type="submit"
-                  disabled={!inputText.trim() || isLoading}
-                  className="p-2.5 rounded-xl text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg hover:opacity-90 active:scale-95"
-                  style={{ backgroundColor: domainColors.primary }}
-                >
-                  <Send className="w-5 h-5" />
-                </button>
+                {isLoading || typingMessageId ? (
+                  <button
+                    type="button"
+                    onClick={stopTypingOrSkip}
+                    title={t('Afficher la réponse complète', 'Show full response')}
+                    className="p-2.5 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 transition-all shadow-lg active:scale-95 flex items-center justify-center group"
+                  >
+                    <Square className="w-4 h-4 fill-current group-hover:scale-90 transition-transform" />
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!inputText.trim() || isRecording}
+                    className="p-2.5 rounded-xl text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg hover:opacity-90 active:scale-95"
+                    style={{ backgroundColor: domainColors.primary }}
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
+                )}
               </form>
             </div>
           </motion.div>
