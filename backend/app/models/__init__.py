@@ -7,6 +7,7 @@ from app.models.logistics import Hub, TransportRequest, TransportMission
 from app.models.livestock import LivestockBatch, SyncClient, LivestockEvent
 from app.models.system import Notification, AuditLog, LoginHistory, TwoFactorCode, SiteVisit
 from app.models.messaging import Conversation, ConversationParticipant, Message
+from app.models.community import CommunityPost, PostLike, PostComment
 
 __all__ = [
     "User", "Profile", "Role", "UserRole",
@@ -17,5 +18,6 @@ __all__ = [
     "Hub", "TransportRequest", "TransportMission",
     "LivestockBatch", "SyncClient", "LivestockEvent",
     "Notification", "AuditLog", "LoginHistory", "TwoFactorCode", "SiteVisit",
-    "Conversation", "ConversationParticipant", "Message"
+    "Conversation", "ConversationParticipant", "Message",
+    "CommunityPost", "PostLike", "PostComment"
 ]

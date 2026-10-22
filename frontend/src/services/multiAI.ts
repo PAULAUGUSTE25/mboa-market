@@ -1,4 +1,5 @@
 import { generateGeminiResponse } from './gemini';
+import httpClient from '@/api/client';
 
 interface AIProvider {
   name: string;
@@ -20,7 +21,7 @@ class MultiAIService {
     if (envUrl) {
       return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
     }
-    return 'https://mboa-market-backend-5y0r.onrender.com/api';
+    return '/api';
   }
 
   private cache: Map<string, { response: string; timestamp: number }> = new Map();
@@ -72,27 +73,15 @@ class MultiAIService {
   }
 
   /**
-   * Appel au backend MBOA (qui appelle Gemini côté serveur)
+   * Appel au backend MBOA (qui appelle Gemini côté serveur avec authentification sécurisée)
    */
-  private async callBackendAI(endpointUrl: string, prompt: string, context?: string, options?: { user_name?: string; interlocutor_name?: string }): Promise<string> {
+  private async callBackendAI(_endpointUrl: string, prompt: string, context?: string, options?: { interlocutor_name?: string }): Promise<string> {
     const body: any = { prompt, context };
-    if (options?.user_name) body.user_name = options.user_name;
     if (options?.interlocutor_name) body.interlocutor_name = options.interlocutor_name;
 
-    const response = await fetch(endpointUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(body)
-    });
+    const response = await httpClient.post('/ai/chat', body);
+    const data = response.data;
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Backend AI error: ${response.status} - ${errorText}`);
-    }
-
-    const data = await response.json();
     if (!data?.text) {
       throw new Error('Backend AI returned empty response');
     }

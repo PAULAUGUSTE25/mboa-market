@@ -1,331 +1,244 @@
 import { useState } from 'react';
-import { ThumbsUp, MessageSquare, Send, X, Phone, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import { ThumbsUp, MessageSquare, Send, X, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
+import httpClient from '@/api/client';
 
 export interface CommunityPost {
-  id: number;
-  author: string;
-  region: string;
-  role: string;
+  id: string;
+  author_id: string;
+  author?: {
+    display_name: string;
+    region: string;
+    activity_type: string;
+    avatar_storage_key?: string | null;
+  } | null;
+  domain: string;
   content: string;
-  likes: number;
-  comments: number;
-  timeAgo: string;
-  avatar: string;
+  likes_count: number;
+  comments_count: number;
+  liked_by_me: boolean;
+  created_at: string;
 }
 
 interface Comment {
-  author: string;
-  text: string;
-  time: string;
+  id: string;
+  author?: { display_name: string; region: string } | null;
+  content: string;
+  created_at: string;
 }
-
-const QUICK_MESSAGES = [
-  'Bonjour ! Votre publication m\'intéresse beaucoup.',
-  'Pouvez-vous partager plus de détails sur cette technique ?',
-  'Je suis intéressé(e) à collaborer avec vous sur ce sujet.',
-  'Merci pour ce partage, c\'est très utile pour notre communauté !',
-  'Dans quelle zone exactement êtes-vous basé(e) ?',
-];
 
 interface Props {
   post: CommunityPost;
   domainColor: string;
-  liked: boolean;
-  onLike: (id: number) => void;
+  isAuthenticated: boolean;
+  currentUserName?: string;
+  onLikeUpdate?: (postId: string, liked: boolean, likesCount: number) => void;
 }
 
-export default function CommunityPostCard({ post, domainColor, liked, onLike }: Props) {
+function timeAgo(isoDate: string): string {
+  const diff = Date.now() - new Date(isoDate).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'À l\'instant';
+  if (mins < 60) return `Il y a ${mins}min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `Il y a ${hours}h`;
+  const days = Math.floor(hours / 24);
+  return `Il y a ${days}j`;
+}
+
+function initials(name: string): string {
+  return name.split(' ').map(w => w[0]).join('').substring(0, 2).toUpperCase();
+}
+
+export default function CommunityPostCard({ post, domainColor, isAuthenticated, currentUserName, onLikeUpdate }: Props) {
+  const [liked, setLiked] = useState(post.liked_by_me);
+  const [likesCount, setLikesCount] = useState(post.likes_count);
   const [commentOpen, setCommentOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
-  const [chatOpen, setChatOpen] = useState(false);
-  const [chatMessages, setChatMessages] = useState<{ text: string; fromMe: boolean; time: string }[]>([]);
-  const [customInput, setCustomInput] = useState('');
-  const [customWarning, setCustomWarning] = useState(false);
+  const [commentsLoaded, setCommentsLoaded] = useState(false);
+  const [commentsCount, setCommentsCount] = useState(post.comments_count);
+  const [submitting, setSubmitting] = useState(false);
+  const [likeLoading, setLikeLoading] = useState(false);
 
-  const saveConversation = (messages: { text: string; fromMe: boolean; time: string }[]) => {
-    const conversationId = `conv-community-${post.id}`;
-    const existingConversations = JSON.parse(localStorage.getItem('demo_conversations') || '[]');
-    const conversationData = {
-      id: conversationId,
-      participant_id: `community-${post.id}`,
-      participant_name: post.author,
-      last_message: messages[messages.length - 1]?.text || '',
-      unread_count: 0,
-      updated_at: new Date().toISOString(),
-      listing_id: null,
-      messages: messages.map((msg) => ({
-        sender: msg.fromMe ? 'me' : 'seller',
-        text: msg.text,
-        time: msg.time,
-      })),
-    };
+  const authorName = post.author?.display_name ?? 'Anonyme';
+  const authorRegion = post.author?.region ?? '';
+  const authorRole = post.author?.activity_type ?? '';
 
-    const existingIndex = existingConversations.findIndex((c: any) => c.id === conversationId);
-    if (existingIndex >= 0) {
-      existingConversations[existingIndex] = conversationData;
-    } else {
-      existingConversations.unshift(conversationData);
+  const handleLike = async () => {
+    if (!isAuthenticated) return;
+    if (likeLoading) return;
+    setLikeLoading(true);
+    // Optimistic update
+    const newLiked = !liked;
+    const newCount = newLiked ? likesCount + 1 : likesCount - 1;
+    setLiked(newLiked);
+    setLikesCount(newCount);
+    try {
+      const res = await httpClient.post(`/community/posts/${post.id}/like`);
+      setLiked(res.data.liked);
+      setLikesCount(res.data.likes_count);
+      onLikeUpdate?.(post.id, res.data.liked, res.data.likes_count);
+    } catch (err) {
+      // Revert on error
+      setLiked(!newLiked);
+      setLikesCount(likesCount);
+    } finally {
+      setLikeLoading(false);
     }
-    localStorage.setItem('demo_conversations', JSON.stringify(existingConversations));
   };
 
-  const handleSubmitComment = () => {
-    if (!commentText.trim()) return;
-    setComments(prev => [
-      ...prev,
-      { author: 'Vous', text: commentText.trim(), time: 'À l\'instant' },
-    ]);
-    setCommentText('');
+  const loadComments = async () => {
+    if (commentsLoaded) return;
+    try {
+      const res = await httpClient.get(`/community/posts/${post.id}/comments`);
+      setComments(res.data || []);
+      setCommentsLoaded(true);
+    } catch {
+      setCommentsLoaded(true);
+    }
   };
 
-  const handleQuickMessage = (msg: string) => {
-    const firstMessage = { text: msg, fromMe: true, time: 'À l\'instant' };
-    setChatMessages(prev => {
-      const next = [...prev, firstMessage];
-      saveConversation(next);
-      return next;
-    });
-    setTimeout(() => {
-      setChatMessages(prev => {
-        const next = [...prev, {
-          text: `Bonjour ! Merci de me contacter. Je reviendrai vers vous dès que possible.`,
-          fromMe: false,
-          time: 'À l\'instant',
-        }];
-        saveConversation(next);
-        return next;
+  const toggleComments = async () => {
+    if (!commentOpen) {
+      await loadComments();
+    }
+    setCommentOpen(prev => !prev);
+  };
+
+  const handleSubmitComment = async () => {
+    if (!commentText.trim() || !isAuthenticated || submitting) return;
+    setSubmitting(true);
+    try {
+      const res = await httpClient.post(`/community/posts/${post.id}/comments`, {
+        content: commentText.trim(),
       });
-    }, 800);
+      setComments(prev => [...prev, res.data]);
+      setCommentsCount(prev => prev + 1);
+      setCommentText('');
+    } catch (err: any) {
+      alert('Erreur lors de l\'envoi du commentaire. Veuillez réessayer.');
+    } finally {
+      setSubmitting(false);
+    }
   };
-
-  const handleSendCustom = () => {
-    if (!customInput.trim()) return;
-    setCustomWarning(true);
-    setTimeout(() => setCustomWarning(false), 4000);
-    setCustomInput('');
-  };
-
-  const totalComments = post.comments + comments.length;
 
   return (
-    <>
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
-        {/* En-tête auteur */}
-        <div className="flex items-start gap-3 mb-3">
-          <div
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
-            style={{ backgroundColor: domainColor }}
-          >
-            {post.avatar}
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="font-semibold text-gray-900 text-sm">{post.author}</span>
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">
+      {/* Author header */}
+      <div className="flex items-start gap-3 mb-3">
+        <div
+          className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+          style={{ backgroundColor: domainColor }}
+        >
+          {initials(authorName)}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold text-gray-900 text-sm">{authorName}</span>
+            {authorRole && (
               <span
                 className="text-xs text-white px-2 py-0.5 rounded-full"
                 style={{ backgroundColor: domainColor }}
               >
-                {post.role}
+                {authorRole}
               </span>
-            </div>
-            <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
-              <MapPin className="w-3 h-3" />
-              <span>{post.region}</span>
-              <span>·</span>
-              <span>{post.timeAgo}</span>
-            </div>
+            )}
+          </div>
+          <div className="flex items-center gap-1 text-xs text-gray-400 mt-0.5">
+            {authorRegion && <><MapPin className="w-3 h-3" /><span>{authorRegion}</span><span>·</span></>}
+            <span>{timeAgo(post.created_at)}</span>
           </div>
         </div>
+      </div>
 
-        {/* Contenu */}
-        <p className="text-gray-700 text-sm leading-relaxed mb-4">{post.content}</p>
+      {/* Content */}
+      <p className="text-gray-700 text-sm leading-relaxed mb-4">{post.content}</p>
 
-        {/* Actions */}
-        <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
-          {/* Like */}
-          <button
-            onClick={() => onLike(post.id)}
-            className={`flex items-center gap-1.5 text-sm font-medium transition-all active:scale-95 ${
-              liked ? 'text-red-500' : 'text-gray-400 hover:text-red-400'
-            }`}
-          >
-            <ThumbsUp className={`w-4 h-4 ${liked ? 'fill-red-500' : ''}`} />
-            <span>{post.likes + (liked ? 1 : 0)}</span>
-          </button>
+      {/* Actions */}
+      <div className="flex items-center gap-4 pt-3 border-t border-gray-100">
+        {/* Like */}
+        <button
+          onClick={handleLike}
+          disabled={!isAuthenticated || likeLoading}
+          title={isAuthenticated ? undefined : 'Connectez-vous pour liker'}
+          className={`flex items-center gap-1.5 text-sm font-medium transition-all active:scale-95 ${
+            liked ? 'text-red-500' : 'text-gray-400 hover:text-red-400'
+          } disabled:opacity-40 disabled:cursor-not-allowed`}
+        >
+          <ThumbsUp className={`w-4 h-4 ${liked ? 'fill-red-500' : ''}`} />
+          <span>{likesCount}</span>
+        </button>
 
-          {/* Commenter */}
-          <button
-            onClick={() => setCommentOpen(prev => !prev)}
-            className="flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-blue-500 transition-colors"
-          >
-            <MessageSquare className="w-4 h-4" />
-            <span>{totalComments} commentaire{totalComments !== 1 ? 's' : ''}</span>
-            {commentOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
-          </button>
+        {/* Comments toggle */}
+        <button
+          onClick={toggleComments}
+          className="flex items-center gap-1.5 text-sm font-medium text-gray-400 hover:text-blue-500 transition-colors"
+        >
+          <MessageSquare className="w-4 h-4" />
+          <span>{commentsCount} commentaire{commentsCount !== 1 ? 's' : ''}</span>
+          {commentOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
+        </button>
+      </div>
 
-          {/* Contacter */}
-          <button
-            onClick={() => setChatOpen(true)}
-            className="ml-auto flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-lg border transition-all hover:scale-105"
-            style={{ color: domainColor, borderColor: domainColor }}
-          >
-            <Phone className="w-3.5 h-3.5" />
-            Contacter
-          </button>
-        </div>
-
-        {/* Section commentaires inline */}
-        {commentOpen && (
-          <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
-            {comments.length === 0 && post.comments === 0 && (
-              <p className="text-xs text-gray-400 italic text-center py-2">
-                Aucun commentaire pour l'instant. Soyez le premier !
-              </p>
-            )}
-            {comments.map((c, i) => (
-              <div key={i} className="flex gap-2 items-start">
-                <div
-                  className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
-                  style={{ backgroundColor: domainColor }}
-                >
-                  V
-                </div>
-                <div className="flex-1 bg-gray-50 rounded-xl px-3 py-2">
-                  <p className="text-xs font-semibold text-gray-700">{c.author}</p>
-                  <p className="text-xs text-gray-600 mt-0.5">{c.text}</p>
-                </div>
+      {/* Comments section */}
+      {commentOpen && (
+        <div className="mt-4 pt-4 border-t border-gray-100 space-y-3">
+          {comments.length === 0 && (
+            <p className="text-xs text-gray-400 italic text-center py-2">
+              Aucun commentaire pour l'instant. Soyez le premier !
+            </p>
+          )}
+          {comments.map((c) => (
+            <div key={c.id} className="flex gap-2 items-start">
+              <div
+                className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold flex-shrink-0"
+                style={{ backgroundColor: domainColor }}
+              >
+                {initials(c.author?.display_name ?? '?')}
               </div>
-            ))}
+              <div className="flex-1 bg-gray-50 rounded-xl px-3 py-2">
+                <p className="text-xs font-semibold text-gray-700">{c.author?.display_name ?? 'Anonyme'}</p>
+                <p className="text-xs text-gray-600 mt-0.5">{c.content}</p>
+              </div>
+            </div>
+          ))}
+
+          {isAuthenticated ? (
             <div className="flex gap-2 items-center">
               <input
                 value={commentText}
                 onChange={e => setCommentText(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleSubmitComment()}
+                onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSubmitComment()}
                 placeholder="Écrire un commentaire..."
                 className="flex-1 text-sm px-3 py-2 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-opacity-30"
-                style={{ '--tw-ring-color': domainColor } as React.CSSProperties}
+                disabled={submitting}
               />
               <button
                 onClick={handleSubmitComment}
-                disabled={!commentText.trim()}
+                disabled={!commentText.trim() || submitting}
                 className="p-2 rounded-xl text-white transition-all hover:opacity-90 disabled:opacity-40"
                 style={{ backgroundColor: domainColor }}
               >
                 <Send className="w-4 h-4" />
               </button>
             </div>
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={() => {
-                  setCommentOpen(false);
-                  setCommentText('');
-                }}
-                className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
-              >
-                Fermer
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+          ) : (
+            <p className="text-xs text-gray-400 italic text-center">
+              Connectez-vous pour commenter.
+            </p>
+          )}
 
-      {/* Modal causerie de contact */}
-      {chatOpen && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/40 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-t-3xl sm:rounded-2xl shadow-2xl flex flex-col max-h-[85vh]">
-            {/* Header */}
-            <div className="flex items-center gap-3 px-5 py-4 border-b border-gray-100">
-              <div
-                className="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm"
-                style={{ backgroundColor: domainColor }}
-              >
-                {post.avatar}
-              </div>
-              <div className="flex-1">
-                <p className="font-semibold text-gray-900 text-sm">{post.author}</p>
-                <p className="text-xs text-gray-400">{post.role} · {post.region}</p>
-              </div>
-              <button
-                onClick={() => setChatOpen(false)}
-                className="p-1.5 rounded-lg hover:bg-gray-100 transition-colors"
-              >
-                <X className="w-4 h-4 text-gray-500" />
-              </button>
-            </div>
-
-            {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-[120px]">
-              {chatMessages.length === 0 && (
-                <p className="text-xs text-gray-400 text-center py-4">
-                  Choisissez un message rapide pour démarrer la conversation.
-                </p>
-              )}
-              {chatMessages.map((msg, i) => (
-                <div key={i} className={`flex ${msg.fromMe ? 'justify-end' : 'justify-start'}`}>
-                  <div
-                    className={`max-w-[78%] px-3 py-2 rounded-2xl text-sm leading-snug ${
-                      msg.fromMe
-                        ? 'text-white rounded-br-sm'
-                        : 'bg-gray-100 text-gray-800 rounded-bl-sm'
-                    }`}
-                    style={msg.fromMe ? { backgroundColor: domainColor } : {}}
-                  >
-                    {msg.text}
-                    <span className="block text-[10px] opacity-60 mt-0.5 text-right">{msg.time}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Messages rapides */}
-            <div className="px-4 pb-2">
-              <p className="text-[10px] text-gray-400 uppercase tracking-wider font-semibold mb-2">
-                Messages rapides
-              </p>
-              <div className="flex flex-wrap gap-2">
-                {QUICK_MESSAGES.map((msg, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleQuickMessage(msg)}
-                    className="text-xs px-3 py-1.5 rounded-full border transition-all hover:scale-105 active:scale-95 text-left"
-                    style={{ borderColor: domainColor, color: domainColor }}
-                  >
-                    {msg}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Zone message personnalisé */}
-            <div className="px-4 pb-5 pt-2 border-t border-gray-100">
-              {customWarning && (
-                <p className="text-xs text-amber-600 bg-amber-50 px-3 py-2 rounded-lg mb-2">
-                  Désolé, la messagerie personnalisée est encore en cours de développement. Utilisez les messages rapides ci-dessus.
-                </p>
-              )}
-              <div className="flex gap-2 items-center">
-                <input
-                  value={customInput}
-                  onChange={e => setCustomInput(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && handleSendCustom()}
-                  placeholder="Écrire un message..."
-                  className="flex-1 text-sm px-3 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-gray-200"
-                />
-                <button
-                  onClick={handleSendCustom}
-                  disabled={!customInput.trim()}
-                  className="p-2.5 rounded-xl text-white transition-all hover:opacity-90 disabled:opacity-40"
-                  style={{ backgroundColor: domainColor }}
-                >
-                  <Send className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
+          <div className="flex justify-end">
+            <button
+              type="button"
+              onClick={() => { setCommentOpen(false); setCommentText(''); }}
+              className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-gray-200 text-gray-500 hover:bg-gray-50 transition-colors"
+            >
+              Fermer
+            </button>
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

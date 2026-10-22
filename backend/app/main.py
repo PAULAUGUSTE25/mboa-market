@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
-from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics, admin, analytics, ai
+from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics, admin, analytics, ai, community
 from app.core.config import settings
 import logging
 import asyncio
@@ -122,6 +122,7 @@ app.include_router(logistics.router, prefix="/api")
 app.include_router(admin.router, prefix="/api")
 app.include_router(analytics.router, prefix="/api")
 app.include_router(ai.router, prefix="/api")
+app.include_router(community.router, prefix="/api")
 
 @app.get("/")
 async def root():

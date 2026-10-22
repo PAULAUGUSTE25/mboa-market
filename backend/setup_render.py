@@ -25,7 +25,8 @@ from app.models import (
     Hub, TransportRequest, TransportMission,
     LivestockBatch, SyncClient, LivestockEvent,
     Notification, AuditLog, LoginHistory, TwoFactorCode,
-    Conversation, ConversationParticipant, Message
+    Conversation, ConversationParticipant, Message,
+    CommunityPost, PostLike, PostComment
 )
 from app.models.user import UserStatus
 

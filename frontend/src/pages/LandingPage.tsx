@@ -5,7 +5,8 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { TrendingUp, TrendingDown, Minus, MapPin, Users, Package, ShieldCheck, X, ArrowRight, Lock } from 'lucide-react';
 
 // ── Vidéo de fond ────────────────────────────────────────
-const VIDEO_SRC = 'https://res.cloudinary.com/dvfmmovlw/video/upload/video_background_pw0i8m.mp4';
+const VIDEO_SRC = '/video_background.mp4';
+const FALLBACK_VIDEO_SRC = 'https://res.cloudinary.com/dvfmmovlw/video/upload/video_background_pw0i8m.mp4';
 
 // ── Palette MBOA ──────────────────────────────────────────
 const OLIVE = '#3F441C';
@@ -98,6 +99,7 @@ export default function LandingPage() {
           style={{ filter: 'brightness(0.6)' }}
         >
           <source src={VIDEO_SRC} type="video/mp4" />
+          <source src={FALLBACK_VIDEO_SRC} type="video/mp4" />
         </video>
         {/* Gradient overlay pour lisibilité */}
         <div className="absolute inset-0" style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.3) 50%, rgba(0,0,0,0.7) 100%)' }} />

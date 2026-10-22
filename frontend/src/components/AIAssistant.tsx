@@ -40,10 +40,17 @@ export default function AIAssistant() {
   const [conversationId, setConversationId] = useState<string | null>(null);
 
   const getWelcomeMessage = () => {
-    const userName = (user?.profile as any)?.display_name || t('cher utilisateur', 'dear user');
+    const displayName = (user?.profile as any)?.display_name;
+    if (displayName) {
+      return t(
+        `Bonjour ${displayName} ! Je suis Bigiss, votre assistant vocal et agricole MBOA Market. Posez-moi des questions à l'écrit ou par note vocale 🎙️.`,
+        `Hello ${displayName}! I am Bigiss, your MBOA Market voice & farm assistant. Ask me questions by typing or using voice notes 🎙️.`
+      );
+    }
+    // Anonymous visitor — no invented name
     return t(
-      `Bonjour ${userName} ! Je suis Bigiss, votre assistant vocal et agricole MBOA Market. Posez-moi des questions à l'écrit ou par note vocale 🎙️.`,
-      `Hello ${userName}! I am Bigiss, your MBOA Market voice & farm assistant. Ask me questions by typing or using voice notes 🎙️.`
+      `Bonjour ! Je suis Bigiss, votre assistant vocal et agricole MBOA Market. Posez-moi des questions à l'écrit ou par note vocale 🎙️.`,
+      `Hello! I am Bigiss, your MBOA Market voice & farm assistant. Ask me questions by typing or using voice notes 🎙️.`
     );
   };
 
@@ -55,6 +62,25 @@ export default function AIAssistant() {
       timestamp: new Date(),
     },
   ]);
+
+  // Reset conversation and context when user logs in, switches account, or logs out
+  useEffect(() => {
+    setMessages([
+      {
+        id: `welcome-${user?.id || 'anon'}-${Date.now()}`,
+        text: getWelcomeMessage(),
+        sender: 'ai',
+        timestamp: new Date(),
+      },
+    ]);
+    setConversationId(null);
+    setInputText('');
+    setRecordingTranscript('');
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+    }
+    setSpeakingMessageId(null);
+  }, [user?.id]);
 
   useEffect(() => {
     if (isOpen && messagesEndRef.current) {
@@ -79,7 +105,7 @@ export default function AIAssistant() {
   const resetConversation = () => {
     setMessages([
       {
-        id: 'welcome',
+        id: `welcome-${user?.id || 'anon'}-${Date.now()}`,
         text: getWelcomeMessage(),
         sender: 'ai',
         timestamp: new Date(),
@@ -165,9 +191,11 @@ export default function AIAssistant() {
               form.append('file', blob, `recording_${Date.now()}.webm`);
               const res = await httpClient.post('/ai/upload_audio', form, { headers: { 'Content-Type': 'multipart/form-data' } });
               const audio_url = res.data?.audio_url;
-              // Save message referencing audio
-              const userName = (user?.profile as any)?.display_name || t("l'utilisateur", 'the user');
-              const saveRes = await httpClient.post('/ai/save_message', null, { params: { conversation_id: conversationId, sender_name: userName, audio_url } });
+              // Save message referencing audio — only if authenticated
+              const displayName: string | undefined = (user?.profile as any)?.display_name || undefined;
+              const saveRes = displayName
+                ? await httpClient.post('/ai/save_message', null, { params: { conversation_id: conversationId, sender_name: displayName, audio_url } })
+                : { data: null };
               if (saveRes?.data?.conversation_id) setConversationId(saveRes.data.conversation_id);
             } catch (err) {
               console.error('Audio upload failed', err);
@@ -227,20 +255,25 @@ export default function AIAssistant() {
     setIsLoading(true);
 
     try {
-      const userName = (user?.profile as any)?.display_name || t("l'utilisateur", 'the user');
-      // Persist user message to backend conversation storage
-      try {
-        const saveRes = await httpClient.post('/ai/save_message', null, { params: { conversation_id: conversationId, sender_name: userName, content: textToSend } });
-        if (saveRes?.data?.conversation_id) setConversationId(saveRes.data.conversation_id);
-      } catch (e) {
-        console.warn('Failed to persist user message:', e);
+      // Only use real display_name if user is authenticated — never invent a name
+      const displayName: string | undefined = (user?.profile as any)?.display_name || undefined;
+      // Persist user message to backend conversation storage (only if authenticated)
+      if (displayName) {
+        try {
+          const saveRes = await httpClient.post('/ai/save_message', null, { params: { conversation_id: conversationId, sender_name: displayName, content: textToSend } });
+          if (saveRes?.data?.conversation_id) setConversationId(saveRes.data.conversation_id);
+        } catch (e) {
+          console.warn('Failed to persist user message:', e);
+        }
       }
-      const recentHistory = messages.slice(-4).map(m => `${m.sender === 'user' ? userName : 'Bigiss'}: ${m.text}`).join('\n');
-      const context = messages.length > 1 
-        ? `Conversation récente avec ${userName}:\n${recentHistory}`
-        : `Utilisateur: ${userName}`;
+      // Build context: only last 4 messages to limit token usage
+      const recentHistory = messages.slice(-4).map(m => `${m.sender === 'user' ? (displayName || t('Visiteur', 'Visitor')) : 'Bigiss'}: ${m.text}`).join('\n');
+      const context = messages.length > 1 ? recentHistory : undefined;
 
-      const response = await multiAI.generateResponse(textToSend, context, { user_name: userName });
+      const response = await multiAI.generateResponse(
+        textToSend,
+        context
+      );
 
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),

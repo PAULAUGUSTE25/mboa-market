@@ -1,11 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, MessageSquare, ArrowLeft, Send, Building2, FileText, ChevronRight } from 'lucide-react';
+import { Users, MessageSquare, ArrowLeft, Send, Building2, FileText, ChevronRight, Loader2 } from 'lucide-react';
 import { elevageAnnouncements, type InstitutionalAnnouncement } from '../data/institutionalAnnouncements';
-import CommunityPostCard from '../components/community/CommunityPostCard';
+import CommunityPostCard, { type CommunityPost } from '../components/community/CommunityPostCard';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuthStore } from '../store/authStore';
+import httpClient from '@/api/client';
 
 const DOMAIN_COLOR = '#7C3D12';
+const DOMAIN = 'elevage';
 
 const categoryIcon = (cat: InstitutionalAnnouncement['category']) => {
   switch (cat) {
@@ -21,90 +24,79 @@ const categoryIcon = (cat: InstitutionalAnnouncement['category']) => {
 export default function CommunityElevagePage() {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user } = useAuthStore();
+  const isAuthenticated = !!user;
+
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [newPost, setNewPost] = useState('');
-  const [likedPosts, setLikedPosts] = useState<Set<number>>(new Set());
+  const [publishing, setPublishing] = useState(false);
   const [activeTab, setActiveTab] = useState<'discussions' | 'officiel'>('discussions');
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [totalPosts, setTotalPosts] = useState(0);
 
-  const communityPosts = [
-    {
-      id: 1,
-      author: 'Samuel Djomo',
-      region: 'Ouest, Bafoussam',
-      role: t('Éleveur de poulets', 'Chicken farmer'),
-      content: t('Nouveau lot de poulets de chair en très bonne santé. Recommandations d\'alimentation bienvenues ! J\'utilise actuellement un mélange maïs-soja local avec d\'excellents résultats.', 'New batch of very healthy broilers. Feeding recommendations welcome! Currently using a local corn-soy blend with excellent results.'),
-      likes: 28,
-      comments: 9,
-      timeAgo: t('Il y a 1h', '1h ago'),
-      avatar: 'SD',
-    },
-    {
-      id: 2,
-      author: 'Grace Tchamba',
-      region: 'Centre, Yaoundé',
-      role: t('Éleveuse bovine', 'Cattle farmer'),
-      content: t('Visite vétérinaire aujourd\'hui — tout le bétail est en bonne santé ! Je recommande des vaccinations régulières, surtout avant la saison des pluies. Partagez vos protocoles de vaccination.', 'Vet visit today — all cattle are healthy! I recommend regular vaccinations, especially before the rainy season. Share your vaccination protocols.'),
-      likes: 19,
-      comments: 4,
-      timeAgo: t('Il y a 3h', '3h ago'),
-      avatar: 'GT',
-    },
-    {
-      id: 3,
-      author: 'David Lekol',
-      region: 'Nord-Ouest, Bamenda',
-      role: t('Éleveur bovin', 'Cattle farmer'),
-      content: t('Je cherche à agrandir ma ferme bovine. Des conseils sur la gestion des pâturages en zone de hautes terres ? Mes 45 têtes de bétail manquent d\'espace pendant la saison sèche.', 'Looking to expand my cattle farm. Any advice on pasture management in highland areas? My 45 head of cattle lack space during the dry season.'),
-      likes: 15,
-      comments: 12,
-      timeAgo: t('Il y a 6h', '6h ago'),
-      avatar: 'DL',
-    },
-    {
-      id: 4,
-      author: 'Hawa Mbarga',
-      region: 'Littoral, Douala',
-      role: t('Piscicultrice', 'Fish farmer'),
-      content: t('Ma production de tilapia a doublé cette année grâce à l\'alimentation en spiruline locale. Je vends en gros et au détail. Intéressés par un partenariat ? Contactez-moi !', 'My tilapia production doubled this year thanks to local spirulina feed. I sell wholesale and retail. Interested in a partnership? Contact me!'),
-      likes: 42,
-      comments: 16,
-      timeAgo: t('Il y a 1j', '1d ago'),
-      avatar: 'HM',
-    },
-  ];
-
-  const [localPosts, setLocalPosts] = useState(communityPosts);
-
-  const handlePublish = () => {
-    if (!newPost.trim()) return;
-    const post = {
-      id: Date.now(),
-      author: t('Vous', 'You'),
-      region: 'Cameroun',
-      role: t('Membre de la communauté', 'Community member'),
-      content: newPost.trim(),
-      likes: 0,
-      comments: 0,
-      timeAgo: t('À l\'instant', 'Just now'),
-      avatar: 'V',
-    };
-    setLocalPosts([post, ...localPosts]);
-    setNewPost('');
-  };
-
-  const handleLike = (id: number) => {
-    setLikedPosts(prev => {
-      const wasLiked = prev.has(id);
-      const next = new Set(prev);
-      wasLiked ? next.delete(id) : next.add(id);
-      setLocalPosts(posts => posts.map(p =>
-        p.id === id ? { ...p, likes: wasLiked ? p.likes - 1 : p.likes + 1 } : p
+  const loadPosts = useCallback(async (pageNum = 1) => {
+    try {
+      setLoading(true);
+      setLoadError(null);
+      const res = await httpClient.get('/community/posts', {
+        params: { domain: DOMAIN, page: pageNum, page_size: 20 },
+      });
+      const data = res.data;
+      if (pageNum === 1) {
+        setPosts(data.items || []);
+      } else {
+        setPosts(prev => [...prev, ...(data.items || [])]);
+      }
+      setTotalPosts(data.total || 0);
+      setHasMore((data.page || 1) < (data.pages || 1));
+      setPage(pageNum);
+    } catch (err) {
+      setLoadError(t(
+        'Impossible de charger les publications. Vérifiez votre connexion.',
+        'Unable to load posts. Check your connection.'
       ));
-      return next;
-    });
+    } finally {
+      setLoading(false);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    loadPosts(1);
+  }, [loadPosts]);
+
+  const handlePublish = async () => {
+    if (!newPost.trim() || !isAuthenticated || publishing) return;
+    setPublishing(true);
+    try {
+      const res = await httpClient.post('/community/posts', {
+        content: newPost.trim(),
+        domain: DOMAIN,
+      });
+      setPosts(prev => [res.data, ...prev]);
+      setTotalPosts(prev => prev + 1);
+      setNewPost('');
+    } catch (err: any) {
+      const detail = err?.response?.data?.detail;
+      alert(typeof detail === 'string' ? detail : t(
+        'Erreur lors de la publication. Réessayez.',
+        'Error publishing. Please try again.'
+      ));
+    } finally {
+      setPublishing(false);
+    }
   };
+
+  const handleLikeUpdate = (postId: string, liked: boolean, likesCount: number) => {
+    setPosts(prev => prev.map(p => p.id === postId ? { ...p, liked_by_me: liked, likes_count: likesCount } : p));
+  };
+
+  const displayName = (user?.profile as any)?.display_name;
 
   return (
-    <div className="min-h-screen bg-orange-50">
+    <div className="min-h-screen bg-[#F5F5F0]">
       {/* Header */}
       <header className="sticky top-0 z-20 bg-white border-b border-gray-200 shadow-sm">
         <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-4">
@@ -116,7 +108,7 @@ export default function CommunityElevagePage() {
           </button>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: DOMAIN_COLOR }}>
-              <span className="text-white text-lg">🐄</span>
+              <span className="text-xl">🐄</span>
             </div>
             <div>
               <h1 className="text-lg font-bold text-gray-900">{t('Communauté Élevage', 'Livestock Community')}</h1>
@@ -125,8 +117,8 @@ export default function CommunityElevagePage() {
           </div>
           <div className="ml-auto flex items-center gap-2 text-sm text-gray-500">
             <Users className="w-4 h-4" />
-            <span className="font-semibold" style={{ color: DOMAIN_COLOR }}>8 542</span>
-            <span>{t('membres', 'members')}</span>
+            <span className="font-semibold" style={{ color: DOMAIN_COLOR }}>{totalPosts}</span>
+            <span>{t('publications', 'posts')}</span>
           </div>
         </div>
 
@@ -136,7 +128,7 @@ export default function CommunityElevagePage() {
             onClick={() => setActiveTab('discussions')}
             className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-colors ${
               activeTab === 'discussions'
-                ? 'text-[#7C3D12] border-[#7C3D12]'
+                ? 'border-[#7C3D12] text-[#7C3D12]'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
@@ -147,15 +139,13 @@ export default function CommunityElevagePage() {
             onClick={() => setActiveTab('officiel')}
             className={`flex items-center gap-2 px-5 py-3 text-sm font-semibold border-b-2 transition-colors ${
               activeTab === 'officiel'
-                ? 'text-[#7C3D12] border-[#7C3D12]'
+                ? 'border-[#7C3D12] text-[#7C3D12]'
                 : 'border-transparent text-gray-500 hover:text-gray-700'
             }`}
           >
             <Building2 className="w-4 h-4" />
             {t('Communiqués officiels', 'Official Announcements')}
-            <span className="text-white text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: DOMAIN_COLOR }}>
-              {elevageAnnouncements.length}
-            </span>
+            <span className="bg-[#7C3D12] text-white text-[10px] px-1.5 py-0.5 rounded-full">{elevageAnnouncements.length}</span>
           </button>
         </div>
       </header>
@@ -163,45 +153,90 @@ export default function CommunityElevagePage() {
       <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
         {activeTab === 'discussions' ? (
           <>
-            {/* Créer une discussion */}
+            {/* Create post */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4">
-              <textarea
-                value={newPost}
-                onChange={e => setNewPost(e.target.value)}
-                placeholder={t("Partagez une expérience, posez une question à la communauté...", "Share an experience, ask a question to the community...")}
-                className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 resize-none text-sm text-gray-800"
-                style={{ '--tw-ring-color': DOMAIN_COLOR } as React.CSSProperties}
-                rows={3}
-              />
-              <div className="flex justify-end mt-3">
-                <button
-                  onClick={handlePublish}
-                  disabled={!newPost.trim()}
-                  className="flex items-center gap-2 px-5 py-2 rounded-xl text-white text-sm font-medium transition-all hover:opacity-90 disabled:opacity-40"
-                  style={{ backgroundColor: DOMAIN_COLOR }}
-                >
-                  <Send className="w-4 h-4" />
-                  {t('Publier', 'Post')}
-                </button>
-              </div>
+              {isAuthenticated ? (
+                <>
+                  <textarea
+                    value={newPost}
+                    onChange={e => setNewPost(e.target.value)}
+                    placeholder={t(
+                      'Partagez une expérience, posez une question à la communauté élevage...',
+                      'Share an experience, ask a question to the livestock community...'
+                    )}
+                    className="w-full p-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-[#7C3D12]/30 resize-none text-sm text-gray-800"
+                    rows={3}
+                  />
+                  <div className="flex justify-end mt-3">
+                    <button
+                      onClick={handlePublish}
+                      disabled={!newPost.trim() || publishing}
+                      className="flex items-center gap-2 px-5 py-2 rounded-xl text-white text-sm font-medium transition-all hover:opacity-90 disabled:opacity-40"
+                      style={{ backgroundColor: DOMAIN_COLOR }}
+                    >
+                      {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      {t('Publier', 'Post')}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-gray-500 text-center py-2">
+                  {t(
+                    'Connectez-vous pour publier et interagir avec la communauté.',
+                    'Sign in to post and interact with the community.'
+                  )}
+                </p>
+              )}
             </div>
 
-            {/* Liste des discussions */}
+            {/* Posts */}
             <div className="space-y-4">
-              {localPosts.map(post => (
+              {loading && posts.length === 0 && (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-6 h-6 animate-spin" style={{ color: DOMAIN_COLOR }} />
+                </div>
+              )}
+              {loadError && (
+                <div className="text-center py-6">
+                  <p className="text-sm text-red-500 mb-3">{loadError}</p>
+                  <button onClick={() => loadPosts(1)} className="text-sm font-semibold hover:underline" style={{ color: DOMAIN_COLOR }}>
+                    {t('Réessayer', 'Retry')}
+                  </button>
+                </div>
+              )}
+              {!loading && !loadError && posts.length === 0 && (
+                <div className="text-center py-10 text-gray-400 text-sm">
+                  {t('Aucune publication pour l\'instant. Soyez le premier à partager !', 'No posts yet. Be the first to share!')}
+                </div>
+              )}
+              {posts.map(post => (
                 <CommunityPostCard
                   key={post.id}
                   post={post}
                   domainColor={DOMAIN_COLOR}
-                  liked={likedPosts.has(post.id)}
-                  onLike={handleLike}
+                  isAuthenticated={isAuthenticated}
+                  currentUserName={displayName}
+                  onLikeUpdate={handleLikeUpdate}
                 />
               ))}
+              {hasMore && !loading && (
+                <div className="flex justify-center pt-2">
+                  <button
+                    onClick={() => loadPosts(page + 1)}
+                    className="text-sm font-semibold hover:underline px-6 py-2 rounded-xl border transition-colors"
+                    style={{ color: DOMAIN_COLOR, borderColor: `${DOMAIN_COLOR}4D` }}
+                  >
+                    {t('Voir plus', 'Load more')}
+                  </button>
+                </div>
+              )}
             </div>
           </>
         ) : (
           <>
-            <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">{t('Communiqués des institutions et organes officiels', 'Announcements from institutions and official bodies')}</p>
+            <p className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+              {t('Communiqués des institutions et organes officiels', 'Announcements from institutions and official bodies')}
+            </p>
             <div className="space-y-4">
               {elevageAnnouncements.map(ann => (
                 <div key={ann.id} className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5">

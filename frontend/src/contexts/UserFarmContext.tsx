@@ -68,6 +68,9 @@ interface UserFarmContextType {
 
 const UserFarmContext = createContext<UserFarmContextType | undefined>(undefined)
 
+const computeTotalArea = (fields: Field[]) =>
+  fields.reduce((sum, field) => sum + (Number.isFinite(field.area) ? field.area : 0), 0)
+
 export function UserFarmProvider({ children }: { children: ReactNode }) {
   const [farmData, setFarmData] = useState<UserFarmData>({
     userId: '',
@@ -83,33 +86,45 @@ export function UserFarmProvider({ children }: { children: ReactNode }) {
   })
 
   const updateFarmData = (data: Partial<UserFarmData>) => {
-    setFarmData(prev => ({ ...prev, ...data }))
+    setFarmData(prev => ({
+      ...prev,
+      ...data,
+      totalArea: data.fields ? computeTotalArea(data.fields) : prev.totalArea
+    }))
   }
 
   const addField = (field: Field) => {
-    setFarmData(prev => ({
-      ...prev,
-      fields: [...prev.fields, field],
-      totalArea: prev.totalArea + field.area
-    }))
+    setFarmData(prev => {
+      const fields = [...prev.fields, field]
+      return {
+        ...prev,
+        fields,
+        totalArea: computeTotalArea(fields)
+      }
+    })
   }
 
   const updateField = (fieldId: string, updates: Partial<Field>) => {
-    setFarmData(prev => ({
-      ...prev,
-      fields: prev.fields.map(field =>
+    setFarmData(prev => {
+      const fields = prev.fields.map(field =>
         field.id === fieldId ? { ...field, ...updates } : field
       )
-    }))
+
+      return {
+        ...prev,
+        fields,
+        totalArea: computeTotalArea(fields)
+      }
+    })
   }
 
   const deleteField = (fieldId: string) => {
     setFarmData(prev => {
-      const fieldToDelete = prev.fields.find(f => f.id === fieldId)
+      const fields = prev.fields.filter(f => f.id !== fieldId)
       return {
         ...prev,
-        fields: prev.fields.filter(f => f.id !== fieldId),
-        totalArea: prev.totalArea - (fieldToDelete?.area || 0)
+        fields,
+        totalArea: computeTotalArea(fields)
       }
     })
   }
