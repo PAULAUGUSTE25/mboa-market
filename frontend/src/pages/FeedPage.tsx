@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '@/store/authStore';
 import { api } from '@/services/api';
-import { MessageCircle, Heart, MapPin, Package, Plus, X, ShoppingCart, Globe, Wheat, Beef, PackageSearch, Sprout, User, Send, Search, Clock, TrendingUp, TrendingDown, Minus, Sparkles, Star, Home, Activity, ShoppingBag, Leaf, Truck, BarChart3, Users, Phone, MoreVertical } from 'lucide-react';
+import { MessageCircle, Heart, MapPin, Package, Plus, X, ShoppingCart, Globe, Wheat, Beef, PackageSearch, Sprout, User, Send, Search, Clock, TrendingUp, TrendingDown, Minus, Sparkles, Star, Home, Activity, ShoppingBag, Leaf, Truck, BarChart3, Users, MoreVertical, Phone } from 'lucide-react';
 import Logo from '@/components/Logo';
 import { useTheme } from '@/contexts/ThemeContext';
 import { getCardStyles, getTextStyles, getInputStyles, getButtonStyles } from '@/utils/cardStyles';
@@ -29,7 +29,7 @@ interface Listing {
   created_at: string;
   images?: string[];
   seller?: {
-    profile: {
+    profile?: {
       display_name: string;
       activity_type: string;
       domain?: string;
@@ -41,12 +41,8 @@ interface Category {
   id: string;
   name_fr: string;
   name_en: string;
+  kind?: string;
 }
-
-const LOCAL_LISTINGS_KEY = 'local_created_listings';
-
-const normalizeValue = (value?: string | number) =>
-  String(value ?? '').trim().toLowerCase();
 
 export default function FeedPage() {
   const { theme } = useTheme();
@@ -55,6 +51,8 @@ export default function FeedPage() {
   const [listings, setListings] = useState<Listing[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
+  const [feedError, setFeedError] = useState('');
+  const [categoryError, setCategoryError] = useState('');
   const [showCreatePost, setShowCreatePost] = useState(false);
   const { selectedDomain: selectedSector, setSelectedDomain: setSelectedSector } = useDomain();
   const { t, lang } = useLanguage();
@@ -164,6 +162,7 @@ export default function FeedPage() {
   const [chatMessages, setChatMessages] = useState<Array<{ sender: 'me' | 'seller'; text: string; time: string }>>([]);
   const [activeListingMenuId, setActiveListingMenuId] = useState<string | null>(null);
   const [orderListing, setOrderListing] = useState<Listing | null>(null);
+  const [startingConversationFor, setStartingConversationFor] = useState<string | null>(null);
   
   // Demo chat state for sidebar contacts
   const [showDemoChat, setShowDemoChat] = useState(false);
@@ -173,40 +172,49 @@ export default function FeedPage() {
   const [isVoiceActive, setIsVoiceActive] = useState(false);
   const [voiceStatus, setVoiceStatus] = useState('idle'); // idle, listening, processing, speaking
 
-  const getStoredLocalListings = () => {
-    try {
-      const raw = JSON.parse(localStorage.getItem(LOCAL_LISTINGS_KEY) || '[]');
-      return Array.isArray(raw) ? raw : [];
-    } catch {
-      return [];
+  const openCreatePost = () => {
+    if (!user) {
+      navigate('/login');
+      return;
     }
+    const categoryId =
+      categories.find((category) => category.kind?.toLowerCase() === user.profile?.domain?.toLowerCase())?.id ||
+      categories[0]?.id ||
+      '';
+    setNewPost((previous) => ({
+      ...previous,
+      category_id: previous.category_id || categoryId,
+    }));
+    setShowCreatePost(true);
   };
 
-  const saveCreatedListingLocally = (listing: any) => {
-    const current = getStoredLocalListings();
-    const next = [listing, ...current.filter((item: any) => item.id !== listing.id)];
-    localStorage.setItem(LOCAL_LISTINGS_KEY, JSON.stringify(next));
-  };
+  const handleContactSeller = async (listing: Listing) => {
+    if (!user) {
+      navigate('/login');
+      return;
+    }
+    if (listing.seller_id === user.id || startingConversationFor === listing.id) return;
 
-  const isSameListing = (a: any, b: any) => {
-    return (
-      normalizeValue(a.title) === normalizeValue(b.title) &&
-      Number(a.price_per_unit || 0) === Number(b.price_per_unit || 0) &&
-      Number(a.quantity || 0) === Number(b.quantity || 0) &&
-      normalizeValue(a.unit) === normalizeValue(b.unit) &&
-      normalizeValue(a.region) === normalizeValue(b.region) &&
-      normalizeValue(a.locality) === normalizeValue(b.locality)
-    );
-  };
-
-  const syncLocalListingsWithApi = (localListings: any[], apiListings: any[]) => {
-    const remainingLocal = localListings.filter((local) => {
-      if (!String(local.id || '').startsWith('local-')) return true;
-      return !apiListings.some((apiListing) => isSameListing(local, apiListing));
-    });
-
-    localStorage.setItem(LOCAL_LISTINGS_KEY, JSON.stringify(remainingLocal));
-    return remainingLocal;
+    setStartingConversationFor(listing.id);
+    try {
+      const conversation = await api.createConversation({
+        participant_user_id: listing.seller_id,
+        listing_id: listing.id,
+        initial_message: t(
+          `Bonjour, je suis intéressé(e) par votre annonce « ${listing.title} ». Est-elle toujours disponible ?`,
+          `Hello, I am interested in your listing "${listing.title}". Is it still available?`
+        ),
+      });
+      navigate(`/chat?conversation_id=${encodeURIComponent(conversation.id)}`);
+    } catch (error: any) {
+      const detail =
+        error?.response?.data?.detail ||
+        error?.message ||
+        t('Impossible de contacter ce vendeur pour le moment.', 'Unable to contact this seller right now.');
+      alert(detail);
+    } finally {
+      setStartingConversationFor(null);
+    }
   };
 
   // Intelligent demo response generator - analyzes user message and responds contextually
@@ -425,40 +433,15 @@ export default function FeedPage() {
   const loadFeed = async () => {
     try {
       setLoading(true);
-      
-      // Import demo listings generator (always show)
-      const { generateDemoListings } = await import('@/data/demoListings');
-      let demoListings = generateDemoListings();
-      
-      // Only show demo listings with images
-      demoListings = demoListings.filter((listing: any) => listing.images && listing.images.length > 0);
-      
-      // Load real listings from API
-      let realListings: any[] = [];
-      try {
-        const response = await api.getListings({ page: 1, page_size: 50, status: 'PUBLISHED' });
-        realListings = response.items || [];
-        
-        // If no PUBLISHED listings, try loading all
-        if (realListings.length === 0) {
-          const allResponse = await api.getListings({ page: 1, page_size: 50 });
-          realListings = allResponse.items || [];
-        }
-      } catch (apiError) {
-        // Chargement des annonces réelles échoué, affichage des données de démonstration
-      }
-      
-      const localListings = getStoredLocalListings();
-      const syncedLocalListings = syncLocalListingsWithApi(localListings, realListings);
-
-      // Combine local + demo + real listings, deduplicated by id
-      const merged = [...syncedLocalListings, ...demoListings, ...realListings];
-      const uniqueById = merged.filter((listing: any, index: number, arr: any[]) =>
-        index === arr.findIndex((item: any) => item.id === listing.id)
+      setFeedError('');
+      const response = await api.getListings({ page: 1, page_size: 50, status: 'PUBLISHED' });
+      setListings(response.items || []);
+    } catch (error: any) {
+      setListings([]);
+      setFeedError(
+        error?.response?.data?.detail ||
+        t('Impossible de charger les publications. Vérifiez votre connexion puis réessayez.', 'Unable to load listings. Check your connection and try again.')
       );
-
-      setListings(uniqueById);
-    } catch (error) {
     } finally {
       setLoading(false);
     }
@@ -467,24 +450,17 @@ export default function FeedPage() {
   const loadCategories = async () => {
     try {
       const data = await api.getCategories();
-      
-      // If no categories from API, use demo categories
-      if (!data || data.length === 0) {
-        const demoCategories = [
-          { id: 'agriculture', name_fr: 'Agriculture', name_en: 'Agriculture' },
-          { id: 'elevage', name_fr: 'Élevage', name_en: 'Livestock' }
-        ];
-        setCategories(demoCategories);
-      } else {
-        setCategories(data);
-      }
-    } catch (error) {
-      // Fallback to demo categories on error
-      const demoCategories = [
-        { id: 'agriculture', name_fr: 'Agriculture', name_en: 'Agriculture' },
-        { id: 'elevage', name_fr: 'Élevage', name_en: 'Livestock' }
-      ];
-      setCategories(demoCategories);
+      setCategories(data || []);
+      setCategoryError(data?.length
+        ? ''
+        : t('Aucune catégorie active n’est disponible pour publier une annonce.', 'No active categories are available for posting a listing.')
+      );
+    } catch (error: any) {
+      setCategories([]);
+      setCategoryError(
+        error?.response?.data?.detail ||
+        t('Les catégories ne sont pas disponibles. La publication est temporairement désactivée.', 'Categories are unavailable. Posting is temporarily disabled.')
+      );
     }
   };
 
@@ -711,11 +687,14 @@ export default function FeedPage() {
       alert('❌ Erreur: Votre profil doit avoir un domaine défini (agriculture ou élevage)');
       return;
     }
+    if (!categories.some((category) => category.id === newPost.category_id)) {
+      alert(categoryError || t('Choisissez une catégorie disponible avant de publier.', 'Choose an available category before posting.'));
+      return;
+    }
 
     try {
-      // Create listing data
-      const listingData: any = {
-        category_id: newPost.category_id || (selectedSector === 'all' ? 'agriculture' : selectedSector),
+      const listingData = {
+        category_id: newPost.category_id,
         title: newPost.title,
         variety: newPost.variety || undefined,
         quantity: parseFloat(newPost.quantity),
@@ -725,46 +704,15 @@ export default function FeedPage() {
         region: newPost.region,
         locality: newPost.locality || undefined,
         domain: userDomain,
-        status: 'PUBLISHED'
       };
 
-      // If files are selected, use them; otherwise use URL if provided
-      if (selectedFiles.length > 0) {
-        // Store preview URLs as images (base64 data URLs)
-        listingData.images = previewUrls;
-      } else if (newPost.image_url) {
-        listingData.images = [newPost.image_url];
-      }
+      const listingToDisplay = await api.createListing(listingData);
 
-      let createdListing: any = null;
-      try {
-        // Try to create via API
-        createdListing = await api.createListing(listingData);
-      } catch (apiError) {
-        // Fallback: local listing
-      }
-
-      const listingToDisplay = createdListing || {
-        id: `local-${Date.now()}`,
-        seller_id: user.id,
-        ...listingData,
-        created_at: new Date().toISOString(),
-        seller: {
-          profile: {
-            display_name: user.profile?.display_name || 'Utilisateur',
-            activity_type: user.profile?.activity_type,
-            domain: userDomain
-          }
-        }
-      };
-
-      // Keep user's newly created listing visible in feed and activity
-      saveCreatedListingLocally(listingToDisplay);
       setListings(prev => [listingToDisplay, ...prev.filter(item => item.id !== listingToDisplay.id)]);
 
       // Reset form
       setNewPost({
-        category_id: selectedSector === 'all' ? 'agriculture' : selectedSector,
+        category_id: '',
         title: '',
         variety: '',
         quantity: '',
@@ -779,10 +727,10 @@ export default function FeedPage() {
       setPreviewUrls([]);
       setShowCreatePost(false);
       
-      alert('Publication créée avec succès!');
+      alert(t('Publication enregistrée en ligne et visible dans le fil.', 'Listing saved online and visible in the feed.'));
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Erreur inconnue';
-      alert(`Erreur lors de la création de la publication: ${errorMessage}`);
+      const errorMessage = error?.response?.data?.detail || error?.message || t('Erreur inconnue', 'Unknown error');
+      alert(`${t('La publication n’a pas été enregistrée en ligne', 'The listing was not saved online')}: ${errorMessage}`);
     }
   };
 
@@ -1250,10 +1198,7 @@ export default function FeedPage() {
           {/* User Profile Card */}
           <div className={`rounded-2xl p-4 ${theme === 'dark' ? 'bg-white/[0.03] border border-white/10 backdrop-blur-xl' : 'bg-white shadow-sm'}`}>
             <button
-              onClick={() => {
-                setNewPost(prev => ({ ...prev, category_id: prev.category_id || (selectedSector === 'all' ? 'agriculture' : selectedSector) }));
-                setShowCreatePost(true);
-              }}
+              onClick={openCreatePost}
               className="w-full flex items-center justify-center space-x-2 px-4 py-3 rounded-xl font-medium transition-all hover:scale-[1.02]"
               style={getButtonStyles(theme, 'secondary', 'emerald')}
             >
@@ -1337,10 +1282,7 @@ export default function FeedPage() {
                   )}
                 </div>
                 <button
-                  onClick={() => {
-                    setNewPost(prev => ({ ...prev, category_id: prev.category_id || (selectedSector === 'all' ? 'agriculture' : selectedSector) }));
-                    setShowCreatePost(true);
-                  }}
+                  onClick={openCreatePost}
                   className={`flex-1 text-left px-4 py-2.5 rounded-full text-sm transition-colors ${theme === 'dark' ? 'bg-white/5 text-gray-400 hover:bg-white/10' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}`}
                 >
                   {t('Quoi de neuf', "What's new")}, {user?.profile?.display_name?.split(' ')[0] || t('Agriculteur', 'Farmer')} ?
@@ -1366,6 +1308,13 @@ export default function FeedPage() {
                     </div>
                   </div>
                 ))
+              ) : feedError ? (
+                <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 p-5 text-sm text-red-700">
+                  <p>{feedError}</p>
+                  <button onClick={() => void loadFeed()} className="mt-3 font-semibold underline">
+                    {t('Réessayer', 'Try again')}
+                  </button>
+                </div>
               ) : filteredListings.length === 0 ? (
                 <div className="text-center py-12">
                   <div className={`w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center ${theme === 'dark' ? 'bg-white/5 text-gray-600' : 'bg-gray-100 text-gray-400'}`}>
@@ -1441,7 +1390,11 @@ export default function FeedPage() {
                       </h4>
                       <div className="flex items-center gap-2 mb-3">
                         <span className="px-2 py-0.5 rounded text-xs font-medium border" style={{ backgroundColor: `${getDomainColors(selectedSector).primary}15`, color: getDomainColors(selectedSector).primary, borderColor: `${getDomainColors(selectedSector).primary}30` }}>
-                          {listing.category_id === 'agriculture' ? 'Agriculture' : t('Élevage', 'Livestock')}
+                          {categories.find((category) => category.id === listing.category_id)
+                            ? (lang === 'en'
+                              ? categories.find((category) => category.id === listing.category_id)?.name_en
+                              : categories.find((category) => category.id === listing.category_id)?.name_fr)
+                            : listing.seller?.profile?.domain || t('Agriculture', 'Agriculture')}
                         </span>
                         {listing.quantity > 0 && (
                           <span className={`px-2 py-0.5 rounded text-xs font-medium border ${theme === 'dark' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-blue-50 text-blue-700 border-blue-100'}`}>
@@ -1456,7 +1409,7 @@ export default function FeedPage() {
 
                     {/* Post Media */}
                     {listing.images && listing.images.length > 0 && (
-                      <div className="relative cursor-pointer group" onClick={() => { setSelectedListing(listing); setShowChatModal(true); }}>
+                      <div className="relative cursor-pointer group" onClick={() => navigate(`/listings/${listing.id}`)}>
                         <div className={`grid ${listing.images.length > 1 ? 'grid-cols-2 sm:grid-cols-2' : 'grid-cols-1'} gap-0.5 bg-gray-100 dark:bg-gray-800`}>
                           {listing.images.slice(0, 4).map((img, idx) => (
                             <div key={idx} className={`relative ${listing.images && listing.images.length === 3 && idx === 0 ? 'row-span-2' : ''} h-48 sm:h-64 lg:h-72 overflow-hidden bg-gray-200 dark:bg-gray-700`}>
@@ -1502,39 +1455,34 @@ export default function FeedPage() {
                       </button>
                       
                       <button 
-                        onClick={() => { setSelectedListing(listing); setShowChatModal(true); }}
+                        onClick={() => navigate(`/listings/${listing.id}#comments`)}
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-gray-400 hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
+                        aria-label={t('Voir les commentaires', 'View comments')}
                       >
                         <MessageCircle className="w-5 h-5" />
                         <span className="text-sm font-medium hidden sm:inline">{t('Commenter', 'Comment')}</span>
                       </button>
 
                       <button 
+                        onClick={() => handleContactSeller(listing)}
+                        disabled={startingConversationFor === listing.id || isOwner}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-gray-400 hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
+                      >
+                        <Phone className="w-5 h-5" />
+                        <span className="text-sm font-medium hidden sm:inline">
+                          {startingConversationFor === listing.id
+                            ? t('Ouverture…', 'Opening…')
+                            : t('Contacter', 'Contact')}
+                        </span>
+                      </button>
+
+                      <button
                         className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors ${theme === 'dark' ? 'text-gray-400 hover:bg-white/5' : 'text-gray-600 hover:bg-gray-50'}`}
                       >
                         <Send className="w-5 h-5" />
                         <span className="text-sm font-medium hidden sm:inline">{t('Partager', 'Share')}</span>
                       </button>
                       
-                      {!isOwner && (
-                        <button 
-                          onClick={() => {
-                            const contact = {
-                              id: listing.seller_id,
-                              name: listing.seller?.profile?.display_name || 'Vendeur',
-                              domain: listing.category_id,
-                              activityType: listing.seller?.profile?.activity_type || 'producer',
-                              lastProduct: listing.title,
-                              region: listing.region
-                            };
-                            startDemoChat(contact);
-                          }}
-                          className="flex-1 flex items-center justify-center gap-2 py-2 rounded-lg transition-colors" style={{ color: getDomainColors(selectedSector).primary }}
-                        >
-                          <Phone className="w-5 h-5" />
-                          <span className="text-sm font-medium">{t('Contacter', 'Contact')}</span>
-                        </button>
-                      )}
                       </div>
                     </div>
                   );
@@ -2228,9 +2176,15 @@ export default function FeedPage() {
                   style={{ borderColor: theme === 'dark' ? 'rgba(255,255,255,0.1)' : '#E5E7EB', backgroundColor: theme === 'dark' ? 'rgba(255,255,255,0.05)' : '#F9FAFB' }}
                 >
                   <option value="">{t('Choisir une catégorie', 'Choose a category')}</option>
-                  <option value="agriculture">{t('Agriculture', 'Agriculture')}</option>
-                  <option value="elevage">{t('Élevage', 'Livestock')}</option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {lang === 'fr' ? category.name_fr : category.name_en}
+                    </option>
+                  ))}
                 </select>
+                {categoryError && (
+                  <p className="mt-2 text-xs text-red-600">{categoryError}</p>
+                )}
               </div>
               <div>
                 <label className="block text-sm font-medium mb-2" style={{ color: getTextStyles(theme).title }}>
@@ -2328,6 +2282,9 @@ export default function FeedPage() {
                 />
                 <p className="text-xs mt-1" style={{ color: getTextStyles(theme).muted }}>
                   {t('Formats acceptés: image et vidéo (max 5MB par fichier).', 'Accepted formats: image and video (max 5MB per file).')}
+                </p>
+                <p className="text-xs mt-1 text-amber-700">
+                  {t('Les fichiers sélectionnés sont en prévisualisation uniquement; ils ne sont pas encore enregistrés en ligne.', 'Selected files are preview-only and are not saved online yet.')}
                 </p>
               </div>
               {previewUrls.length > 0 && (

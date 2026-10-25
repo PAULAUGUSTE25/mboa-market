@@ -1,10 +1,14 @@
 import asyncio
 import base64
+import io
 import json
+import math
 import os
 import re
+import struct
 import urllib.error
 import urllib.request
+import wave
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
@@ -15,18 +19,22 @@ from sqlalchemy import select
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
 import pathlib
-from uuid import uuid4
-from app.models.messaging import Conversation, Message, ConversationParticipant
-from app.models.user import User, Profile
-from pydantic import BaseModel
+import logging
+import time
+from uuid import uuid4, UUID
+from app.models.messaging import Conversation, Message
+from app.models.user import User
+from pydantic import BaseModel, Field
 
 from app.core.config import settings
 
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError, jwt
 from sqlalchemy.orm import selectinload
+from fastapi.responses import StreamingResponse
 
 router = APIRouter(prefix="/ai", tags=["AI"])
+logger = logging.getLogger(__name__)
 
 # Optional bearer for authenticated requests
 _optional_bearer = HTTPBearer(auto_error=False)
@@ -40,34 +48,26 @@ async def _optional_current_user(
         return None
     try:
         payload = jwt.decode(credentials.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        user_id: str = payload.get("sub")
-        if not user_id:
-            return None
-        from uuid import UUID as _UUID
-        result = await db.execute(
-            select(User)
-            .options(selectinload(User.profile))
-            .where(User.id == _UUID(user_id))
-        )
-        return result.scalar_one_or_none()
-    except (JWTError, Exception):
+    except JWTError:
         return None
-
-# Base64 encoded fallback key (passes GitHub push protection and ensures live Gemini works everywhere)
-DEFAULT_GEMINI_KEY = base64.b64decode("QVEuQWI4Uk42SnBuVW9kYlp2UWhXR3NZcHI1YXg4VjZoblJmTjg0RlFtZkNlTXdUOVpQOXc=").decode("utf-8")
-
-# Valid Gemini model names as of 2026
-GEMINI_MODELS = [
-    "gemini-flash-latest",
-    "gemini-3.5-flash",
-    "gemini-3.6-flash",
-]
-
+    user_id = payload.get("sub")
+    if not isinstance(user_id, str):
+        return None
+    try:
+        parsed_user_id = UUID(user_id)
+    except ValueError:
+        return None
+    result = await db.execute(
+        select(User)
+        .options(selectinload(User.profile))
+        .where(User.id == parsed_user_id)
+    )
+    return result.scalar_one_or_none()
 
 class AIChatRequest(BaseModel):
-    prompt: str
-    context: Optional[str] = None
-    interlocutor_name: Optional[str] = None
+    prompt: str = Field(max_length=3000)
+    context: Optional[str] = Field(default=None, max_length=2400)
+    interlocutor_name: Optional[str] = Field(default=None, max_length=100)
 
 
 class AIChatResponse(BaseModel):
@@ -75,38 +75,37 @@ class AIChatResponse(BaseModel):
     provider: str = "Gemini"
 
 
+class AITranscriptionResponse(BaseModel):
+    text: str
+
+
 def _get_clean_api_key() -> str:
-    """Valide et nettoie la clé API Gemini pour éviter les erreurs HTTP 400 Bad Request."""
+    """Return only a Gemini key explicitly supplied through server configuration."""
     env_key = (os.environ.get("GEMINI_API_KEY") or "").strip().strip('"').strip("'")
     settings_key = (getattr(settings, "GEMINI_API_KEY", "") or "").strip().strip('"').strip("'")
     
     for k in (env_key, settings_key):
-        if k and len(k) >= 20 and not k.startswith("AIzaSyDMve") and not k.startswith("your-") and " " not in k:
+        if k and len(k) >= 20 and not k.startswith("your-") and " " not in k:
             return k
             
-    return DEFAULT_GEMINI_KEY
+    return ""
+
+
+def _validated_model_name(model: str) -> str:
+    model_name = (model or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9._-]{1,100}", model_name):
+        raise ValueError("Gemini model configuration is invalid")
+    return model_name
 
 
 def _build_system_instruction(
-    prompt: str,
-    context: Optional[str],
     user: Optional[User] = None,
     interlocutor_name: Optional[str] = None,
 ) -> str:
     """Build conversational instructions with natural tone and verified identity."""
-    lower_prompt = (prompt or "").lower()
-    is_greeting = any(
-        word in lower_prompt for word in ("bonjour", "salut", "hello", "coucou", "bonsoir", "hi")
-    )
-    is_continuation = bool(context and len(context.strip()) > 0)
-
     instructions = [
-        "Tu es Bigiss, l'assistant intelligent et conseiller agricole de terrain de MBOA Market au Cameroun.",
-        "Ton rôle est d'accompagner producteurs, éleveurs et acheteurs avec un ton humain, chaleureux, bienveillant, clair et direct.",
-        "Évite le jargon administratif, les formules robotiques ou les répétitions mécaniques.",
-        "Réponds dans la langue de la question (français camerounais/courant ou anglais). Va à l'essentiel, puis donne des conseils pratiques, étapes concrètes (3 à 5 points clairs), adaptés au contexte camerounais (climat, saisons locales, unités courantes, XAF).",
-        "N'invente jamais de données inexistantes : pas de prix spéculatifs, de prévisions météo inventées, ni de listes d'annonces factices. Si une donnée en temps réel te manque, explique simplement comment vérifier auprès des coopératives ou marchés locaux.",
-        "Pour la santé des cultures ou des animaux, sois prudent : décris les symptômes possibles, suggère des bonnes pratiques éprouvées, et recommande la consultation d'un agronome ou d'un vétérinaire en cas de doute.",
+        "Tu es Bigiss, l'assistant de MBOA Market au Cameroun. Réponds dans la langue de l'utilisateur, naturellement, avec professionnalisme et brièvement; développe seulement si nécessaire. Évite les salutations répétées, le Markdown (#, ***) et numérote les listes simplement avec « 1. », « 2. », « 3. ».",
+        "Aide sur la marketplace, l'agriculture et l'élevage. N'invente ni prix, disponibilité, météo, annonce ou identité. Pour un diagnostic de santé incertain, recommande un agronome ou vétérinaire.",
     ]
 
     # Authenticated user vs anonymous visitor
@@ -123,23 +122,10 @@ def _build_system_instruction(
         )
         instructions.append(user_info)
     else:
-        instructions.append(
-            "L'utilisateur visite la plateforme anonymement (non connecté). "
-            "Salue-le courtoisement en tant que visiteur ou ami de MBOA Market, "
-            "sans inventer d'identité ni supposer de données privées non fournies."
-        )
+        instructions.append("L'utilisateur n'est pas authentifié : n'invente pas son nom ni ses informations personnelles.")
 
     if interlocutor_name:
         instructions.append(f"Interlocuteur concerné par l'échange : {interlocutor_name}.")
-
-    if is_continuation:
-        instructions.append(
-            "La conversation est déjà en cours. Ne recommence PAS par une salutation de bienvenue formelle ; réponds directement à la question de manière fluide et naturelle."
-        )
-    elif is_greeting:
-        instructions.append(
-            "Il s'agit du début de conversation. Fais un accueil amical, concis et invite naturellement l'utilisateur à poser sa question ou exprimer son besoin."
-        )
 
     return "\n\n".join(instructions)
 
@@ -191,16 +177,29 @@ def _call_gemini_model(
     model: str,
     api_key: Optional[str] = None,
     system_instruction: Optional[str] = None,
+    audio_data: Optional[str] = None,
+    audio_mime_type: Optional[str] = None,
+    timeout_seconds: int = 15,
 ) -> str:
+    model = _validated_model_name(model)
     key = api_key or _get_clean_api_key()
     url = (
         f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
         f"?key={key}"
     )
+    parts = [{"text": prompt}]
+    if audio_data and audio_mime_type:
+        parts.append({
+            "inline_data": {
+                "mime_type": audio_mime_type,
+                "data": audio_data,
+            }
+        })
+
     payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
+        "contents": [{"parts": parts}],
         "systemInstruction": {"parts": [{"text": system_instruction}]} if system_instruction else None,
-        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 2048},
+        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 768},
     }
     req = urllib.request.Request(
         url=url,
@@ -209,7 +208,8 @@ def _call_gemini_model(
         method="POST",
     )
 
-    with urllib.request.urlopen(req, timeout=15) as response:
+    started_at = time.perf_counter()
+    with urllib.request.urlopen(req, timeout=timeout_seconds) as response:
         data = json.loads(response.read().decode("utf-8"))
 
     candidates = data.get("candidates") or []
@@ -221,10 +221,147 @@ def _call_gemini_model(
         raise ValueError("Gemini response stopped at the output token limit")
 
     parts = (candidate.get("content") or {}).get("parts") or []
-    if not parts or not parts[0].get("text"):
+    text = "".join(part["text"] for part in parts if part.get("text"))
+    if not text:
         raise ValueError("Gemini response has no text")
 
-    return "".join(part["text"] for part in parts if part.get("text"))
+    usage = data.get("usageMetadata") or {}
+    logger.info(
+        "ai_request model=%s prompt_tokens=%s output_tokens=%s duration_ms=%d",
+        model,
+        usage.get("promptTokenCount", "unknown"),
+        usage.get("candidatesTokenCount", "unknown"),
+        round((time.perf_counter() - started_at) * 1000),
+    )
+    return text
+
+
+def _stream_gemini_response(
+    prompt: str,
+    model: str,
+    api_key: str,
+    system_instruction: str,
+):
+    model = _validated_model_name(model)
+    url = (
+        f"https://generativelanguage.googleapis.com/v1beta/models/{model}:streamGenerateContent"
+        f"?alt=sse&key={api_key}"
+    )
+    payload = {
+        "contents": [{"parts": [{"text": prompt}]}],
+        "systemInstruction": {"parts": [{"text": system_instruction}]},
+        "generationConfig": {"temperature": 0.4, "maxOutputTokens": 768},
+    }
+    request = urllib.request.Request(
+        url=url,
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+        method="POST",
+    )
+    started_at = time.perf_counter()
+    prompt_tokens = output_tokens = "unknown"
+    try:
+        with urllib.request.urlopen(request, timeout=30) as response:
+            for line in response:
+                if not line.startswith(b"data:"):
+                    continue
+                chunk = json.loads(line[5:].strip())
+                for candidate in chunk.get("candidates") or []:
+                    for part in (candidate.get("content") or {}).get("parts") or []:
+                        text = part.get("text")
+                        if text:
+                            yield f"data: {json.dumps({'text': text}, ensure_ascii=False)}\n\n"
+                usage = chunk.get("usageMetadata") or {}
+                prompt_tokens = usage.get("promptTokenCount", prompt_tokens)
+                output_tokens = usage.get("candidatesTokenCount", output_tokens)
+        logger.info(
+            "ai_request model=%s prompt_tokens=%s output_tokens=%s duration_ms=%d streaming=true",
+            model,
+            prompt_tokens,
+            output_tokens,
+            round((time.perf_counter() - started_at) * 1000),
+        )
+        yield "event: done\ndata: {}\n\n"
+    except Exception as exc:
+        logger.error("Gemini streaming request failed (%s)", type(exc).__name__)
+        yield f"event: error\ndata: {json.dumps({'detail': 'Le service IA est temporairement indisponible.'}, ensure_ascii=False)}\n\n"
+
+
+@router.post("/transcribe_audio", response_model=AITranscriptionResponse)
+async def transcribe_audio(file: UploadFile = File(...)):
+    mime_type = (file.content_type or "").split(";", 1)[0].strip().lower()
+    supported_audio_types = {
+        "audio/aac",
+        "audio/flac",
+        "audio/mp3",
+        "audio/mp4",
+        "audio/mpeg",
+        "audio/ogg",
+        "audio/wav",
+        "audio/webm",
+    }
+    if mime_type not in supported_audio_types:
+        raise HTTPException(status_code=415, detail="Format audio non pris en charge.")
+
+    audio_bytes = await file.read(4 * 1024 * 1024 + 1)
+    if not audio_bytes:
+        raise HTTPException(status_code=400, detail="L'enregistrement audio est vide.")
+    if len(audio_bytes) > 4 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="L'enregistrement dépasse la taille maximale de 4 Mo.")
+
+    if mime_type == "audio/wav":
+        try:
+            with wave.open(io.BytesIO(audio_bytes), "rb") as wav_file:
+                if wav_file.getsampwidth() == 2:
+                    pcm = wav_file.readframes(wav_file.getnframes())
+                    sample_count = len(pcm) // 2
+                    step = max(1, sample_count // 10_000)
+                    samples = (
+                        struct.unpack_from("<h", pcm, offset)[0]
+                        for offset in range(0, len(pcm) - 1, step * 2)
+                    )
+                    sample_values = list(samples)
+                    rms = math.sqrt(
+                        sum(sample * sample for sample in sample_values)
+                        / max(1, len(sample_values))
+                    )
+                    if rms < 120:
+                        raise HTTPException(
+                            status_code=422,
+                            detail="Aucune parole n'a été détectée. Réessayez en parlant après le démarrage.",
+                        )
+        except wave.Error as exc:
+            raise HTTPException(status_code=400, detail="Le fichier audio WAV est invalide.") from exc
+
+    prompt = (
+        "Transcris fidèlement et intégralement les paroles clairement audibles dans cet audio. "
+        "Conserve la langue originale. Réponds uniquement avec la transcription, sans "
+        "commentaire, sans traduction et sans texte ajouté. Ne devine et n'invente aucun mot. "
+        "Si aucune parole n'est clairement audible, réponds exactement : NO_SPEECH."
+    )
+    encoded_audio = base64.b64encode(audio_bytes).decode("ascii")
+    key = _get_clean_api_key()
+    if not key:
+        raise HTTPException(status_code=503, detail="Le service de transcription n'est pas configuré.")
+    try:
+        text = await asyncio.to_thread(
+            _call_gemini_model,
+            prompt,
+            settings.GEMINI_MODEL,
+            key,
+            None,
+            encoded_audio,
+            mime_type,
+            45,
+        )
+    except Exception as exc:
+        logger.error("Gemini audio transcription failed (%s)", type(exc).__name__)
+        raise HTTPException(status_code=502, detail="La transcription audio a échoué. Réessayez.") from exc
+
+    transcript = text.strip()
+    if not transcript or transcript.upper().rstrip(".") == "NO_SPEECH":
+        raise HTTPException(status_code=422, detail="Aucune parole n'a été détectée. Réessayez en parlant plus clairement.")
+    return AITranscriptionResponse(text=transcript)
 
 
 @router.post("/chat", response_model=AIChatResponse)
@@ -236,7 +373,7 @@ async def chat_with_ai(
     if not prompt_str:
         return AIChatResponse(
             text="Veuillez poser une question précise pour que je puisse vous aider.",
-            provider="Bigiss AI",
+            provider="1AI",
         )
 
     live_price_response = _unavailable_live_price_response(prompt_str)
@@ -244,39 +381,50 @@ async def chat_with_ai(
         return AIChatResponse(text=live_price_response, provider="Bigiss (no live market data)")
 
     key = _get_clean_api_key()
+    if not key:
+        raise HTTPException(status_code=503, detail="Le service IA n'est pas configuré.")
     user_prompt = _build_prompt(prompt_str, payload.context)
     system_instruction = _build_system_instruction(
-        prompt_str, payload.context, current_user, payload.interlocutor_name
+        current_user, payload.interlocutor_name
     )
 
-    errors = []
-    for model in GEMINI_MODELS:
-        if not model:
-            continue
-        try:
-            text = await asyncio.to_thread(
-                _call_gemini_model, user_prompt, model, key, system_instruction
-            )
-            return AIChatResponse(text=text, provider=f"Gemini ({model})")
-        except urllib.error.HTTPError as exc:
-            try:
-                err_body = exc.read().decode("utf-8")
-                err_json = json.loads(err_body)
-                msg = err_json.get("error", {}).get("message") or exc.reason
-            except Exception:
-                msg = exc.reason
-            err_msg = f"HTTP {exc.code}: {msg}"
-            print(f"[WARN] Gemini model {model} error: {err_msg}")
-            errors.append(f"{model} ({err_msg})")
-            continue
-        except Exception as exc:
-            print(f"[WARN] Gemini model {model} error: {exc}")
-            errors.append(f"{model} ({exc})")
-            continue
+    try:
+        text = await asyncio.to_thread(
+            _call_gemini_model, user_prompt, settings.GEMINI_MODEL, key, system_instruction
+        )
+        return AIChatResponse(text=text, provider=f"Gemini ({settings.GEMINI_MODEL})")
+    except Exception as exc:
+        logger.error("Gemini chat request failed (%s)", type(exc).__name__)
+        raise HTTPException(status_code=502, detail="Le service IA est temporairement indisponible.") from exc
 
-    raise HTTPException(
-        status_code=502,
-        detail=f"Échec des appels aux modèles Gemini Google Cloud. Détails: {'; '.join(errors)}"
+
+@router.post("/chat/stream")
+async def stream_chat_with_ai(
+    payload: AIChatRequest,
+    current_user: Optional[User] = Depends(_optional_current_user),
+):
+    prompt_str = payload.prompt.strip()
+    if not prompt_str:
+        raise HTTPException(status_code=400, detail="Veuillez poser une question précise.")
+    key = _get_clean_api_key()
+    if not key:
+        raise HTTPException(status_code=503, detail="Le service IA n'est pas configuré.")
+
+    live_price_response = _unavailable_live_price_response(prompt_str)
+    if live_price_response:
+        def fixed_response():
+            yield f"data: {json.dumps({'text': live_price_response}, ensure_ascii=False)}\n\n"
+            yield "event: done\ndata: {}\n\n"
+        return StreamingResponse(fixed_response(), media_type="text/event-stream")
+
+    system_instruction = _build_system_instruction(
+        current_user, payload.interlocutor_name
+    )
+    user_prompt = _build_prompt(prompt_str, payload.context)
+    return StreamingResponse(
+        _stream_gemini_response(user_prompt, settings.GEMINI_MODEL, key, system_instruction),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache, no-transform", "X-Accel-Buffering": "no"},
     )
 
 
@@ -331,4 +479,3 @@ async def save_message(
     await db.refresh(message)
 
     return {"message_id": str(message.id), "conversation_id": str(conv.id)}
-

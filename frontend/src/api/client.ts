@@ -1,13 +1,12 @@
 import axios, { AxiosInstance } from 'axios';
-
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+import { API_BASE_URL } from './config';
 
 const httpClient: AxiosInstance = axios.create({
-  baseURL: BASE_URL,
+  baseURL: API_BASE_URL,
   headers: {
     'Content-Type': 'application/json',
   },
-  // 60s timeout — Render free-tier cold starts can take 30-60s
+  // Authentication overrides this with a shorter timeout; other API calls may be longer.
   timeout: 60000,
 });
 

@@ -1,22 +1,21 @@
 /**
  * keepAlive.ts
  * ─────────────────────────────────────────────────────────────
- * Prevents the Render free-tier backend from spinning down due
- * to inactivity (Render kills free services after 15 minutes).
+ * Legacy warm-up helper for older always-on deployments.
+ * Do not start this for Vercel functions: periodic pings only add invocations.
  *
  * Strategy:
  *   1. On app start → warm up the backend immediately.
- *   2. Every 10 minutes → silently ping /api/health.
+ *   2. Every 10 minutes → silently ping /api/health when explicitly started.
  *
- * The service is a singleton; call `keepAlive.start()` once in
- * main.tsx / App.tsx and it handles everything automatically.
+ * The Vercel application entrypoint intentionally does not start this service.
  * ─────────────────────────────────────────────────────────────
  */
+import { API_BASE_URL } from '@/api/config';
 
 const PING_INTERVAL_MS = 10 * 60 * 1000; // 10 minutes
-const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 // Strip trailing /api to get the root URL for the health check
-const HEALTH_URL = BASE_URL.replace(/\/api\/?$/, '') + '/api/health';
+const HEALTH_URL = API_BASE_URL.replace(/\/api\/?$/, '') + '/api/health';
 
 class KeepAliveService {
   private intervalId: ReturnType<typeof setInterval> | null = null;
@@ -49,7 +48,7 @@ class KeepAliveService {
     if (this.isRunning) return;
     this.isRunning = true;
 
-    // Warm-up: ping immediately so the backend is hot when the user lands
+    // Optional warm-up for deployments that need it.
     this.ping();
 
     // Schedule recurring pings

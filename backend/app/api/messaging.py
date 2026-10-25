@@ -6,6 +6,7 @@ from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User, Profile
 from app.models.messaging import Conversation, ConversationParticipant, Message
+from app.models.marketplace import Listing, ListingStatus
 from app.schemas.messaging import MessageCreate, MessageResponse, ConversationCreate, ConversationResponse
 from typing import List
 from uuid import uuid4, UUID
@@ -82,6 +83,19 @@ async def get_conversations(
         profiles = profiles_result.scalars().all()
         profiles_dict = {p.user_id: p for p in profiles}
     
+    listing_ids = {conv.listing_id for conv in conversations if conv.listing_id}
+    listings_by_id = {}
+    if listing_ids:
+        listing_result = await db.execute(
+            select(Listing).where(Listing.id.in_(listing_ids))
+        )
+        listings_by_id = {listing.id: listing for listing in listing_result.scalars().all()}
+
+    current_profile_result = await db.execute(
+        select(Profile).where(Profile.user_id == current_user.id)
+    )
+    current_profile = current_profile_result.scalar_one_or_none()
+
     # Format response with participant info and unread count
     response = []
     for conv in conversations:
@@ -96,7 +110,7 @@ async def get_conversations(
             profile = profiles_dict.get(other_participant.user_id)
             
             # Get last message
-            last_message = conv.messages[-1] if conv.messages else None
+            last_message = max(conv.messages, key=lambda message: message.created_at) if conv.messages else None
             
             # Count unread messages
             current_participant = next(
@@ -120,10 +134,28 @@ async def get_conversations(
                 "id": str(conv.id),
                 "participant_id": str(other_participant.user_id),
                 "participant_name": profile.display_name if profile else "Unknown",
-                "last_message": last_message.content if last_message else None,
+                "participants": [
+                    {
+                        "user_id": str(current_user.id),
+                        "display_name": current_profile.display_name if current_profile else "Vous",
+                    },
+                    {
+                        "user_id": str(other_participant.user_id),
+                        "display_name": profile.display_name if profile else "Utilisateur",
+                    },
+                ],
+                "last_message": {
+                    "id": str(last_message.id),
+                    "conversation_id": str(last_message.conversation_id),
+                    "sender_id": str(last_message.sender_id),
+                    "content": last_message.content,
+                    "created_at": last_message.created_at.isoformat(),
+                } if last_message else None,
                 "unread_count": unread_count,
                 "updated_at": conv.updated_at.isoformat(),
-                "listing_id": str(conv.listing_id) if conv.listing_id else None
+                "listing_id": str(conv.listing_id) if conv.listing_id else None,
+                "listing_title": listings_by_id[conv.listing_id].title
+                if conv.listing_id in listings_by_id else None,
             })
     
     return PaginatedConversationsResponse(
@@ -141,7 +173,39 @@ async def create_conversation(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """Create a new conversation"""
+    """Create or resume a private conversation, optionally linked to a listing."""
+    if current_user.id == data.participant_user_id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot start a conversation with yourself"
+        )
+
+    participant_result = await db.execute(
+        select(User).where(User.id == data.participant_user_id)
+    )
+    participant_user = participant_result.scalar_one_or_none()
+    if not participant_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    if data.listing_id:
+        listing_result = await db.execute(
+            select(Listing).where(Listing.id == data.listing_id)
+        )
+        listing = listing_result.scalar_one_or_none()
+        if not listing or listing.status != ListingStatus.PUBLISHED:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Published listing not found"
+            )
+        if listing.seller_id != data.participant_user_id:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The contact must be the owner of the listing"
+            )
+
     # Check if conversation already exists between these users
     existing = await db.execute(
         select(Conversation)
@@ -153,7 +217,8 @@ async def create_conversation(
             )
         )
         .group_by(Conversation.id)
-        .having(func.count(ConversationParticipant.user_id) == 2)
+        .having(func.count(func.distinct(ConversationParticipant.user_id)) == 2)
+        .limit(1)
     )
     existing_conv = existing.scalar_one_or_none()
     
@@ -163,7 +228,7 @@ async def create_conversation(
             id=uuid4(),
             conversation_id=existing_conv.id,
             sender_id=current_user.id,
-            content=data.initial_message
+            content=data.initial_message.strip()
         )
         db.add(message)
         existing_conv.updated_at = datetime.utcnow()
@@ -195,7 +260,7 @@ async def create_conversation(
         id=uuid4(),
         conversation_id=conversation.id,
         sender_id=current_user.id,
-        content=data.initial_message
+        content=data.initial_message.strip()
     )
     db.add(message)
     

@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import httpClient from '@/api/client';
-import { X, Send, Sparkles, Bot, Mic, MicOff, Volume2, VolumeX, Square, RefreshCw } from 'lucide-react';
+import { isAxiosError } from 'axios';
+import { X, Send, Sparkles, Bot, Mic, MicOff, Volume2, Square, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { multiAI } from '@/services/multiAI';
 import { voiceAssistant } from '@/services/voiceAssistant';
@@ -9,6 +10,7 @@ import { useDomain } from '@/contexts/DomainContext';
 import { getDomainColors } from '@/utils/colors';
 import { useAuthStore } from '@/store/authStore';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { formatAssistantText } from '@/utils/formatAssistantText';
 
 interface Message {
   id: string;
@@ -16,6 +18,77 @@ interface Message {
   sender: 'user' | 'ai';
   timestamp: Date;
   isVoice?: boolean;
+}
+
+async function convertAudioToWav(audio: Blob): Promise<{ file: Blob; rms: number; peak: number }> {
+  const audioWindow = window as Window & { webkitAudioContext?: typeof AudioContext };
+  const AudioContextConstructor = window.AudioContext || audioWindow.webkitAudioContext;
+  if (!AudioContextConstructor) {
+    throw new Error('Audio conversion is not supported in this browser.');
+  }
+
+  const context = new AudioContextConstructor();
+  try {
+    const source = await context.decodeAudioData(await audio.arrayBuffer());
+    const targetSampleRate = 16_000;
+    const sampleCount = Math.ceil(source.length * targetSampleRate / source.sampleRate);
+    const dataSize = sampleCount * 2;
+    const wavBuffer = new ArrayBuffer(44 + dataSize);
+    const view = new DataView(wavBuffer);
+    const writeText = (offset: number, text: string) => {
+      for (let i = 0; i < text.length; i++) {
+        view.setUint8(offset + i, text.charCodeAt(i));
+      }
+    };
+
+    writeText(0, 'RIFF');
+    view.setUint32(4, 36 + dataSize, true);
+    writeText(8, 'WAVE');
+    writeText(12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, targetSampleRate, true);
+    view.setUint32(28, targetSampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeText(36, 'data');
+    view.setUint32(40, dataSize, true);
+
+    const output = new DataView(wavBuffer, 44);
+    const channelData = Array.from(
+      { length: source.numberOfChannels },
+      (_, channel) => source.getChannelData(channel)
+    );
+    const ratio = source.sampleRate / targetSampleRate;
+    let sumSquares = 0;
+    let peak = 0;
+
+    for (let i = 0; i < sampleCount; i++) {
+      const start = Math.floor(i * ratio);
+      const end = Math.min(source.length, Math.max(start + 1, Math.floor((i + 1) * ratio)));
+      let sum = 0;
+      let count = 0;
+      for (const channel of channelData) {
+        for (let sample = start; sample < end; sample++) {
+          sum += channel[sample];
+          count++;
+        }
+      }
+      const value = Math.max(-1, Math.min(1, sum / count));
+      sumSquares += value * value;
+      peak = Math.max(peak, Math.abs(value));
+      output.setInt16(i * 2, value < 0 ? value * 0x8000 : value * 0x7fff, true);
+    }
+
+    return {
+      file: new Blob([wavBuffer], { type: 'audio/wav' }),
+      rms: Math.sqrt(sumSquares / sampleCount),
+      peak,
+    };
+  } finally {
+    await context.close();
+  }
 }
 
 export default function AIAssistant() {
@@ -29,23 +102,28 @@ export default function AIAssistant() {
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
-  const [autoSpeak, setAutoSpeak] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isVoiceTranscript, setIsVoiceTranscript] = useState(false);
+  const [recordingError, setRecordingError] = useState('');
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState<string | null>(null);
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null);
-  const [recordingTranscript, setRecordingTranscript] = useState('');
   const [typingMessageId, setTypingMessageId] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<any>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const mediaStreamRef = useRef<MediaStream | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
-  const typingTimeoutRef = useRef<any>(null);
-  const activeFullTextRef = useRef<{ id: string; fullText: string; shouldSpeak: boolean } | null>(null);
+  const discardRecordingRef = useRef(false);
+  const recordingTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const audioPreviewUrlRef = useRef<string | null>(null);
+  const streamControllerRef = useRef<AbortController | null>(null);
+  const sendMessageRef = useRef<(customPrompt?: string) => Promise<void>>(async () => {});
   const [conversationId, setConversationId] = useState<string | null>(null);
 
   const getWelcomeMessage = () => {
     const displayName = (user?.profile as any)?.display_name;
-    if (displayName) {
+    if (user) {
       return t(
         `Bonjour ${displayName} ! Je suis Bigiss, votre assistant vocal et agricole MBOA Market. Posez-moi des questions à l'écrit ou par note vocale 🎙️.`,
         `Hello ${displayName}! I am Bigiss, your MBOA Market voice & farm assistant. Ask me questions by typing or using voice notes 🎙️.`
@@ -67,72 +145,23 @@ export default function AIAssistant() {
     },
   ]);
 
-  // Stop typing and immediately display the full message if requested
+  const clearAudioPreview = () => {
+    if (audioPreviewUrlRef.current) {
+      URL.revokeObjectURL(audioPreviewUrlRef.current);
+      audioPreviewUrlRef.current = null;
+    }
+    setAudioPreviewUrl(null);
+  };
+
+  // Stop an active response stream while preserving the text already received.
   const stopTypingOrSkip = () => {
-    if (typingTimeoutRef.current) {
-      clearTimeout(typingTimeoutRef.current);
-      typingTimeoutRef.current = null;
-    }
-    if (activeFullTextRef.current) {
-      const { id, fullText, shouldSpeak } = activeFullTextRef.current;
-      setMessages((prev) =>
-        prev.map((m) => (m.id === id ? { ...m, text: fullText } : m))
-      );
-      if (shouldSpeak) {
-        speakText(id, fullText);
-      }
-      activeFullTextRef.current = null;
-    }
+    streamControllerRef.current?.abort();
+    streamControllerRef.current = null;
     setTypingMessageId(null);
     setIsLoading(false);
     if (messagesContainerRef.current) {
       messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
     }
-  };
-
-  // Modern progressive typewriter stream
-  const startTypewriter = (msgId: string, fullText: string, shouldSpeak: boolean) => {
-    activeFullTextRef.current = { id: msgId, fullText, shouldSpeak };
-    setTypingMessageId(msgId);
-    setIsLoading(false);
-
-    let currentIndex = 0;
-    const totalLength = fullText.length;
-    // Pacing adapted to message length: short greetings type letter-by-letter;
-    // longer answers stream smoothly in small natural tokens
-    const baseInterval = totalLength > 600 ? 12 : totalLength > 250 ? 15 : 18;
-    const stepSize = totalLength > 600 ? 4 : totalLength > 250 ? 2 : 1;
-
-    const typeNext = () => {
-      if (currentIndex < totalLength) {
-        currentIndex = Math.min(currentIndex + stepSize, totalLength);
-        const currentSlice = fullText.slice(0, currentIndex);
-
-        setMessages((prev) =>
-          prev.map((m) => (m.id === msgId ? { ...m, text: currentSlice } : m))
-        );
-
-        if (messagesContainerRef.current) {
-          messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
-        }
-
-        // Slight natural human-like cadence pause at punctuation
-        const lastChar = currentSlice.slice(-1);
-        const pause = (lastChar === '.' || lastChar === '!' || lastChar === '?' || lastChar === '\n') ? 35 : 0;
-
-        typingTimeoutRef.current = setTimeout(typeNext, baseInterval + pause);
-      } else {
-        // Complete
-        setTypingMessageId(null);
-        activeFullTextRef.current = null;
-        typingTimeoutRef.current = null;
-        if (shouldSpeak) {
-          speakText(msgId, fullText);
-        }
-      }
-    };
-
-    typeNext();
   };
 
   // Reset conversation and context when user logs in, switches account, or logs out
@@ -148,7 +177,9 @@ export default function AIAssistant() {
     ]);
     setConversationId(null);
     setInputText('');
-    setRecordingTranscript('');
+    setIsVoiceTranscript(false);
+    setRecordingError('');
+    clearAudioPreview();
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
     }
@@ -161,16 +192,24 @@ export default function AIAssistant() {
     }
   }, [messages, isOpen, isRecording]);
 
-  // Clean up speech synthesis, typewriter and recognition on unmount
+  // Clean up speech synthesis, streaming, audio preview and recording on unmount.
   useEffect(() => {
     return () => {
-      if (typingTimeoutRef.current) {
-        clearTimeout(typingTimeoutRef.current);
+      streamControllerRef.current?.abort();
+      if (recordingTimeoutRef.current) {
+        clearTimeout(recordingTimeoutRef.current);
       }
-      if (recognitionRef.current) {
+      if (mediaRecorderRef.current) {
+        mediaRecorderRef.current.onstop = null;
         try {
-          recognitionRef.current.stop();
-        } catch (e) {}
+          if (mediaRecorderRef.current.state !== 'inactive') {
+            mediaRecorderRef.current.stop();
+          }
+        } catch {}
+      }
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      if (audioPreviewUrlRef.current) {
+        URL.revokeObjectURL(audioPreviewUrlRef.current);
       }
       if (window.speechSynthesis) {
         window.speechSynthesis.cancel();
@@ -179,6 +218,9 @@ export default function AIAssistant() {
   }, []);
 
   const resetConversation = () => {
+    if (mediaRecorderRef.current) {
+      stopRecording(true);
+    }
     stopTypingOrSkip();
     setMessages([
       {
@@ -189,13 +231,15 @@ export default function AIAssistant() {
       },
     ]);
     setInputText('');
-    setRecordingTranscript('');
+    setIsVoiceTranscript(false);
+    setRecordingError('');
+    clearAudioPreview();
   };
 
   const handleClose = () => {
     stopTypingOrSkip();
-    if (isRecording) {
-      stopRecording();
+    if (mediaRecorderRef.current) {
+      stopRecording(true);
     }
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
@@ -213,113 +257,203 @@ export default function AIAssistant() {
     }
   };
 
-  const startRecording = () => {
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      alert(t("La reconnaissance vocale n'est pas supportée sur ce navigateur.", "Speech recognition is not supported on this browser."));
+  const startRecording = async () => {
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      setRecordingError(t(
+        "L'enregistrement audio n'est pas pris en charge par ce navigateur.",
+        "Audio recording is not supported by this browser."
+      ));
       return;
     }
 
+    let stream: MediaStream | null = null;
     try {
-      const recognition = new SpeechRecognition();
-      recognition.continuous = true;
-      recognition.interimResults = true;
-      recognition.lang = lang === 'fr' ? 'fr-FR' : 'en-US';
+      stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const preferredMimeType = [
+        'audio/webm;codecs=opus',
+        'audio/ogg;codecs=opus',
+        'audio/mp4',
+      ].find((mimeType) => MediaRecorder.isTypeSupported(mimeType));
+      const recorder = preferredMimeType
+        ? new MediaRecorder(stream, { mimeType: preferredMimeType })
+        : new MediaRecorder(stream);
 
-      recognition.onstart = () => {
-        setIsRecording(true);
-        setRecordingTranscript('');
-      };
+      audioChunksRef.current = [];
+      clearAudioPreview();
+      discardRecordingRef.current = false;
+      mediaStreamRef.current = stream;
+      mediaRecorderRef.current = recorder;
+      setInputText('');
+      setIsVoiceTranscript(false);
+      setRecordingError('');
 
-      recognition.onresult = (event: any) => {
-        let currentTranscript = '';
-        for (let i = event.resultIndex; i < event.results.length; i++) {
-          currentTranscript += event.results[i][0].transcript;
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
         }
-        setRecordingTranscript(currentTranscript);
-        setInputText(currentTranscript);
       };
-
-      recognition.onerror = (event: any) => {
-        console.error('Speech recognition error:', event.error);
+      recorder.onerror = () => {
+        discardRecordingRef.current = true;
+        setRecordingError(t(
+          "Une erreur est survenue pendant l'enregistrement. Vérifiez le microphone puis réessayez.",
+          "An error occurred while recording. Check your microphone and try again."
+        ));
+        stopRecording(true);
+      };
+      recorder.onstop = async () => {
+        const chunks = audioChunksRef.current;
+        audioChunksRef.current = [];
+        mediaRecorderRef.current = null;
+        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
         setIsRecording(false);
-      };
 
-      recognition.onend = () => {
-        setIsRecording(false);
-      };
+        if (discardRecordingRef.current) {
+          discardRecordingRef.current = false;
+          return;
+        }
 
-      recognition.start();
-      recognitionRef.current = recognition;
-
-      // Also start MediaRecorder to capture audio blob for upload
-      try {
-        navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
-          const mr = new MediaRecorder(stream);
-          audioChunksRef.current = [];
-          mr.ondataavailable = (e) => {
-            if (e.data && e.data.size > 0) audioChunksRef.current.push(e.data);
-          };
-          mr.onstop = async () => {
-            const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
-            // upload audio
-            try {
-              const form = new FormData();
-              form.append('file', blob, `recording_${Date.now()}.webm`);
-              const res = await httpClient.post('/ai/upload_audio', form, { headers: { 'Content-Type': 'multipart/form-data' } });
-              const audio_url = res.data?.audio_url;
-              // Save message referencing audio — only if authenticated
-              const displayName: string | undefined = (user?.profile as any)?.display_name || undefined;
-              const saveRes = displayName
-                ? await httpClient.post('/ai/save_message', null, { params: { conversation_id: conversationId, sender_name: displayName, audio_url } })
-                : { data: null };
-              if (saveRes?.data?.conversation_id) setConversationId(saveRes.data.conversation_id);
-            } catch (err) {
-              console.error('Audio upload failed', err);
-            }
-          };
-          mr.start();
-          mediaRecorderRef.current = mr;
-        }).catch((err) => {
-          console.error('MediaDevices.getUserMedia error:', err);
+        const audio = new Blob(chunks, {
+          type: recorder.mimeType || chunks[0]?.type || 'audio/webm',
         });
-      } catch (e) {
-        console.error('MediaRecorder init failed', e);
-      }
-    } catch (err) {
-      console.error('Error starting speech recognition:', err);
+        if (!audio.size) {
+          setRecordingError(t(
+            "Aucun son n'a été enregistré. Réessayez en parlant après le démarrage.",
+            "No audio was recorded. Try speaking after recording starts."
+          ));
+          return;
+        }
+
+        const previewUrl = URL.createObjectURL(audio);
+        audioPreviewUrlRef.current = previewUrl;
+        setAudioPreviewUrl(previewUrl);
+        setIsTranscribing(true);
+        setRecordingError('');
+        try {
+          let audioToUpload = audio;
+          let filename = 'bigis-voice.webm';
+          try {
+            const convertedAudio = await convertAudioToWav(audio);
+            if (convertedAudio.rms < 0.0037 && convertedAudio.peak < 0.015) {
+              setRecordingError(t(
+                "Aucune parole n'a été détectée. Vérifiez le microphone puis réessayez.",
+                "No speech was detected. Check your microphone and try again."
+              ));
+              return;
+            }
+            audioToUpload = convertedAudio.file;
+            filename = 'bigis-voice.wav';
+          } catch (conversionError) {
+            const supportedTypes = ['audio/webm', 'audio/ogg', 'audio/mp4', 'audio/mpeg', 'audio/aac'];
+            const mimeType = audio.type.split(';', 1)[0].trim().toLowerCase();
+            if (!supportedTypes.includes(mimeType)) {
+              throw conversionError;
+            }
+          }
+
+          const form = new FormData();
+          form.append('file', audioToUpload, filename);
+          const response = await httpClient.post<{ text: string }>('/ai/transcribe_audio', form);
+          const transcript = response.data.text.trim();
+          if (!transcript) {
+            setRecordingError(t(
+              "Je n'ai pas pu reconnaître les paroles. Réessayez en parlant plus clairement.",
+              "I couldn't recognize the speech. Try again and speak more clearly."
+            ));
+            return;
+          }
+          setInputText(transcript);
+          setIsVoiceTranscript(true);
+          await sendMessageRef.current(transcript);
+        } catch (error) {
+          const detail = isAxiosError<{ detail?: string }>(error)
+            ? error.response?.data?.detail
+            : undefined;
+          const processingError = !isAxiosError(error) && error instanceof Error
+            ? error.message
+            : '';
+          setRecordingError(detail || (processingError
+            ? t(
+                `Impossible de préparer l'enregistrement audio : ${processingError}`,
+                `Unable to prepare the audio recording: ${processingError}`
+              )
+            : t(
+                "La transcription a échoué. Vérifiez votre connexion puis réessayez.",
+                "Transcription failed. Check your connection and try again."
+              )));
+        } finally {
+          setIsTranscribing(false);
+        }
+      };
+
+      recorder.start(250);
+      setIsRecording(true);
+      recordingTimeoutRef.current = setTimeout(() => {
+        setRecordingError(t(
+          "Durée maximale atteinte. Transcription de votre enregistrement…",
+          "Maximum recording time reached. Transcribing your recording…"
+        ));
+        stopRecording();
+      }, 30_000);
+    } catch (error) {
+      stream?.getTracks().forEach((track) => track.stop());
+      mediaRecorderRef.current = null;
+      mediaStreamRef.current = null;
+      audioChunksRef.current = [];
       setIsRecording(false);
+      if (error instanceof DOMException && error.name === 'NotAllowedError') {
+        setRecordingError(t(
+          "L'accès au microphone est refusé. Autorisez-le dans les paramètres du navigateur puis réessayez.",
+          "Microphone access was denied. Allow it in your browser settings and try again."
+        ));
+      } else if (error instanceof DOMException && error.name === 'NotFoundError') {
+        setRecordingError(t(
+          "Aucun microphone n'a été détecté sur cet appareil.",
+          "No microphone was detected on this device."
+        ));
+      } else {
+        setRecordingError(t(
+          "Impossible de démarrer l'enregistrement. Vérifiez l'accès au microphone puis réessayez.",
+          "Could not start recording. Check microphone access and try again."
+        ));
+      }
     }
   };
 
-  const stopRecording = () => {
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (e) {}
+  const stopRecording = (discard = false) => {
+    if (recordingTimeoutRef.current) {
+      clearTimeout(recordingTimeoutRef.current);
+      recordingTimeoutRef.current = null;
     }
-    // stop media recorder
-    if (mediaRecorderRef.current) {
-      try {
-        mediaRecorderRef.current.stop();
-        // stop all tracks
-        mediaRecorderRef.current.stream?.getTracks().forEach((t) => t.stop());
-      } catch (e) {}
-      mediaRecorderRef.current = null;
+    if (discard) {
+      discardRecordingRef.current = true;
     }
     setIsRecording(false);
+    const recorder = mediaRecorderRef.current;
+    if (recorder && recorder.state !== 'inactive') {
+      try {
+        recorder.stop();
+      } catch {
+        mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+        mediaStreamRef.current = null;
+        mediaRecorderRef.current = null;
+      }
+    } else {
+      mediaStreamRef.current?.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+      mediaRecorderRef.current = null;
+    }
   };
 
-  const handleSendMessage = async (customPrompt?: string, isVoicePrompt = false) => {
+  const handleSendMessage = async (customPrompt?: string) => {
     const textToSend = (customPrompt || inputText).trim();
     if (!textToSend) return;
 
     // Flush any ongoing typewriter before sending
     stopTypingOrSkip();
 
-    if (isRecording) {
-      stopRecording();
+    if (mediaRecorderRef.current) {
+      stopRecording(true);
     }
 
     const userMessage: Message = {
@@ -327,7 +461,7 @@ export default function AIAssistant() {
       text: textToSend,
       sender: 'user',
       timestamp: new Date(),
-      isVoice: isVoicePrompt || isRecording,
+      isVoice: isVoiceTranscript,
     };
 
     const aiMessageId = `ai-${Date.now() + 1}`;
@@ -340,15 +474,17 @@ export default function AIAssistant() {
 
     setMessages((prev) => [...prev, userMessage, pendingAiMessage]);
     setInputText('');
-    setRecordingTranscript('');
+    setIsVoiceTranscript(false);
+    setRecordingError('');
+    clearAudioPreview();
     setIsLoading(true);
     setTypingMessageId(aiMessageId);
-
-    const shouldSpeak = autoSpeak || isVoicePrompt || isRecording;
+    const controller = new AbortController();
+    streamControllerRef.current = controller;
 
     try {
       // Only use real display_name if user is authenticated — never invent a name
-      const displayName: string | undefined = (user?.profile as any)?.display_name || undefined;
+      const displayName = user?.profile?.display_name || undefined;
       // Persist user message to backend conversation storage (only if authenticated)
       if (displayName) {
         try {
@@ -362,18 +498,26 @@ export default function AIAssistant() {
       const recentHistory = messages
         .filter((m) => m.text)
         .slice(-4)
-        .map((m) => `${m.sender === 'user' ? (displayName || t('Visiteur', 'Visitor')) : 'Bigiss'}: ${m.text}`)
-        .join('\n');
+        .map((m) => `${m.sender === 'user' ? (displayName ? displayName : t('Utilisateur', 'User')) : 'Bigiss'}: ${m.text}`)
+        .join('\n')
+        .slice(-2000);
       const context = messages.length > 1 ? recentHistory : undefined;
 
-      const response = await multiAI.generateResponse(
+      await multiAI.streamResponse(
         textToSend,
-        context
+        context,
+        (partialText) => {
+          setMessages((previous) => previous.map((message) =>
+            message.id === aiMessageId ? { ...message, text: partialText } : message
+          ));
+        },
+        controller.signal,
       );
-
-      // Smooth typewriter streaming animation
-      startTypewriter(aiMessageId, response.text, shouldSpeak);
+      setTypingMessageId(null);
     } catch (error) {
+      if (controller.signal.aborted) {
+        return;
+      }
       console.error('Error getting AI response:', error);
       setIsLoading(false);
       setTypingMessageId(null);
@@ -381,8 +525,14 @@ export default function AIAssistant() {
       setMessages((prev) =>
         prev.map((m) => (m.id === aiMessageId ? { ...m, text: errorText } : m))
       );
+    } finally {
+      if (streamControllerRef.current === controller) {
+        streamControllerRef.current = null;
+      }
+      setIsLoading(false);
     }
   };
+  sendMessageRef.current = handleSendMessage;
 
   // Text-to-speech read out loud
   const speakText = (msgId: string, text: string) => {
@@ -426,7 +576,7 @@ export default function AIAssistant() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="absolute bottom-16 right-0 w-[330px] sm:w-[420px] h-[520px] rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl border border-white/20 flex flex-col"
+            className="absolute bottom-16 right-0 w-[calc(100vw-2rem)] max-w-[420px] h-[min(520px,calc(100dvh-10rem))] rounded-2xl overflow-hidden shadow-2xl backdrop-blur-xl border border-white/20 flex flex-col"
             style={{
               background: theme === 'dark' ? 'rgba(15, 23, 42, 0.92)' : 'rgba(255, 255, 255, 0.92)',
             }}
@@ -438,36 +588,23 @@ export default function AIAssistant() {
                   <Bot className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="font-bold text-white text-sm">Bigiss AI</h3>
-                    <span className="text-[10px] bg-white/20 text-white px-1.5 py-0.5 rounded-full font-medium">
-                      Voice & Farm
-                    </span>
-                  </div>
-                  <p className="text-[11px] text-white/80 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                    {t('En ligne • Vocal actif', 'Online • Voice active')}
-                  </p>
+                  <h3 className="font-bold text-white text-sm">Bigis</h3>
                 </div>
               </div>
 
               <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setAutoSpeak(!autoSpeak)}
-                  title={autoSpeak ? t('Lecture vocale automatique activée', 'Auto voice output on') : t('Activer la lecture vocale', 'Turn on auto voice output')}
-                  className={`p-1.5 rounded-lg transition-colors text-white ${autoSpeak ? 'bg-white/30' : 'hover:bg-white/15 opacity-70'}`}
-                >
-                  {autoSpeak ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
-                </button>
-                <button
                   onClick={resetConversation}
                   title={t('Réinitialiser la discussion', 'Reset chat')}
-                  className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-white opacity-70 hover:opacity-100"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 hover:bg-white/20 rounded-lg transition-colors text-white text-xs font-medium"
                 >
                   <RefreshCw className="w-4 h-4" />
+                  <span>{t('Réinitialiser', 'Reset')}</span>
                 </button>
                 <button
                   onClick={handleClose}
+                  aria-label={t('Fermer Bigis', 'Close Bigis')}
+                  title={t('Fermer', 'Close')}
                   className="p-1.5 hover:bg-white/20 rounded-lg transition-colors text-white"
                 >
                   <X className="w-5 h-5" />
@@ -481,6 +618,7 @@ export default function AIAssistant() {
                 <button
                   key={idx}
                   onClick={() => handleSendMessage(chip.prompt)}
+                  disabled={isRecording || isTranscribing || isLoading}
                   className={`px-2.5 py-1 rounded-full whitespace-nowrap transition-all border text-[11px] font-medium ${
                     theme === 'dark'
                       ? 'bg-white/10 hover:bg-white/20 text-white border-white/10'
@@ -537,7 +675,7 @@ export default function AIAssistant() {
                         </div>
                       ) : (
                         <div className="leading-relaxed whitespace-pre-wrap">
-                          {msg.text}
+                          {msg.sender === 'ai' ? formatAssistantText(msg.text) : msg.text}
                           {isCurrentTyping && (
                             <span
                               className="inline-block w-1.5 h-4 ml-1 bg-emerald-500 rounded-sm animate-pulse shadow-sm"
@@ -592,16 +730,17 @@ export default function AIAssistant() {
               })}
 
               {/* Recording Indicator */}
-              {isRecording && (
+              {(isRecording || isTranscribing) && (
                 <div className="flex justify-center my-2">
                   <div className="bg-red-500/10 border border-red-500/30 text-red-500 px-4 py-2 rounded-2xl flex items-center gap-2 text-xs font-medium animate-pulse shadow-lg">
-                    <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
-                    <span>{t('Enregistrement note vocale...', 'Recording voice note...')}</span>
-                    <div className="flex items-center gap-0.5 ml-1">
-                      <span className="w-1 h-3 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                      <span className="w-1 h-4 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                      <span className="w-1 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                    </div>
+                    {isRecording ? (
+                      <>
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-ping" />
+                        <span>{t('Enregistrement vocal… appuyez sur le micro pour terminer', 'Recording… tap the microphone to finish')}</span>
+                      </>
+                    ) : (
+                      <span>{t('Bigis transcrit votre message…', 'Bigis is transcribing your message…')}</span>
+                    )}
                   </div>
                 </div>
               )}
@@ -611,6 +750,27 @@ export default function AIAssistant() {
 
             {/* Input Bar */}
             <div className="p-3 border-t border-white/10 bg-black/5 dark:bg-white/5 backdrop-blur-md">
+              {audioPreviewUrl && (
+                <div className="mb-2 flex items-center gap-2">
+                  <audio className="min-w-0 flex-1 h-9" controls src={audioPreviewUrl}>
+                    {t('Votre navigateur ne peut pas lire cet enregistrement.', 'Your browser cannot play this recording.')}
+                  </audio>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      clearAudioPreview();
+                      setInputText('');
+                      setIsVoiceTranscript(false);
+                    }}
+                    disabled={isTranscribing || isLoading}
+                    aria-label={t('Supprimer l’enregistrement vocal', 'Delete voice recording')}
+                    title={t('Supprimer et recommencer', 'Delete and record again')}
+                    className="p-2 rounded-lg text-gray-500 hover:bg-red-50 hover:text-red-600 disabled:opacity-40"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
               <form
                 onSubmit={(e) => {
                   e.preventDefault();
@@ -622,6 +782,8 @@ export default function AIAssistant() {
                 <button
                   type="button"
                   onClick={toggleRecording}
+                  disabled={isTranscribing}
+                  aria-pressed={isRecording}
                   title={isRecording ? t('Arrêter la note vocale', 'Stop voice note') : t('Enregistrer une note vocale', 'Record voice note')}
                   className={`p-2.5 rounded-xl transition-all shadow-md ${
                     isRecording
@@ -641,6 +803,8 @@ export default function AIAssistant() {
                   placeholder={
                     isRecording
                       ? t('Parlez maintenant...', 'Speak now...')
+                      : isTranscribing
+                        ? t('Transcription en cours...', 'Transcribing...')
                       : t('Posez votre question ou note vocale...', 'Ask a question or voice note...')
                   }
                   className={`flex-1 px-3.5 py-2.5 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all ${
@@ -654,7 +818,7 @@ export default function AIAssistant() {
                   <button
                     type="button"
                     onClick={stopTypingOrSkip}
-                    title={t('Afficher la réponse complète', 'Show full response')}
+                    title={t('Arrêter la génération', 'Stop generating')}
                     className="p-2.5 rounded-xl text-white bg-emerald-600 hover:bg-emerald-700 transition-all shadow-lg active:scale-95 flex items-center justify-center group"
                   >
                     <Square className="w-4 h-4 fill-current group-hover:scale-90 transition-transform" />
@@ -662,7 +826,7 @@ export default function AIAssistant() {
                 ) : (
                   <button
                     type="submit"
-                    disabled={!inputText.trim() || isRecording}
+                    disabled={!inputText.trim() || isRecording || isTranscribing}
                     className="p-2.5 rounded-xl text-white disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-lg hover:opacity-90 active:scale-95"
                     style={{ backgroundColor: domainColors.primary }}
                   >
@@ -670,6 +834,11 @@ export default function AIAssistant() {
                   </button>
                 )}
               </form>
+              {recordingError && (
+                <p role="alert" className="mt-2 px-1 text-xs text-red-600 dark:text-red-300">
+                  {recordingError}
+                </p>
+              )}
             </div>
           </motion.div>
         )}

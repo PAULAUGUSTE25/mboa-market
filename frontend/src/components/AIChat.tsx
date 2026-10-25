@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { multiAI } from '@/services/multiAI';
 import { Send, Bot, User, Loader } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
+import { formatAssistantText } from '@/utils/formatAssistantText';
 
 interface Message {
   role: 'user' | 'assistant';
@@ -118,7 +119,9 @@ export default function AIChat() {
                   ? 'bg-white/10 text-white'
                   : 'bg-gray-100 text-gray-900'
               }`}>
-                <div className="whitespace-pre-wrap text-sm">{message.content}</div>
+                <div className="whitespace-pre-wrap text-sm">
+                  {message.role === 'assistant' ? formatAssistantText(message.content) : message.content}
+                </div>
               </div>
               {message.provider && message.role === 'assistant' && (
                 <div className={`text-xs mt-1 ${isDark ? 'text-gray-500' : 'text-gray-400'}`}>

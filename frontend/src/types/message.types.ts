@@ -5,11 +5,13 @@ export interface Message {
   content: string;
   created_at: string;
   read_at?: string;
+  is_read?: boolean;
 }
 
 export interface Conversation {
   id: string;
   listing_id?: string;
+  listing_title?: string;
   participants: ConversationParticipant[];
   last_message?: Message;
   unread_count: number;

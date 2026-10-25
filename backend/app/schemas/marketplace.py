@@ -38,6 +38,43 @@ class ListingPhotoResponse(BaseModel):
         from_attributes = True
 
 
+class ListingSellerProfileResponse(BaseModel):
+    display_name: str
+    activity_type: str
+    domain: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ListingSellerResponse(BaseModel):
+    profile: Optional[ListingSellerProfileResponse] = None
+
+    class Config:
+        from_attributes = True
+
+
+class ListingCommentAuthorResponse(BaseModel):
+    display_name: str
+    activity_type: str
+    region: str
+
+    class Config:
+        from_attributes = True
+
+
+class ListingCommentResponse(BaseModel):
+    id: UUID
+    listing_id: UUID
+    author_id: UUID
+    author: Optional[ListingCommentAuthorResponse] = None
+    content: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class ListingBase(BaseModel):
     category_id: UUID
     product_ref_id: Optional[UUID] = None
@@ -73,6 +110,7 @@ class ListingUpdate(BaseModel):
 class ListingResponse(ListingBase):
     id: UUID
     seller_id: UUID
+    seller: Optional[ListingSellerResponse] = None
     status: str
     created_at: datetime
     updated_at: datetime

@@ -32,6 +32,19 @@ export interface Listing {
   };
 }
 
+export interface ListingComment {
+  id: string;
+  listing_id: string;
+  author_id: string;
+  author?: {
+    display_name: string;
+    activity_type: string;
+    region: string;
+  } | null;
+  content: string;
+  created_at: string;
+}
+
 export interface ListingCreateRequest {
   category_id: string;
   product_ref_id?: string;
@@ -43,6 +56,7 @@ export interface ListingCreateRequest {
   currency?: string;
   region: string;
   locality?: string;
+  domain?: string;
   available_from?: string;
 }
 

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useLocation } from 'react-router-dom'
+import { API_BASE_URL } from '@/api/config'
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 const SESSION_KEY = 'mboa_session_id'
 
 function getSessionId(): string {
@@ -22,7 +22,7 @@ function recordVisit(page: string, action = 'visit', userId?: string) {
     user_id: userId || null,
   }
   // fetch + keepalive : non-bloquant, survit à la fermeture de page, pas de problème CORS
-  fetch(`${API_URL}/analytics/visit`, {
+  fetch(`${API_BASE_URL}/analytics/visit`, {
     method: 'POST',
     body: JSON.stringify(payload),
     headers: { 'Content-Type': 'application/json' },

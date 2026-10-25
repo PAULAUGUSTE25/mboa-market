@@ -50,7 +50,41 @@ uvicorn app.main:app --reload
 - **ReDoc:** http://localhost:8000/redoc
 - **Configuration BD:** [DATABASE_SETUP.md](DATABASE_SETUP.md)
 
+## Déploiement Vercel et transfert PostgreSQL
+
+Configurez deux projets Vercel si frontend et API restent séparés : racine `frontend` (Vite)
+et racine `backend` (fonction Python `api/index.py`). Dans le frontend, définissez `VITE_API_URL`
+sur l’URL publique du backend, terminée par `/api`.
+
+Créez une base Neon vide et utilisez son URL directe dans `NEON_DATABASE_URL` pour l’import.
+Conservez `RENDER_DATABASE_URL` comme URL source et exécutez `python migrate_render_to_neon.py`
+depuis un poste doté de `pg_dump`, `pg_restore` et `psql`. Le script refuse une cible PostgreSQL
+non vide, réalise un dump complet, restaure dans une transaction et compare le nombre de lignes de
+toutes les tables publiques. Il ne supprime ni la source ni la sauvegarde. N’exécutez pas
+`init_neon_db.py` avant ce restore.
+
+Après vérification, configurez côté serveur Vercel `DATABASE_URL` avec l’URL Neon **poolée**,
+`ENVIRONMENT=production`, `SECRET_KEY` (reprenez temporairement la valeur actuelle pour préserver
+les JWT existants), ainsi que `GEMINI_API_KEY` si l’IA est activée. Configurez `CORS_ORIGINS` avec
+l’origine exacte du frontend Vercel et définissez `VITE_API_URL` côté frontend. N’exposez jamais ces
+secrets dans les variables `VITE_*`. Gardez Render et le dump jusqu’à validation des connexions,
+des comptes existants et des fonctionnalités; aucun basculement ni suppression n’est automatisé.
+
 ## 🗄️ Base de Données
+
+### Réponses IA sur les publications de démonstration
+
+Pour une base PostgreSQL existante, exécutez une fois `migrations/2026_10_24_demo_ai_comments.sql`
+avant de déployer la nouvelle version. Les publications existantes restent des publications réelles
+(`is_demo = false`). Marquez explicitement les seules publications de démonstration avec leur UUID :
+
+```sql
+UPDATE community_posts SET is_demo = TRUE WHERE id = 'UUID_DE_LA_PUBLICATION_DE_DEMO';
+```
+
+Les réponses automatiques sont désactivées par défaut. Activez-les uniquement côté serveur avec
+`DEMO_POST_AUTO_REPLY_ENABLED=true` et configurez `GEMINI_API_KEY`. Une réponse persistée est
+attribuée à « Bigiss · IA », jamais au propriétaire de la publication.
 
 ### Modèles Principaux
 

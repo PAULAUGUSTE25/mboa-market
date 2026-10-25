@@ -7,6 +7,7 @@ import type {
   Product,
   PaginatedListings,
   ListingFilters,
+  ListingComment,
 } from '../types/listing.types';
 
 export const listingsApi = {
@@ -17,6 +18,16 @@ export const listingsApi = {
 
   getById: async (id: string): Promise<Listing> => {
     const response = await httpClient.get(`/listings/${id}`);
+    return response.data;
+  },
+
+  getComments: async (id: string): Promise<ListingComment[]> => {
+    const response = await httpClient.get(`/listings/${id}/comments`);
+    return response.data;
+  },
+
+  addComment: async (id: string, content: string): Promise<ListingComment> => {
+    const response = await httpClient.post(`/listings/${id}/comments`, { content });
     return response.data;
   },
 

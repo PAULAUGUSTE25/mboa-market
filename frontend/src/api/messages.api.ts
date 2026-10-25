@@ -4,8 +4,11 @@ import type { Conversation, Message, CreateConversationRequest } from '../types/
 export const messagesApi = {
   getConversations: async (): Promise<Conversation[]> => {
     const response = await httpClient.get('/messages/conversations');
-    const data = response.data;
-    return data.items || data || [];
+    const items = response.data?.items ?? response.data ?? [];
+    return items.map((conversation: Conversation & { listing_title?: string }) => ({
+      ...conversation,
+      listing_title: conversation.listing_title,
+    }));
   },
 
   getMessages: async (conversationId: string): Promise<Message[]> => {
@@ -19,13 +22,12 @@ export const messagesApi = {
   sendMessage: async (conversationId: string, content: string): Promise<Message> => {
     const response = await httpClient.post(
       `/messages/conversations/${conversationId}/messages`,
-      null,
-      { params: { content } }
+      { content }
     );
     return response.data;
   },
 
-  createConversation: async (data: CreateConversationRequest): Promise<Conversation> => {
+  createConversation: async (data: CreateConversationRequest): Promise<{ id: string }> => {
     const response = await httpClient.post('/messages/conversations', data);
     return response.data;
   },

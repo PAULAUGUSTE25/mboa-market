@@ -5,13 +5,14 @@ from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.core.security import get_current_user
 from app.models.user import User
-from app.models.marketplace import Listing, Category, ProductRef, ListingStatus
+from app.models.marketplace import Listing, ListingComment, Category, ProductRef, ListingStatus
 from app.schemas.marketplace import (
     ListingCreate, ListingUpdate, ListingResponse, PaginatedResponse,
-    CategoryResponse, ProductRefResponse
+    CategoryResponse, ProductRefResponse, ListingCommentResponse
 )
 from typing import List, Optional
 from uuid import uuid4, UUID
+from pydantic import BaseModel, Field, field_validator
 import time
 
 router = APIRouter(prefix="/listings", tags=["Marketplace"])
@@ -22,6 +23,34 @@ _cache = {
     "products": {"data": None, "timestamp": 0}
 }
 CACHE_TTL = 300  # 5 minutes
+
+
+class ListingCommentCreate(BaseModel):
+    content: str = Field(..., min_length=1, max_length=2000)
+
+    @field_validator("content")
+    @classmethod
+    def normalize_content(cls, value: str) -> str:
+        content = value.strip()
+        if not content:
+            raise ValueError("Comment cannot be empty")
+        return content
+
+
+def _format_listing_comment(comment: ListingComment) -> dict:
+    profile = comment.author.profile if comment.author else None
+    return {
+        "id": comment.id,
+        "listing_id": comment.listing_id,
+        "author_id": comment.author_id,
+        "author": {
+            "display_name": profile.display_name,
+            "activity_type": profile.activity_type,
+            "region": profile.region,
+        } if profile else None,
+        "content": comment.content,
+        "created_at": comment.created_at,
+    }
 
 
 @router.get("/categories/all", response_model=List[CategoryResponse])
@@ -97,9 +126,15 @@ async def create_listing(
     
     db.add(listing)
     await db.commit()
-    await db.refresh(listing, ['photos'])
-    
-    return listing
+    result = await db.execute(
+        select(Listing)
+        .where(Listing.id == listing.id)
+        .options(
+            selectinload(Listing.photos),
+            selectinload(Listing.seller).selectinload(User.profile),
+        )
+    )
+    return result.scalar_one()
 
 
 @router.get("", response_model=PaginatedResponse, response_model_exclude_unset=True)
@@ -114,7 +149,10 @@ async def get_listings(
 ):
     """Get paginated listings - optimized serialization"""
     try:
-        query = select(Listing).options(selectinload(Listing.photos))
+        query = select(Listing).options(
+            selectinload(Listing.photos),
+            selectinload(Listing.seller).selectinload(User.profile),
+        )
         
         # Apply filters
         if category_id:
@@ -182,7 +220,10 @@ async def get_my_listings(
         result = await db.execute(
             select(Listing)
             .where(Listing.seller_id == current_user.id)
-            .options(selectinload(Listing.photos))
+            .options(
+                selectinload(Listing.photos),
+                selectinload(Listing.seller).selectinload(User.profile),
+            )
             .order_by(Listing.created_at.desc())
         )
         listings = result.scalars().all()
@@ -192,6 +233,69 @@ async def get_my_listings(
         logger = logging.getLogger(__name__)
         logger.error(f"Error in get_my_listings: {e}", exc_info=True)
         return []
+
+
+@router.get("/{listing_id}/comments", response_model=List[ListingCommentResponse])
+async def get_listing_comments(
+    listing_id: UUID,
+    db: AsyncSession = Depends(get_db),
+):
+    """Get public comments for a marketplace listing."""
+    listing_result = await db.execute(
+        select(Listing.id).where(
+            Listing.id == listing_id,
+            Listing.status == ListingStatus.PUBLISHED,
+        )
+    )
+    if listing_result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
+
+    result = await db.execute(
+        select(ListingComment)
+        .where(ListingComment.listing_id == listing_id)
+        .options(selectinload(ListingComment.author).selectinload(User.profile))
+        .order_by(ListingComment.created_at.asc())
+        .limit(200)
+    )
+    return [_format_listing_comment(comment) for comment in result.scalars().all()]
+
+
+@router.post(
+    "/{listing_id}/comments",
+    response_model=ListingCommentResponse,
+    status_code=status.HTTP_201_CREATED,
+)
+async def create_listing_comment(
+    listing_id: UUID,
+    data: ListingCommentCreate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Create a public comment on a listing. Requires authentication."""
+    listing_result = await db.execute(
+        select(Listing.id).where(
+            Listing.id == listing_id,
+            Listing.status == ListingStatus.PUBLISHED,
+        )
+    )
+    if listing_result.scalar_one_or_none() is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Listing not found")
+
+    comment = ListingComment(
+        id=uuid4(),
+        listing_id=listing_id,
+        author_id=current_user.id,
+        content=data.content,
+    )
+    db.add(comment)
+    await db.commit()
+
+    result = await db.execute(
+        select(ListingComment)
+        .where(ListingComment.id == comment.id)
+        .options(selectinload(ListingComment.author).selectinload(User.profile))
+    )
+    return _format_listing_comment(result.scalar_one())
 
 
 @router.get("/{listing_id}", response_model=ListingResponse)
@@ -204,7 +308,10 @@ async def get_listing(
         result = await db.execute(
             select(Listing)
             .where(Listing.id == listing_id)
-            .options(selectinload(Listing.photos))
+            .options(
+                selectinload(Listing.photos),
+                selectinload(Listing.seller).selectinload(User.profile),
+            )
         )
         listing = result.scalar_one_or_none()
         

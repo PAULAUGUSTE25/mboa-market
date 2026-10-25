@@ -15,13 +15,13 @@ const persistAuthTokens = (payload: Partial<LoginResponse> | null | undefined) =
 
 export const authApi = {
   register: async (data: RegisterRequest): Promise<any> => {
-    const response = await httpClient.post('/auth/register', data);
+    const response = await httpClient.post('/auth/register', data, { timeout: 20000 });
     persistAuthTokens(response.data);
     return response.data;
   },
 
   login: async (credentials: LoginRequest): Promise<LoginResponse> => {
-    const response = await httpClient.post('/auth/login', credentials);
+    const response = await httpClient.post('/auth/login', credentials, { timeout: 15000 });
     persistAuthTokens(response.data);
     return response.data;
   },

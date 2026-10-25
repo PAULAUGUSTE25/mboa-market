@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/store/authStore';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { usePlatformStats } from '@/hooks/usePlatformStats';
+import { trackLogin } from '@/hooks/useVisitTracking';
 import TrustPopup from '@/components/TrustPopup';
 import {
   Phone, Lock, CheckCircle, TrendingUp, Users, ShoppingBag,
@@ -16,7 +18,12 @@ function useCountUp(target: number, duration = 2000) {
   const ref = useRef<HTMLDivElement>(null);
   const started = useRef(false);
   useEffect(() => {
-    const el = ref.current; if (!el || started.current) return;
+    started.current = false;
+    setCount(0);
+  }, [target]);
+
+  useEffect(() => {
+    const el = ref.current; if (!el || started.current || target <= 0) return;
     const observer = new IntersectionObserver(([entry]) => {
       if (entry.isIntersecting && !started.current) {
         started.current = true;
@@ -94,8 +101,10 @@ const TESTIMONIALS = [
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { login, loading, error, clearError } = useAuthStore();
+  const { login, error, clearError, resetLoading } = useAuthStore();
+  const platformStats = usePlatformStats();
   const { t, lang } = useLanguage();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
   const [formData, setFormData] = useState({ phone: '+237', password: '' });
@@ -114,6 +123,16 @@ export default function LoginPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   const tickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    resetLoading();
+  }, [resetLoading]);
+
+  const phoneDigits = formData.phone.replace(/\D/g, '');
+  const isFormValid =
+    formData.phone.startsWith('+') &&
+    phoneDigits.length >= 9 &&
+    formData.password.trim().length > 0;
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -165,7 +184,7 @@ export default function LoginPage() {
       errors.phone = t('Le numéro de téléphone est trop court', 'Phone number is too short');
     }
 
-    if (!formData.password) {
+    if (!formData.password.trim()) {
       errors.password = t('Le mot de passe est obligatoire', 'Password is required');
     }
 
@@ -175,9 +194,12 @@ export default function LoginPage() {
     }
 
     setFieldErrors({});
+    setIsSubmitting(true);
 
     try {
       await login(formData);
+      const userId = useAuthStore.getState().user?.id;
+      if (userId) trackLogin(userId);
       setShowSuccessModal(true);
       setTimeout(() => {
         navigate('/feed');
@@ -185,13 +207,15 @@ export default function LoginPage() {
     } catch (err: any) {
       // Error is already set in authStore — no need to duplicate into fieldErrors
       // Only set fieldErrors.general if there's extra context not in authStore error
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Animated counters
-  const usersCount = useCountUp(2847, 2000);
-  const listingsCount = useCountUp(15630, 2500);
-  const regionsCount = useCountUp(10, 1500);
+  // Animated counters (real platform data when available)
+  const usersCount = useCountUp(platformStats?.users ?? 0, 2000);
+  const listingsCount = useCountUp(platformStats?.listings ?? 0, 2500);
+  const regionsCount = useCountUp(platformStats?.regions ?? 0, 1500);
 
   return (
     <>
@@ -274,7 +298,7 @@ export default function LoginPage() {
             </div>
             <div>
               <div className="text-3xl font-bold text-white" ref={usersCount.ref}>
-                {usersCount.count.toLocaleString()}+
+                {platformStats ? usersCount.count.toLocaleString() : '—'}
               </div>
               <p className="text-sm text-white/60">{t('Agriculteurs Connectés', 'Connected Farmers')}</p>
             </div>
@@ -291,7 +315,7 @@ export default function LoginPage() {
             </div>
             <div>
               <div className="text-3xl font-bold text-white" ref={listingsCount.ref}>
-                {listingsCount.count.toLocaleString()}+
+                {platformStats ? listingsCount.count.toLocaleString() : '—'}
               </div>
               <p className="text-sm text-white/60">{t('Annonces Actives', 'Active Listings')}</p>
             </div>
@@ -308,7 +332,7 @@ export default function LoginPage() {
             </div>
             <div>
               <div className="text-3xl font-bold text-white" ref={regionsCount.ref}>
-                {regionsCount.count}+
+                {platformStats ? regionsCount.count.toLocaleString() : '—'}
               </div>
               <p className="text-sm text-white/60">{t('Régions Couvertes', 'Regions Covered')}</p>
             </div>
@@ -490,10 +514,10 @@ export default function LoginPage() {
                   whileHover={{ scale: 1.02, boxShadow: '0 8px 30px rgba(63,68,28,0.4)' }}
                   whileTap={{ scale: 0.98 }}
                   type="submit"
-                  disabled={loading}
+                  disabled={isSubmitting || !isFormValid}
                   className="w-full py-4 bg-gradient-to-r from-[#3F441C] to-[#5A6129] text-white font-bold rounded-xl shadow-lg transition-all hover:from-[#4A4F23] hover:to-[#656D30] disabled:opacity-60 flex items-center justify-center gap-2"
                 >
-                  {loading ? (
+                  {isSubmitting ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       {t('Connexion...', 'Logging in...')}

@@ -70,6 +70,12 @@ class Listing(Base):
     product_ref = relationship("ProductRef", back_populates="listings")
     photos = relationship("ListingPhoto", back_populates="listing", cascade="all, delete-orphan")
     orders = relationship("Order", back_populates="listing")
+    comments = relationship(
+        "ListingComment",
+        back_populates="listing",
+        cascade="all, delete-orphan",
+        order_by="ListingComment.created_at",
+    )
 
 
 class ListingPhoto(Base):
@@ -82,3 +88,16 @@ class ListingPhoto(Base):
     created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
     
     listing = relationship("Listing", back_populates="photos")
+
+
+class ListingComment(Base):
+    __tablename__ = "listing_comments"
+
+    id = Column(GUID(), primary_key=True, default=uuid.uuid4)
+    listing_id = Column(GUID(), ForeignKey("listings.id", ondelete="CASCADE"), nullable=False)
+    author_id = Column(GUID(), ForeignKey("users.id", ondelete="CASCADE"), nullable=False)
+    content = Column(Text, nullable=False)
+    created_at = Column(DateTime, nullable=False, default=datetime.utcnow)
+
+    listing = relationship("Listing", back_populates="comments")
+    author = relationship("User", foreign_keys=[author_id])

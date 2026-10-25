@@ -3,67 +3,39 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from contextlib import asynccontextmanager
+from sqlalchemy import text
 from app.api import auth, users, listings, messaging, orders, security, b2b, livestock, logistics, admin, analytics, ai, community
 from app.core.config import settings
 import logging
-import asyncio
 import os
-import httpx
 
 logger = logging.getLogger(__name__)
-
-# ──────────────────────────────────────────────
-# Keep-alive: prevents Render free tier spin-down
-# ──────────────────────────────────────────────
-KEEP_ALIVE_INTERVAL = 10 * 60  # 10 minutes (Render spins down after 15 min)
-
-async def _keep_alive_task():
-    """Periodically ping our own /api/health endpoint so Render never
-    idles the service due to inactivity on the free tier."""
-    # Give the server a moment to fully start before first ping
-    await asyncio.sleep(30)
-    # Determine base URL from environment (Render sets RENDER_EXTERNAL_URL)
-    base_url = os.getenv("RENDER_EXTERNAL_URL", "http://localhost:8000")
-    health_url = f"{base_url}/api/health"
-    logger.info("🔄 Keep-alive task started — pinging %s every %ds", health_url, KEEP_ALIVE_INTERVAL)
-    async with httpx.AsyncClient(timeout=10) as client:
-        while True:
-            try:
-                resp = await client.get(health_url)
-                logger.debug("✅ Keep-alive ping OK (%d)", resp.status_code)
-            except Exception as exc:
-                logger.warning("⚠️  Keep-alive ping failed: %s", exc)
-            await asyncio.sleep(KEEP_ALIVE_INTERVAL)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Crée les tables DB au démarrage si elles n'existent pas"""
+    """Validate database access; run schema creation only in local development."""
+    is_production = settings.ENVIRONMENT.lower() == "production" or os.getenv("VERCEL") == "1"
     try:
         from app.core.database import engine, Base
         import app.models  # noqa: F401 – enregistre tous les modèles dans Base.metadata
+        if is_production:
+            if engine.url.host in {"localhost", "127.0.0.1"}:
+                raise RuntimeError("Production DATABASE_URL must point to a remote PostgreSQL service.")
+            if settings.SECRET_KEY == "mboa-market-secret-key-change-in-production-2024":
+                raise RuntimeError("Set SECRET_KEY in the production environment.")
         async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
-        logger.info("✅ Tables DB vérifiées/créées au démarrage")
-    except Exception as e:
-        logger.error(f"❌ Erreur init DB: {e}")
-
-    # Start keep-alive background task (only on Render or prod)
-    keep_alive_task = None
-    if os.getenv("RENDER_EXTERNAL_URL") or os.getenv("ENVIRONMENT") == "production":
-        keep_alive_task = asyncio.create_task(_keep_alive_task())
-        logger.info("🚀 Keep-alive background task launched")
+            if not is_production:
+                await conn.run_sync(Base.metadata.create_all)
+            else:
+                await conn.execute(text("SELECT 1"))
+        logger.info("Database startup check succeeded")
+    except Exception:
+        logger.exception("Database startup check failed")
+        if is_production:
+            raise
 
     yield
-
-    # Shutdown: cancel the keep-alive task gracefully
-    if keep_alive_task and not keep_alive_task.done():
-        keep_alive_task.cancel()
-        try:
-            await keep_alive_task
-        except asyncio.CancelledError:
-            pass
-        logger.info("🛑 Keep-alive task stopped")
 
 app = FastAPI(
     title="MBOA Market API",
@@ -79,7 +51,7 @@ except Exception:
     # If directory doesn't exist yet, ignore until created
     pass
 
-# CORS middleware — keep exact origins for production and a regex fallback for Netlify/Render domains.
+# CORS middleware — keep exact origins for production and a regex fallback for deployed frontends.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.cors_origins_list,
@@ -139,7 +111,14 @@ async def health_check():
 
 @app.get("/api/health")
 async def api_health_check():
-    return {"status": "healthy", "api": "online"}
+    from app.core.database import engine
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+    except Exception:
+        logger.exception("API health check failed because the database is unavailable")
+        return JSONResponse(status_code=503, content={"status": "unhealthy", "database": "unavailable"})
+    return {"status": "healthy", "api": "online", "database": "connected"}
 
 
 @app.get("/api/db-status")

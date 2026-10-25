@@ -4,12 +4,16 @@ Endpoint public (sans authentification) utilisé par le frontend.
 """
 from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func
 from pydantic import BaseModel
 from typing import Optional
 import logging
 
 from app.core.database import get_db
 from app.models.system import SiteVisit
+from app.models.user import User, Profile
+from app.models.marketplace import Listing, ListingStatus
+from app.models.community import CommunityPost
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 logger = logging.getLogger(__name__)
@@ -22,6 +26,39 @@ def _detect_device(user_agent: str) -> str:
     if "tablet" in ua:
         return "tablet"
     return "desktop"
+
+
+class PlatformStatsResponse(BaseModel):
+    users: int
+    listings: int
+    regions: int
+    posts: int
+
+
+@router.get("/platform-stats", response_model=PlatformStatsResponse)
+async def get_platform_stats(db: AsyncSession = Depends(get_db)):
+    """Public aggregate counts for marketing surfaces (no authentication)."""
+    total_users = (await db.execute(select(func.count(User.id)))).scalar_one()
+    active_listings = (
+        await db.execute(
+            select(func.count(Listing.id)).where(Listing.status == ListingStatus.PUBLISHED)
+        )
+    ).scalar_one()
+    regions_covered = (
+        await db.execute(
+            select(func.count(func.distinct(Profile.region))).where(
+                Profile.region.isnot(None),
+                Profile.region != "",
+            )
+        )
+    ).scalar_one()
+    total_posts = (await db.execute(select(func.count(CommunityPost.id)))).scalar_one()
+    return PlatformStatsResponse(
+        users=int(total_users or 0),
+        listings=int(active_listings or 0),
+        regions=int(regions_covered or 0),
+        posts=int(total_posts or 0),
+    )
 
 
 class VisitPayload(BaseModel):

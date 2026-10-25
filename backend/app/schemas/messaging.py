@@ -31,7 +31,13 @@ class MessageResponse(BaseModel):
 class ConversationCreate(BaseModel):
     participant_user_id: UUID
     listing_id: Optional[UUID] = None
-    initial_message: str
+    initial_message: str = Field(..., min_length=1, max_length=5000)
+
+    @validator("initial_message")
+    def validate_initial_message(cls, value):
+        if not value or not value.strip():
+            raise ValueError("Initial message cannot be empty")
+        return value.strip()
 
 
 class ConversationResponse(BaseModel):

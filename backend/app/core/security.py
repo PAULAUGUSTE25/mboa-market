@@ -27,13 +27,13 @@ def normalize_phone(phone: str | None) -> str:
 
 def phone_lookup_variants(phone: str | None) -> list[str]:
     normalized = normalize_phone(phone)
-    variants: set[str] = set()
+    variants = []
     for value in [phone, normalized, f"+{normalized}"]:
         if value:
             cleaned = str(value).strip()
-            if cleaned:
-                variants.add(cleaned)
-    return list(variants)
+            if cleaned and cleaned not in variants:
+                variants.append(cleaned)
+    return variants
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:

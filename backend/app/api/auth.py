@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, case
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload
 from app.core.database import get_db
 from app.core.security import verify_password, get_password_hash, create_access_token, create_refresh_token, normalize_phone, phone_lookup_variants
@@ -71,12 +72,10 @@ async def register(
 
     # Check if phone already exists (all format variants)
     phone_variants = phone_lookup_variants(normalized_phone)
-    existing_user = None
-    for variant in phone_variants:
-        result = await db.execute(select(User).where(User.phone == variant))
-        existing_user = result.scalar_one_or_none()
-        if existing_user:
-            break
+    existing_result = await db.execute(
+        select(User.id).where(User.phone.in_(phone_variants)).limit(1)
+    )
+    existing_user = existing_result.scalar_one_or_none()
 
     if existing_user:
         logger.warning(f"Registration failed - phone already exists: {data.phone}")
@@ -153,14 +152,30 @@ async def login(
     # Constant-time start
     start_time = asyncio.get_event_loop().time()
 
-    user = None
-    for variant in phone_lookup_variants(normalized_phone):
-        result = await db.execute(
-            select(User).options(selectinload(User.profile)).where(User.phone == variant)
+    phone_variants = phone_lookup_variants(normalized_phone)
+    variant_priority = case(
+        {variant: index for index, variant in enumerate(phone_variants)},
+        value=User.phone,
+        else_=len(phone_variants),
+    )
+    try:
+        result = await asyncio.wait_for(
+            db.execute(
+                select(User)
+                .options(selectinload(User.profile))
+                .where(User.phone.in_(phone_variants))
+                .order_by(variant_priority)
+                .limit(1)
+            ),
+            timeout=10,
         )
-        user = result.scalar_one_or_none()
-        if user:
-            break
+    except (asyncio.TimeoutError, SQLAlchemyError) as exc:
+        logger.warning("Login database lookup failed or exceeded its timeout: %s", type(exc).__name__)
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Le service de connexion est temporairement indisponible. Réessayez dans quelques instants.",
+        ) from exc
+    user = result.scalar_one_or_none()
 
     # Always verify password even if user doesn't exist (constant-time defense)
     if user and user.password_hash:
@@ -205,7 +220,7 @@ async def login(
             success="true",
         )
         db.add(history)
-        await db.commit()
+        await asyncio.wait_for(db.commit(), timeout=2)
         logger.info(f"Login history saved for user: {user.id}")
     except Exception as e:
         logger.warning(f"Could not save login history: {e}")

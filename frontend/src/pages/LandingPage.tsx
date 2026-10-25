@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
+import { usePlatformStats } from '@/hooks/usePlatformStats';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLanguage } from '@/contexts/LanguageContext';
@@ -52,17 +53,20 @@ const PREVIEW = [
   { id: 9, emoji: '🌿', title: 'Manioc frais récolté', seller: 'Ferme Littoral', region: 'Littoral', price: 200, unit: 'kg', qty: 1000, img: '/images/agriculture/bonmanioc.jpg', domain: 'agriculture' },
 ];
 
-// ── Stats ──────────────────────────────────────────────────
-const STATS = [
-  { icon: Users, fr: '5 000+ membres', en: '5,000+ members' },
-  { icon: MapPin, fr: '10 régions couvertes', en: '10 regions covered' },
-  { icon: Package, fr: '50+ produits', en: '50+ products' },
-  { icon: ShieldCheck, fr: 'Vendeurs vérifiés', en: 'Verified sellers' },
-];
-
 export default function LandingPage() {
   const { t, lang } = useLanguage();
+  const platformStats = usePlatformStats();
   const navigate = useNavigate();
+
+  const statsBar = useMemo(() => {
+    const fmt = (n: number | undefined) => (typeof n === 'number' ? n.toLocaleString(lang === 'en' ? 'en-US' : 'fr-FR') : '—');
+    return [
+      { icon: Users, fr: `${fmt(platformStats?.users)} membres`, en: `${fmt(platformStats?.users)} members` },
+      { icon: MapPin, fr: `${fmt(platformStats?.regions)} régions`, en: `${fmt(platformStats?.regions)} regions` },
+      { icon: Package, fr: `${fmt(platformStats?.listings)} annonces`, en: `${fmt(platformStats?.listings)} listings` },
+      { icon: ShieldCheck, fr: `${fmt(platformStats?.posts)} publications`, en: `${fmt(platformStats?.posts)} posts` },
+    ];
+  }, [platformStats, lang]);
   const tickerRef = useRef<HTMLDivElement>(null);
   const [lockedListing, setLockedListing] = useState<typeof PREVIEW[0] | null>(null);
 
@@ -163,7 +167,7 @@ export default function LandingPage() {
         {/* ── Stats bar en bas du hero ───────────────────── */}
         <div className="relative z-10 backdrop-blur-md border-t border-white/10" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="max-w-4xl mx-auto px-4 py-3 grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-white/10">
-            {STATS.map(({ icon: Icon, fr, en }) => (
+            {statsBar.map(({ icon: Icon, fr, en }) => (
               <div key={fr} className="flex items-center justify-center gap-2 px-4 py-1">
                 <Icon className="w-4 h-4 flex-shrink-0 text-white/60" />
                 <span className="text-xs font-semibold text-white/90">{lang === 'en' ? en : fr}</span>

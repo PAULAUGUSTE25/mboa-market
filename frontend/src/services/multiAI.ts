@@ -1,5 +1,5 @@
-import { generateGeminiResponse } from './gemini';
 import httpClient from '@/api/client';
+import { API_BASE_URL } from '@/api/config';
 
 interface AIProvider {
   name: string;
@@ -16,53 +16,78 @@ interface AIResponse {
 }
 
 class MultiAIService {
+  private cache: Map<string, { response: string; timestamp: number }> = new Map();
+  private cacheExpiry = 3600000;
+
   private getApiUrl(): string {
-    const envUrl = import.meta.env.VITE_API_URL;
-    if (envUrl) {
-      return envUrl.endsWith('/api') ? envUrl : `${envUrl}/api`;
-    }
-    return '/api';
+    return API_BASE_URL;
   }
 
-  private cache: Map<string, { response: string; timestamp: number }> = new Map();
-  private cacheExpiry = 3600000; // 1 heure
-
   /**
-   * Génère une réponse IA avec fallback automatique multi-niveaux
+   * Use the server-configured provider once; retries here duplicated model calls.
    */
   async generateResponse(prompt: string, context?: string, options?: { user_name?: string; interlocutor_name?: string }): Promise<AIResponse> {
-    // 1. Essayer le backend MBOA (Gemini Server)
-    try {
-      const endpoint = `${this.getApiUrl()}/ai/chat`;
-      const response = await this.callBackendAI(endpoint, prompt, context, options);
-      return {
-        text: response,
-        provider: 'MBOA Gemini Server',
-        cached: false
-      };
-    } catch (error) {
-      console.warn('Backend AI failed, trying Direct Gemini Client...', error);
+    const endpoint = `${this.getApiUrl()}/ai/chat`;
+    const text = await this.callBackendAI(endpoint, prompt, context, options);
+    return { text, provider: 'MBOA Gemini Server', cached: false };
+  }
+
+  async streamResponse(
+    prompt: string,
+    context: string | undefined,
+    onText: (text: string) => void,
+    signal: AbortSignal,
+    options?: { interlocutor_name?: string },
+  ): Promise<void> {
+    const token = localStorage.getItem('access_token');
+    const response = await fetch(`${this.getApiUrl()}/ai/chat/stream`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+      body: JSON.stringify({ prompt, context, ...options }),
+      signal,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => null);
+      throw new Error(error?.detail || `AI request failed (${response.status})`);
+    }
+    if (!response.body) {
+      throw new Error('The browser does not support streamed responses.');
     }
 
-    // 2. Essayer Gemini Client Direct
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+    let fullText = '';
     try {
-      const clientResponse = await generateGeminiResponse(prompt, context);
-      if (clientResponse && !clientResponse.includes("n'est pas configuré")) {
-        return {
-          text: clientResponse,
-          provider: 'Gemini Client',
-          cached: false
-        };
+      while (true) {
+        const { value, done } = await reader.read();
+        buffer += decoder.decode(value, { stream: !done });
+        const events = buffer.split(/\r?\n\r?\n/);
+        buffer = events.pop() || '';
+        for (const event of events) {
+          const dataLine = event.split(/\r?\n/).find((line) => line.startsWith('data:'));
+          if (!dataLine) continue;
+          const data = JSON.parse(dataLine.slice(5).trim());
+          if (event.startsWith('event: error')) {
+            throw new Error(data.detail || 'The AI service is temporarily unavailable.');
+          }
+          if (typeof data.text === 'string') {
+            fullText += data.text;
+            onText(fullText);
+          }
+        }
+        if (done) break;
       }
-    } catch (error) {
-      console.warn('Direct Gemini Client failed:', error);
+    } finally {
+      reader.releaseLock();
     }
-
-    return {
-      text: "Erreur lors de l'appel à l'IA Google Gemini Cloud. Veuillez vérifier votre connexion et réessayer.",
-      provider: 'Erreur Gemini API',
-      cached: false
-    };
+    if (!fullText) {
+      throw new Error('The AI service returned an empty response.');
+    }
   }
 
   /**

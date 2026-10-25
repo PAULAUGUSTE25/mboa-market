@@ -1,20 +1,28 @@
 from pydantic_settings import BaseSettings
 import os
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 
 def _fix_db_url(url: str) -> str:
-    """Render fournit postgresql://, SQLAlchemy async a besoin de postgresql+asyncpg://"""
+    """Normalize provider URLs for SQLAlchemy's asyncpg driver."""
+    url = url.strip()
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql+asyncpg://", 1)
     elif url.startswith("postgresql://") and "+asyncpg" not in url:
         url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
-    # Render internal database host fix if internal hostname without domain is passed
+    # Legacy Render hostname normalization is retained only for rollback compatibility.
     if "@dpg-" in url and ".render.com" not in url:
         # Append region domain suffix for frankfurt
         url = url.replace("@dpg-", "@dpg-").replace("-a/", "-a.frankfurt-postgres.render.com/")
         if "-a:" in url:
             url = url.replace("-a:", "-a.frankfurt-postgres.render.com:")
-    return url
+    parts = urlsplit(url)
+    query = [
+        (key, value)
+        for key, value in parse_qsl(parts.query, keep_blank_values=True)
+        if key.lower() not in {"sslmode", "channel_binding"}
+    ]
+    return urlunsplit(parts._replace(query=urlencode(query)))
 
 
 class Settings(BaseSettings):
@@ -66,7 +74,7 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_regex(self) -> str:
-        return r"https://.*\.netlify\.app|https://.*\.onrender\.com|http://localhost:\d+|http://127\.0\.0\.1:\d+|https?://.*\.vercel\.app"
+        return r"^https://([a-z0-9-]+\.)*(?:netlify\.app|vercel\.app)$|^http://(?:localhost|127\.0\.0\.1):\d+$"
     
     # SMS Configuration
     SMS_PROVIDER: str = "twilio"
@@ -88,12 +96,14 @@ class Settings(BaseSettings):
     # AI / Gemini
     GEMINI_API_KEY: str = ""
     GEMINI_MODEL: str = "gemini-flash-latest"
+    DEMO_POST_AUTO_REPLY_ENABLED: bool = False
     
     # PostgreSQL specific settings
     DB_POOL_SIZE: int = 20
     DB_MAX_OVERFLOW: int = 10
     DB_POOL_TIMEOUT: int = 30
     DB_POOL_RECYCLE: int = 3600
+    DB_CONNECT_TIMEOUT: int = 8
     
     class Config:
         env_file = ("backend/.env", ".env")

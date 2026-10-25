@@ -11,8 +11,9 @@ import gsap from 'gsap';
 export default function RegisterPage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { register, loading, error, clearError } = useAuthStore();
+  const { register, error, clearError, resetLoading } = useAuthStore();
   const { t } = useLanguage();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<{[key: string]: string}>({});
   const [showPassword, setShowPassword] = useState(false);
@@ -35,6 +36,10 @@ export default function RegisterPage() {
       locality: '',
     },
   });
+
+  useEffect(() => {
+    resetLoading();
+  }, [resetLoading]);
 
   useEffect(() => {
     if (sectorFromUrl) {
@@ -120,7 +125,8 @@ export default function RegisterPage() {
     }
     
     setFieldErrors({});
-    
+    setIsSubmitting(true);
+
     try {
       await register(formData);
       setShowSuccessModal(true);
@@ -149,6 +155,8 @@ export default function RegisterPage() {
         const errorMsg = err.response?.data?.detail || t('Inscription échouée. Vérifiez vos informations.', 'Registration failed. Check your information.');
         setFieldErrors({ general: typeof errorMsg === 'string' ? errorMsg : JSON.stringify(errorMsg) });
       }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -462,10 +470,10 @@ export default function RegisterPage() {
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="submit"
-                disabled={loading}
+                disabled={isSubmitting}
                 className="w-full py-4 text-white font-bold rounded-xl shadow-lg disabled:opacity-50 transition-all bg-[#3F441C] hover:bg-[#353916] shadow-[#F5F5F0]0/30"
               >
-                {loading ? t('Inscription...', 'Signing up...') : t("S'inscrire", 'Sign Up')}
+                {isSubmitting ? t('Inscription...', 'Signing up...') : t("S'inscrire", 'Sign Up')}
               </motion.button>
             </form>
 

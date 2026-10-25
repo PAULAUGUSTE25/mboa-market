@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ThumbsUp, MessageSquare, Send, X, MapPin, ChevronDown, ChevronUp } from 'lucide-react';
 import httpClient from '@/api/client';
 
@@ -13,6 +13,7 @@ export interface CommunityPost {
   } | null;
   domain: string;
   content: string;
+  is_demo?: boolean;
   likes_count: number;
   comments_count: number;
   liked_by_me: boolean;
@@ -24,6 +25,7 @@ interface Comment {
   author?: { display_name: string; region: string } | null;
   content: string;
   created_at: string;
+  is_ai_generated?: boolean;
 }
 
 interface Props {
@@ -55,7 +57,6 @@ export default function CommunityPostCard({ post, domainColor, isAuthenticated, 
   const [commentOpen, setCommentOpen] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [comments, setComments] = useState<Comment[]>([]);
-  const [commentsLoaded, setCommentsLoaded] = useState(false);
   const [commentsCount, setCommentsCount] = useState(post.comments_count);
   const [submitting, setSubmitting] = useState(false);
   const [likeLoading, setLikeLoading] = useState(false);
@@ -88,15 +89,29 @@ export default function CommunityPostCard({ post, domainColor, isAuthenticated, 
   };
 
   const loadComments = async () => {
-    if (commentsLoaded) return;
     try {
       const res = await httpClient.get(`/community/posts/${post.id}/comments`);
       setComments(res.data || []);
-      setCommentsLoaded(true);
+      setCommentsCount((res.data || []).length);
     } catch {
-      setCommentsLoaded(true);
+      // Keep the current comments visible if a refresh temporarily fails.
     }
   };
+
+  useEffect(() => {
+    if (!commentOpen || !post.is_demo) return;
+    const interval = window.setInterval(() => {
+      httpClient.get(`/community/posts/${post.id}/comments`)
+        .then((res) => {
+          setComments(res.data || []);
+          setCommentsCount((res.data || []).length);
+        })
+        .catch(() => {
+          // Keep the current comments visible if a refresh temporarily fails.
+        });
+    }, 3000);
+    return () => window.clearInterval(interval);
+  }, [commentOpen, post.id, post.is_demo]);
 
   const toggleComments = async () => {
     if (!commentOpen) {
@@ -141,6 +156,11 @@ export default function CommunityPostCard({ post, domainColor, isAuthenticated, 
                 style={{ backgroundColor: domainColor }}
               >
                 {authorRole}
+              </span>
+            )}
+            {post.is_demo && (
+              <span className="text-xs text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full">
+                Démonstration
               </span>
             )}
           </div>
@@ -197,7 +217,14 @@ export default function CommunityPostCard({ post, domainColor, isAuthenticated, 
                 {initials(c.author?.display_name ?? '?')}
               </div>
               <div className="flex-1 bg-gray-50 rounded-xl px-3 py-2">
-                <p className="text-xs font-semibold text-gray-700">{c.author?.display_name ?? 'Anonyme'}</p>
+                <p className="text-xs font-semibold text-gray-700">
+                  {c.is_ai_generated ? 'Bigiss · IA' : c.author?.display_name ?? 'Anonyme'}
+                  {c.is_ai_generated && (
+                    <span className="ml-1.5 font-normal text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                      Réponse automatisée
+                    </span>
+                  )}
+                </p>
                 <p className="text-xs text-gray-600 mt-0.5">{c.content}</p>
               </div>
             </div>

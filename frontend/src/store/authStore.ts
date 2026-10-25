@@ -28,6 +28,7 @@ interface AuthState {
   logout: () => void;
   setUser: (user: User | null) => void;
   clearError: () => void;
+  resetLoading: () => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -41,14 +42,7 @@ export const useAuthStore = create<AuthState>()(
       login: async (credentials) => {
         set({ loading: true, error: null });
         try {
-          const response = await Promise.race([
-            api.login(credentials),
-            new Promise<never>((_, reject) => {
-              setTimeout(() => {
-                reject(new Error('Le serveur met trop de temps à répondre. Il est peut-être en cours de démarrage, réessayez dans 30 secondes.'));
-              }, 65000); // 65s — matches axios timeout + buffer for Render cold starts
-            }),
-          ]);
+          const response = await api.login(credentials);
 
           // ✅ Store tokens in localStorage so axios interceptor attaches them to all requests
           if (response.access_token) {
@@ -61,9 +55,12 @@ export const useAuthStore = create<AuthState>()(
           set({ user: response.user, token: response.access_token, loading: false, error: null });
         } catch (error: any) {
           const detail = error?.response?.data?.detail;
-          const message =
-            typeof detail === 'string'
-              ? detail
+          const connectionFailed = ['ECONNABORTED', 'ETIMEDOUT', 'ERR_NETWORK'].includes(error?.code)
+            || error?.message === 'Network Error';
+          const message = typeof detail === 'string'
+            ? detail
+            : connectionFailed
+              ? 'Le serveur ne répond pas. Vérifiez votre connexion et réessayez.'
               : error?.message || 'Identifiants incorrects. Vérifiez votre téléphone et mot de passe.';
           set({ error: message, loading: false });
           throw error;
@@ -73,14 +70,7 @@ export const useAuthStore = create<AuthState>()(
       register: async (data) => {
         set({ loading: true, error: null });
         try {
-          const response = await Promise.race([
-            api.register(data),
-            new Promise<never>((_, reject) => {
-              setTimeout(() => {
-                reject(new Error("L'inscription met trop de temps à répondre. Le serveur est peut-être en cours de démarrage, réessayez dans 30 secondes."));
-              }, 65000); // 65s — matches axios timeout + buffer for Render cold starts
-            }),
-          ]);
+          const response = await api.register(data);
 
           // ✅ Backend now returns LoginResponse on register (access_token + user)
           if (response.access_token) {
@@ -104,7 +94,10 @@ export const useAuthStore = create<AuthState>()(
             // Pydantic validation errors
             message = detail.map((e: any) => e.msg || JSON.stringify(e)).join('; ');
           } else {
-            message = error?.message || 'Inscription échouée. Vérifiez vos informations.';
+            message = ['ECONNABORTED', 'ETIMEDOUT', 'ERR_NETWORK'].includes(error?.code)
+              || error?.message === 'Network Error'
+              ? "Le serveur ne répond pas. Vérifiez votre connexion et réessayez."
+              : error?.message || 'Inscription échouée. Vérifiez vos informations.';
           }
           set({ error: message, loading: false });
           throw error;
@@ -121,6 +114,8 @@ export const useAuthStore = create<AuthState>()(
       setUser: (user) => set({ user }),
 
       clearError: () => set({ error: null }),
+
+      resetLoading: () => set({ loading: false }),
     }),
     {
       name: 'mboa-auth-storage',
